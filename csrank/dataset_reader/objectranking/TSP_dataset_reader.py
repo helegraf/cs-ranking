@@ -115,5 +115,3 @@ class TSPDatasetReader(DatasetReader):
         return train, test
 
 
-reader = TSPDatasetReader()
-reader.get_single_train_test_split()
