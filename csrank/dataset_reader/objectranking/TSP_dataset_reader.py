@@ -23,7 +23,7 @@ class TSPDatasetReader(DatasetReader):
         Something as well
         """
 
-        super(TSPDatasetReader, self).__init__(learning_problem=OBJECT_RANKING, dataset_folder="data", **kwargs)
+        super(TSPDatasetReader, self).__init__(learning_problem=OBJECT_RANKING, dataset_folder="TSP_excerpt.csv", **kwargs)
 
         self.nFeatures = n_features
         self.nObjects = n_objects
