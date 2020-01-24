@@ -176,6 +176,7 @@ class FATENetwork(FATENetworkCore):
                                 kernel_regularizer=self.kernel_regularizer)
         self.is_variadic = True
         self.hash_file = None
+        self.loss_function_requires_x_values = False
 
     def _create_set_layers(self, **kwargs):
         """
@@ -348,7 +349,11 @@ class FATENetwork(FATENetworkCore):
         scores = self.join_input_layers(input_layer, set_repr, n_objects=n_objects, n_layers=self.n_hidden_set_layers)
         model = Model(inputs=input_layer, outputs=scores)
 
-        model.compile(loss=self.loss_function, optimizer=self.optimizer, metrics=self.metrics)
+        if self.loss_function_requires_x_values:
+            model.compile(loss=self.loss_function(input_layer), optimizer=self.optimizer, metrics=self.metrics)
+        else:
+            model.compile(loss=self.loss_function, optimizer=self.optimizer, metrics=self.metrics)
+
         return model
 
     def fit(self, X, Y, epochs=35, inner_epochs=1, callbacks=None, validation_split=0.1, verbose=0, global_lr=1.0,

@@ -47,6 +47,7 @@ from functools import partial
 import numpy as np
 import tensorflow as tf
 from keras import backend as K
+from scipy.spatial.distance import cdist
 
 from csrank.tensorflow_util import scores_to_rankings, get_instances_objects, tensorify
 
@@ -331,3 +332,38 @@ def err(y_true, y_pred, utility_function=None, probability_mapping=None):
     results = tf.reduce_sum(discounted_document_values, axis=1)
 
     return K.mean(results)
+
+
+def tsp_loss(x, y_true, y_pred):
+    """
+    Computes the difference between the lengths of the given paths for a TSP problem instance
+
+    Parameters
+    ----------
+    x : numpy array
+        list of instances represented by objects with real coordinates
+    y_true : numpy array
+        list of shortest paths for each instance, represented by rankings
+    y_pred : numpy array
+        list of predicted paths for each instance, represented by rankings
+
+    Returns
+    -------
+
+    """
+    solutions = np.empty(len(x))
+    opt_path_len = np.empty(len(x))
+    pred_path_len = np.empty((len(x)))
+
+    for i in range(len(x)):
+        x_dist = cdist(x[i], x[i])
+
+        opt_path_len[i] = path_len(x_dist, y_true[i].astype(int))
+        pred_path_len[i] = path_len(x_dist, y_pred[i])
+        solutions[i] = pred_path_len[i] - opt_path_len[i]
+
+    return np.sum(solutions) / len(solutions), opt_path_len, pred_path_len
+
+
+def path_len(distances, path):
+    return np.sum(np.asarray([distances[path[x-1]][path[x]] for x in range(len(path))]))

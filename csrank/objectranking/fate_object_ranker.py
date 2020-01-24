@@ -13,8 +13,8 @@ class FATEObjectRanker(FATENetwork, ObjectRanker):
     def __init__(self, n_object_features, n_hidden_set_layers=2, n_hidden_set_units=2, n_hidden_joint_layers=32,
                  n_hidden_joint_units=32, activation='selu', kernel_initializer='lecun_normal',
                  kernel_regularizer=l2(l=0.01), optimizer=SGD(lr=1e-4, nesterov=True, momentum=0.9), batch_size=256,
-                 loss_function=hinged_rank_loss, metrics=[zero_one_rank_loss_for_scores_ties], random_state=None,
-                 **kwargs):
+                 loss_function=hinged_rank_loss, loss_function_requires_x_values=False,
+                 metrics=[zero_one_rank_loss_for_scores_ties], random_state=None, **kwargs):
         """
             Create a FATE-network architecture for leaning object ranking function. The first-aggregate-then-evaluate
             approach learns an embedding of each object and then aggregates that into a context representation
@@ -58,6 +58,8 @@ class FATEObjectRanker(FATENetwork, ObjectRanker):
                 Batch size to use for training
             loss_function : function
                 Differentiable loss function for the score vector
+            loss_function_requires_x_values : bool
+                Whether the loss function requires to be instantiated with x values
             metrics : list
                 List of evaluation metrics (can be non-differentiable)
             random_state : int or object
@@ -73,6 +75,7 @@ class FATEObjectRanker(FATENetwork, ObjectRanker):
                          kernel_initializer=kernel_initializer, kernel_regularizer=kernel_regularizer,
                          optimizer=optimizer, batch_size=batch_size, random_state=random_state, **kwargs)
         self.logger = logging.getLogger(FATEObjectRanker.__name__)
+        self.loss_function_requires_x_values = loss_function_requires_x_values
 
     def construct_model(self, n_features, n_objects):
         return super().construct_model(n_features, n_objects)
