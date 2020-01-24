@@ -21,11 +21,11 @@ from csrank import metrics
 
 class TSPDatasetReader(DatasetReader):
     def __init__(self, n_features=2, n_objects_train=4, n_train_instances=10, n_test_instances=2, random_state=None,
-                 include_id=False, **kwargs):
+                 include_id=False, filename="TSP_excerpt.csv", **kwargs):
 
         super(TSPDatasetReader, self).__init__(learning_problem=OBJECT_RANKING, dataset_folder="", **kwargs)
 
-        self.dataset_file = os.path.join(self.dirname, "TSP_excerpt.csv")
+        self.dataset_file = os.path.join(self.dirname, filename)
         self.n_features = n_features
         self.n_objects_train = n_objects_train
         self.n_objects_test = 4
@@ -118,7 +118,7 @@ class TSPDatasetReader(DatasetReader):
             # fill matrix with distances
             matrix = np.empty((n_objects, n_objects), dtype=float)
             for objectsse in range(n_objects):
-                matrix[objectsse] = pythagoras(x_data[instance][objectsse-1][0]-x_data[instance][objectsse][0],
+                matrix[objectsse] = dist(x_data[instance][objectsse-1][0]-x_data[instance][objectsse][0],
                                                x_data[instance][objectsse-1][1]-x_data[instance][objectsse][1])
 
             y_labels[instance] = np.empty(n_objects).astype(float)
@@ -134,50 +134,29 @@ class TSPDatasetReader(DatasetReader):
         return self.splitter(splits)
 
 
-def pythagoras(a, b):
+def dist(a, b):
     return math.sqrt(a * a + b * b)
 
-reader = TSPDatasetReader(include_id=False)
-#reader2 = SushiObjectRankingDatasetReader()
-#X, Y = reader2.get_dataset_dictionaries()
 
-#print("X: ")
-#print(X)
-
-#print("\n")
-#print("Y:")
-#print(Y)
-
-#arr = np.array([10, 20, 30, 40, 50])
-#idx = [1, 0, 3, 4, 2]
-#print(arr[idx])
+reader = TSPDatasetReader(include_id=False, n_objects_train=10, n_train_instances=1000, n_test_instances=100,
+                          filename="cities.csv")
 
 x_train, y_train, x_test, y_test = reader.get_single_train_test_split()
 print(x_train)
 print(y_train)
 
-#loss_func = TSPLoss(x_train)
-#fate = cs.FATEObjectRanker(n_object_features=2, loss_function=losses.hinged_rank_loss)
 fate = cs.FATEObjectRanker(n_object_features=2, loss_function=losses.tsp_dist_matrix_loss_wrapper,
                            loss_function_requires_x_values=True)
 fate.fit(x_train, y_train)
 
 predictions = fate.predict(x_test)
 
-#from sklearn.metrics import f1_score
-#print(f1_score(y_test, predictions, average="micro")
 print("x_train", x_train.shape)
 print("y_train", y_train.shape)
 print("x_test", x_test.shape)
 print("y_test", y_test.shape)
 print("y_pred", predictions.shape)
 
-
-#from sklearn.metrics import f1_score
-#print(f1_score(y_test, predictions, average="micro"))
-
-#from sklearn.metrics import hinge_loss
-#print(hinge_loss(y_test[0], predictions[0]))
 
 print(metrics.tsp_loss(x_test, y_test, predictions))
 print(y_test)

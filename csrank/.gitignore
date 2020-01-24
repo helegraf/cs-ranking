@@ -1,2 +1,3 @@
 /datasets/*
 !datasets/TSP_excerpt.csv
+!datasets/cities.csv
