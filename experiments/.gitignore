@@ -12,5 +12,7 @@
 /config/
 /detailedresults/
 /journalresults/
-/logs/
+logs/*
 /thesis/
+
+!logs/README.MD

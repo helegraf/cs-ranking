@@ -1,0 +1,1 @@
+This folder contains logging data for experiments.
