@@ -1,6 +1,5 @@
 import tensorflow as tf
 from keras import backend as K
-from scipy.spatial.distance import cdist
 
 from csrank.tensorflow_util import tensorify
 
@@ -93,6 +92,8 @@ def tsp_dist_matrix_loss_wrapper(x):
     A tsp_dist_matrix_loss function that can be used with the two parameters of true and predicted values,
     while internally having access to the corresponding objects and their features.
     """
+    # tensorify
+    x = tensorify(x)
 
     def tsp_dist_matrix_loss(y_true, y_pred):
         """
@@ -112,8 +113,13 @@ def tsp_dist_matrix_loss_wrapper(x):
         -------
         A tensor matrix (1 axis) containing a loss value for each input instance
         """
+        # tensorify
+        y_true = tensorify(y_true)
+        y_pred = tensorify(y_pred)
+
         # compute distances
         distance_matrix = l2_matrix(x, x)
+        distance_matrix = tf.linalg.l2_normalize(distance_matrix)
 
         # compute matrix of pairwise hinge loss
         hinge_matrix = pairwise_hinge_matrix(y_true, y_pred)
@@ -181,15 +187,20 @@ def tsp_probability_matrix_loss(y_true, y_pred):
     -------
     A tensor matrix (1 axis) containing a loss value for each input instance
     """
+    # tensorify
+    y_true = tensorify(y_true)
+    y_pred = tensorify(y_pred)
+
     # compute matrix of U_A / (U_A + U_B)
     exp_pred = K.exp(y_pred)
     exp_matrix = exp_pred[:, None] / (exp_pred[:, None] + exp_pred[:, :, None])
 
     # compute matrix of pairwise hinge loss
     hinge_matrix = pairwise_hinge_matrix(y_true, y_pred)
+    multiplier = exp_matrix * hinge_matrix
 
     # sum multiplication of results
-    return K.sum(exp_matrix * hinge_matrix, axis=(1, 2))
+    return K.sum(multiplier, axis=(1, 2))
 
 
 def pairwise_hinge_matrix(y_true, y_pred):
@@ -207,9 +218,12 @@ def pairwise_hinge_matrix(y_true, y_pred):
     -------
     A tensor representing a matrix containing the pairwise hinge loss between predicted values (3 axes)
     """
+
     # mask: only compute entries in the matrix where i > j
     mask = K.cast(K.greater(y_true[:, None] - y_true[:, :, None], 0),
                   dtype='float32')
+    mask = tf.Print(mask, [mask], message="mask")
+    y_pred = tf.Print( y_pred, [ y_pred], message="ypred")
 
     # compute actual hinge loss
-    return mask * (1 - (y_pred[:, None] - y_pred[:, :, None]))
+    return mask * (1 - (y_pred[:, :, None] - y_pred[:, None]))

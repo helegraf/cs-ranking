@@ -12,7 +12,8 @@ __all__ = ['FETAObjectRanker']
 
 class FETAObjectRanker(FETANetwork, ObjectRanker):
     def __init__(self, n_objects, n_object_features, n_hidden=2, n_units=8, add_zeroth_order_model=False,
-                 max_number_of_objects=5, num_subsample=5, loss_function=hinged_rank_loss, batch_normalization=False,
+                 max_number_of_objects=5, num_subsample=5, loss_function=hinged_rank_loss,
+                 loss_function_requires_x_values=False, batch_normalization=False,
                  kernel_regularizer=l2(l=1e-4), kernel_initializer='lecun_normal', activation='selu',
                  optimizer=SGD(lr=1e-4, nesterov=True, momentum=0.9), metrics=None, batch_size=256, random_state=None,
                  **kwargs):
@@ -76,6 +77,7 @@ class FETAObjectRanker(FETANetwork, ObjectRanker):
                          kernel_initializer=kernel_initializer, activation=activation, optimizer=optimizer,
                          metrics=metrics, batch_size=batch_size, random_state=random_state, **kwargs)
         self.logger = logging.getLogger(FETAObjectRanker.__name__)
+        self.loss_function_requires_x_values = loss_function_requires_x_values
 
     def construct_model(self):
         return super().construct_model()

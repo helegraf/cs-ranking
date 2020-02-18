@@ -3,6 +3,7 @@ DYAD_RANKING = 'dyad_ranking'
 OBJECT_RANKING = 'object_ranking'
 DISCRETE_CHOICE = "discrete_choice"
 CHOICE_FUNCTION = "choice_function"
+OBJECT_RANKING_TSP = "object_ranking_tsp"
 EXCEPTION_OUTPUT_FEATURES_INSTANCES = "Number of instances inconsistent for {} dataset! output array:{} instances " \
                                       "and features arrays:{} instances"
 EXCEPTION_OBJECT_ARRAY_SHAPE = "Invalid shape for {} dataset objects features array! shape is: {}"

@@ -8,6 +8,7 @@ MNIST_CHOICE = "mnist_choice"
 MNIST_DC = "mnist_dc"
 LETOR_CHOICE = "letor_choice"
 EXP_CHOICE = "exp_choice"
+TSP = "TSP"
 
 DEPTH = 'depth'
 SENTENCE_ORDERING = "sentence_ordering"

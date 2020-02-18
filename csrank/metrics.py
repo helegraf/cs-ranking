@@ -49,13 +49,15 @@ import tensorflow as tf
 from keras import backend as K
 from scipy.spatial.distance import cdist
 
+from csrank.numpy_util import ranking_ordering_conversion
 from csrank.tensorflow_util import scores_to_rankings, get_instances_objects, tensorify
 
 __all__ = ['zero_one_rank_loss', 'zero_one_rank_loss_for_scores',
            'zero_one_rank_loss_for_scores_ties',
            'make_ndcg_at_k_loss', 'kendalls_tau_for_scores',
            'spearman_correlation_for_scores', "zero_one_accuracy",
-           "zero_one_accuracy_for_scores", "topk_categorical_accuracy"]
+           "zero_one_accuracy_for_scores", "topk_categorical_accuracy", 'tsp_loss_absolute_wrapper',
+           'tsp_loss_relative_wrapper']
 
 
 def zero_one_rank_loss(y_true, y_pred):
@@ -334,36 +336,76 @@ def err(y_true, y_pred, utility_function=None, probability_mapping=None):
     return K.mean(results)
 
 
-def tsp_loss(x, y_true, y_pred):
-    """
-    Computes the difference between the lengths of the given paths for a TSP problem instance
+def tsp_loss_absolute_wrapper(x):
 
-    Parameters
-    ----------
-    x : numpy array
-        list of instances represented by objects with real coordinates
-    y_true : numpy array
-        list of shortest paths for each instance, represented by rankings
-    y_pred : numpy array
-        list of predicted paths for each instance, represented by rankings
+    def tsp_loss_absolute(y_true, y_pred):
+        """
+        Computes the difference between the lengths of the given paths for a TSP problem instance
 
-    Returns
-    -------
+        Parameters
+        ----------
+        x : numpy array
+            list of instances represented by objects with real coordinates
+        y_true : numpy array
+            list of shortest paths for each instance, represented by rankings
+        y_pred : numpy array
+            list of predicted paths for each instance, represented by rankings
 
-    """
-    solutions = np.empty(len(x))
-    opt_path_len = np.empty(len(x))
-    pred_path_len = np.empty((len(x)))
+        Returns
+        -------
 
-    for i in range(len(x)):
-        x_dist = cdist(x[i], x[i])
+        """
+        solutions = np.empty(len(x))
+        opt_path_len = np.empty(len(x))
+        pred_path_len = np.empty((len(x)))
 
-        opt_path_len[i] = path_len(x_dist, y_true[i].astype(int))
-        pred_path_len[i] = path_len(x_dist, y_pred[i])
-        solutions[i] = pred_path_len[i] - opt_path_len[i]
+        for i in range(len(x)):
+            x_dist = cdist(x[i], x[i])
 
-    return np.sum(solutions) / len(solutions), opt_path_len, pred_path_len
+            opt_path_len[i] = path_len(x_dist, y_true[i].astype(int))
+            pred_path_len[i] = path_len(x_dist, y_pred[i])
+            solutions[i] = pred_path_len[i] - opt_path_len[i]
+
+        return np.sum(solutions) / len(solutions)
+
+    return tsp_loss_absolute
 
 
-def path_len(distances, path):
+def tsp_loss_relative_wrapper(x):
+
+    def tsp_loss_relative(y_true, y_pred):
+        """
+        Computes the relative difference between the lengths of the given paths for a TSP problem instance
+
+        Parameters
+        ----------
+        x : numpy array
+            list of instances represented by objects with real coordinates
+        y_true : numpy array
+            list of shortest paths for each instance, represented by rankings
+        y_pred : numpy array
+            list of predicted paths for each instance, represented by rankings
+
+        Returns
+        -------
+
+        """
+        solutions = np.empty(len(x))
+        opt_path_len = np.empty(len(x))
+        pred_path_len = np.empty((len(x)))
+
+        for i in range(len(x)):
+            x_dist = cdist(x[i], x[i])
+
+            opt_path_len[i] = path_len(x_dist, y_true[i].astype(int))
+            pred_path_len[i] = path_len(x_dist, y_pred[i])
+            solutions[i] = opt_path_len[i] / pred_path_len[i]
+
+        return np.sum(solutions) / len(solutions)
+
+    return tsp_loss_relative
+
+
+def path_len(distances, ranking):
+    path = np.argsort(ranking)
     return np.sum(np.asarray([distances[path[x-1]][path[x]] for x in range(len(path))]))

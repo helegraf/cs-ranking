@@ -14,5 +14,7 @@
 /journalresults/
 logs/*
 /thesis/
+config/db_local.json
+config/db.json
 
 !logs/README.MD
