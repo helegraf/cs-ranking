@@ -3,7 +3,7 @@ import sys
 import pymc3 as pm
 from tensorflow.keras.callbacks import TensorBoard
 
-from csrank.callbacks import EarlyStoppingWithWeights, LRScheduler, DebugOutput
+from csrank.callbacks import EarlyStoppingWithWeights, LRScheduler, DebugOutput, CyclicLR
 from csrank.choicefunction import *
 from csrank.constants import *
 from csrank.dataset_reader import *
@@ -74,7 +74,7 @@ choice_metrics = {'F1Score': f1_measure, 'Precision': precision, 'Recall': recal
                   "AucScore": auc_score, "AveragePrecisionScore": average_precision}
 callbacks_dictionary = {'EarlyStoppingWithWeights': EarlyStoppingWithWeights, 'LRScheduler': LRScheduler,
                         'DebugOutput': DebugOutput, "CheckConvergence": pm.callbacks.CheckParametersConvergence,
-                        "Tracker": pm.callbacks.Tracker, 'TensorBoard': TensorBoard}
+                        "Tracker": pm.callbacks.Tracker, 'TensorBoard': TensorBoard, "CyclicLR": CyclicLR}
 lp_metric_dict = {
     OBJECT_RANKING: ranking_metrics,
     OBJECT_RANKING_TSP: tsp_ranking_metrics,

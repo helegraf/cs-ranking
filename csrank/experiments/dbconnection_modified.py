@@ -83,11 +83,13 @@ class ModifiedDBConnector(metaclass=ABCMeta):
         is_table_exist = bool(self.cursor_db.fetchone()[0])
         if not is_table_exist:
             self.logger.info("Table {} does not exist creating with columns {}".format(results_table, columns))
-            create_command = "CREATE TABLE {} (job_id INTEGER PRIMARY KEY)".format(
+            create_command = "CREATE TABLE {} (job_id INTEGER, train_test character varying(200))".format(
                 results_table)
             self.cursor_db.execute(create_command)
+            alter_command = "ALTER TABLE {} ADD PRIMARY KEY (job_id, train_test);".format(results_table)
+            self.cursor_db.execute(alter_command)
             for column in results.keys():
-                if column not in ["job_id"]:
+                if column not in ["job_id", "train_test"]:
                     alter_table_command = 'ALTER TABLE %s ADD COLUMN %s double precision' % (results_table, column)
                     self.cursor_db.execute(alter_table_command)
             self.close_connection()
@@ -201,4 +203,20 @@ class ModifiedDBConnector(metaclass=ABCMeta):
         jobs = "{}.{}".format(self.schema, self.table_jobs)
         update_job = """UPDATE {} set validation_loss = %s WHERE job_id = %s""".format(jobs)
         self.cursor_db.execute(update_job, (str(validation_loss), str(job_id)))
+        self.close_connection()
+
+    def finish_job(self, job_id, cluster_id):
+        """
+
+        Updates the jobs table row so that the time_finished is entered.
+
+        Parameters
+        ----------
+        cluster_id : the cluster id of the job for which the time_finished should be inserted
+        job_id : the id of the job for which the time_finished should be inserted
+        """
+        self.init_connection()
+        jobs = "{}.{}".format(self.schema, self.table_jobs)
+        update_job = """UPDATE {} set cluster_id = %s WHERE job_id = %s""".format(jobs)
+        self.cursor_db.execute(update_job, (str(cluster_id), str(job_id)))
         self.close_connection()

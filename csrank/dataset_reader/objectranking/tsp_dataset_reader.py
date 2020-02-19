@@ -119,6 +119,11 @@ class TSPDatasetReader(DatasetReader):
             # predict labels
             y_labels[instance] = np.asarray(np.argsort(elkai.solve_int_matrix(matrix)), dtype=int)
 
+        # scale to [0, 1]
+        print("before", x_data.shape)
+        x_data = np.asarray(
+            [[[x_data[j, i, 0]/5200, x_data[j, i, 1]/3400] for i in range(len(x_data[j]))] for j in range(len(x_data))])
+        print("after", x_data.shape)
         return index, x_data, y_labels
 
     def get_train_test_datasets(self, n_datasets=5):
@@ -126,19 +131,19 @@ class TSPDatasetReader(DatasetReader):
         return self.splitter(splits)
 
 
-seed = 1234
-fold_id = 1
-random_state = np.random.RandomState(seed=seed + fold_id)
-reader = TSPDatasetReader(include_id=False, n_objects_train=5, n_objects_test=5, n_train_instances=5,
-                          n_test_instances=2, filename="cities.csv", random_state=random_state)
-
-x_train, y_train, x_test, y_test = reader.get_single_train_test_split()
-
-print("What is happening!")
-print("x_train")
-print(x_train)
-print("y_train")
-print(y_train)
+# seed = 1234
+# fold_id = 1
+# random_state = np.random.RandomState(seed=seed + fold_id)
+# reader = TSPDatasetReader(include_id=False, n_objects_train=5, n_objects_test=5, n_train_instances=5,
+#                           n_test_instances=2, filename="cities.csv", random_state=random_state)
+#
+# x_train, y_train, x_test, y_test = reader.get_single_train_test_split()
+#
+# print("What is happening!")
+# print("x_train")
+# print(x_train)
+# print("y_train")
+# print(y_train)
 
 
 # log_dir="/home/hgraf/tensorboard/logs/test_tsp/" + "dist_loss_" + datetime.datetime.now().strftime("%Y%m%d-%H%M%S")

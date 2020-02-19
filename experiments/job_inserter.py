@@ -51,32 +51,8 @@ def gen_jobs(configuration_file_path):
     return combine_with_elements(previous_dict={}, index=0, combos=combos)
 
 
-job = {'resources': {'CPUs': 4, 'GPUs': 0},
-       'dataset': 'TSP',
-       'dataset_params': {'include_id': 'False', 'n_objects_train': 20, 'n_objects_test': 20,
-                          'n_train_instances': 500, 'n_test_instances': 2, 'filename': 'cities.csv'},
-       'fold_id': 1,
-       'n_inner_folds': 0,
-       'learning_problem': 'OBJECT_RANKING_TSP',
-       'seed': 1234,
-       'learner_name': 'fate_choice',
-       'learner_params': {
-           'loss_function': 'losses.tsp_dist_matrix_loss_wrapper',
-           'loss_function_requires_x_values': 'True'
-        },
-       'learner_fit_params': {},
-       'use_hp': "False",
-       'hp_iterations': 0,
-       'hp_ranges': {},
-       'hp_fit_params': {},
-       'duration': '60M',
-       'time_out_eval': '10M',
-       'results_table_name': 'results_test'}
-
 config_file_path = "config/db.json"
-
-connector = ModifiedDBConnector(config_file_path, table_jobs="jobs_test")
-# connector.insert_new_job(job)
+connector = ModifiedDBConnector(config_file_path, table_jobs="jobs_tsp_experiment_1")
 
 jobs = gen_jobs("configuration.json")
 for combo_job in jobs:
