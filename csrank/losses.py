@@ -222,8 +222,6 @@ def pairwise_hinge_matrix(y_true, y_pred):
     # mask: only compute entries in the matrix where i > j
     mask = K.cast(K.greater(y_true[:, None] - y_true[:, :, None], 0),
                   dtype='float32')
-    mask = tf.Print(mask, [mask], message="mask")
-    y_pred = tf.Print( y_pred, [ y_pred], message="ypred")
 
     # compute actual hinge loss
     return mask * (1 - (y_pred[:, :, None] - y_pred[:, None]))

@@ -31,7 +31,7 @@ from docopt import docopt
 from sklearn.model_selection import ShuffleSplit
 import tensorflow as tf
 
-from csrank.callbacks import LRScheduler
+from csrank import FATEObjectRanker
 from csrank.experiments import *
 from csrank.experiments.dbconnection_modified import ModifiedDBConnector
 from csrank.experiments.util import learners, create_callbacks
@@ -113,8 +113,8 @@ def exit_orderly_in_case_of_error(error_message, db_connector, job_id):
 def do_experiment():
     start = datetime.now()
     print(sys.argv)
-    print("TensorFlow built with CUDA-support", tf.compat.v1.test.is_built_with_cuda)
-    print("GPU is available", tf.compat.v1.test.is_gpu_available)
+    print("TensorFlow built with CUDA-support", tf.compat.v1.test.is_built_with_cuda())
+    print("GPU is available", tf.compat.v1.test.is_gpu_available())
     # extract arguments
     arguments = docopt(__doc__)
     cluster_id = int(arguments["--c_index"])
@@ -190,15 +190,10 @@ def do_experiment():
             dataset_params['random_state'] = random_state
             dataset_params['fold_id'] = fold_id
             dataset_reader = get_dataset_reader(dataset_name, dataset_params)
-            X_train, Y_train, X_test, Y_test = dataset_reader.get_single_train_test_split()
-            print("data x")
-            print(X_train)
-
-            print("data y")
-            print(Y_train)
+            x_train, y, x_test, y_test = dataset_reader.get_single_train_test_split()
 
             # log data contents, get num_objects, delete internal reader info
-            n_objects = log_test_train_data(X_train, X_test, logger)
+            n_objects = log_test_train_data(x_train, x_test, logger)
             del dataset_reader
             inner_cv = ShuffleSplit(n_splits=n_inner_folds, test_size=0.1, random_state=random_state)
             if learner_name in [MNL, PCL, NLM, GEV]:
@@ -214,7 +209,7 @@ def do_experiment():
             total_duration = duration - time_taken - time_out_eval
 
             # set learner parameters
-            learner_params['n_objects'], learner_params['n_object_features'] = X_train.shape[1:]
+            learner_params['n_objects'], learner_params['n_object_features'] = x_train.shape[1:]
             learner_params["random_state"] = random_state
             if learner_params["loss_function"] in util.losses.keys():
                 learner_params["loss_function"] = util.losses[learner_params["loss_function"]]
@@ -237,7 +232,7 @@ def do_experiment():
 
                 # start hyperparameter optimizer - training
                 optimizer_model = ParameterOptimizer(**hp_params)
-                optimizer_model.fit(X_train, Y_train, **hp_fit_params)
+                optimizer_model.fit(x_train, y, **hp_fit_params)
                 validation_loss = optimizer_model.validation_loss
                 learner = optimizer_model.model
 
@@ -248,7 +243,7 @@ def do_experiment():
                 learner_func = learners[learner_name]
                 learner = learner_func(**learner_params)
                 create_callbacks(learner_fit_params)
-                learner.fit(X_train, Y_train, **learner_fit_params)
+                learner.fit(x_train, y, **learner_fit_params)
 
             # # # SAVING MODEL # # #
 
@@ -256,12 +251,14 @@ def do_experiment():
             #pickle.dump(learner, open(pickle_path, 'wb'))
             #logger.info("Saved model at: {}".format(pickle_path))
 
+            fate = FATEObjectRanker()
+
             # # # PREDICTION # # #
 
-            get_results_and_upload('\'test\'', X_test, Y_test, db_connector, hash_value, job_id, learner
+            get_results_and_upload('\'test\'', x_test, y_test, db_connector, hash_value, job_id, learner
                                    , learning_problem, logger, n_objects, results_table_name)
 
-            get_results_and_upload('\'train\'', X_train, Y_train, db_connector, hash_value, job_id, learner,
+            get_results_and_upload('\'train\'', x_train, y, db_connector, hash_value, job_id, learner,
                                    learning_problem, logger, n_objects, results_table_name)
 
             db_connector.finish_job(job_id=job_id, cluster_id=cluster_id)
