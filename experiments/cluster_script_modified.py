@@ -20,7 +20,7 @@ import inspect
 import logging
 
 import os
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
 import pickle as pk
 import sys
@@ -61,6 +61,11 @@ def do_experiment():
     start = datetime.now()
     tf.logging.set_verbosity(tf.logging.ERROR)
     tf.autograph.set_verbosity(1)
+    tf.get_logger().setLevel('WARN')
+    tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
+    tf.compat.v1.autograph.set_verbosity(1)
+    logging.getLogger("tensorflow").setLevel(logging.ERROR)
+
     print(sys.argv)
     print("TensorFlow built with CUDA-support", tf.compat.v1.test.is_built_with_cuda())
     print("GPU is available", tf.compat.v1.test.is_gpu_available())
