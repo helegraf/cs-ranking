@@ -18,9 +18,10 @@ Options:
 """
 import inspect
 import logging
+import warnings
 
 import os
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
+# os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
 import pickle as pk
 import sys
@@ -59,12 +60,13 @@ def exit_orderly_in_case_of_error(error_message, db_connector, job_id):
 
 def do_experiment():
     start = datetime.now()
-    tf.logging.set_verbosity(tf.logging.ERROR)
-    tf.autograph.set_verbosity(1)
-    tf.get_logger().setLevel('WARN')
-    tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
-    tf.compat.v1.autograph.set_verbosity(1)
-    logging.getLogger("tensorflow").setLevel(logging.ERROR)
+  #  tf.logging.set_verbosity(tf.logging.ERROR)
+  #  tf.autograph.set_verbosity(1)
+   # tf.get_logger().setLevel('WARN')
+  #  tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
+  #  tf.compat.v1.autograph.set_verbosity(1)
+  #  logging.getLogger("tensorflow").setLevel(logging.ERROR)
+    warnings.filterwarnings('ignore')
 
     print(sys.argv)
     print("TensorFlow built with CUDA-support", tf.compat.v1.test.is_built_with_cuda())
