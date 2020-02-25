@@ -20,6 +20,8 @@ import inspect
 import logging
 
 import os
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
+
 import pickle as pk
 import sys
 from datetime import datetime
@@ -140,12 +142,6 @@ def do_experiment():
             dataset_params['fold_id'] = fold_id
             dataset_reader = get_dataset_reader(dataset_name, dataset_params)
             x_train, y_train, x_test, y_test = dataset_reader.get_single_train_test_split()
-
-            print("x")
-            print(x_train)
-
-            print("y")
-            print(y_train)
 
             # log data contents, get num_objects, delete internal reader info
             n_objects = log_test_train_data(x_train, x_test, logger)
