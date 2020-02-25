@@ -69,7 +69,7 @@ def do_experiment():
     table_jobs = arguments["--table_name"]
 
     # configure postgres database connector
-    config_file_path = os.path.join(DIR_PATH, 'config', config_file_name)
+    config_file_path = os.path.join(DIR_PATH, 'database_configs', config_file_name)
     db_connector = ModifiedDBConnector(config_file_path=config_file_path, table_jobs=table_jobs)
 
     # get job description

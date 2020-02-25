@@ -9,12 +9,12 @@
 /predictions/
 /results/
 /pc2/
-/config/
+/database_configs/
 /detailedresults/
 /journalresults/
 logs/*
 /thesis/
-config/db_local.json
-config/db.json
+database_configs/db_local.json
+database_configs/db.json
 
 !logs/README.MD
