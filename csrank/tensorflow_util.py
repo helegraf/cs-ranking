@@ -37,7 +37,7 @@ def get_tensor_value(x):
     return x
 
 
-def configure_numpy_keras(seed=42):
+def configure_numpy_keras(seed=42, log_device_placement_if_is_gpu_available=True):
     tf.set_random_seed(seed)
     os.environ["KERAS_BACKEND"] = "tensorflow"
     devices = [x.name for x in device_lib.list_local_devices()]
@@ -50,7 +50,8 @@ def configure_numpy_keras(seed=42):
                                 device_count={'CPU': multiprocessing.cpu_count() - 2})
     else:
         config = tf.ConfigProto(allow_soft_placement=True,
-                                log_device_placement=True, intra_op_parallelism_threads=2,
+                                log_device_placement=log_device_placement_if_is_gpu_available,
+                                intra_op_parallelism_threads=2,
                                 inter_op_parallelism_threads=2)  # , gpu_options = gpu_options)
     sess = tf.Session(config=config)
     K.set_session(sess)

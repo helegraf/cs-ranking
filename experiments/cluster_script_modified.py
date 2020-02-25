@@ -66,7 +66,9 @@ def do_experiment():
   #  tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
   #  tf.compat.v1.autograph.set_verbosity(1)
   #  logging.getLogger("tensorflow").setLevel(logging.ERROR)
-    warnings.filterwarnings('ignore')
+    #warnings.filterwarnings('ignore')
+
+   # tf.debugging.set_log_device_placement(False)
 
     print(sys.argv)
     print("TensorFlow built with CUDA-support", tf.compat.v1.test.is_built_with_cuda())
@@ -130,7 +132,7 @@ def do_experiment():
 
             # set up logger
             setup_logging(log_path=log_path)
-            configure_numpy_keras(seed=seed)
+            configure_numpy_keras(seed=seed, log_device_placement_if_is_gpu_available=False)
             logger = logging.getLogger('Experiment')
             logger.info("DB config filePath {}".format(config_file_path))
             logger.info("Arguments {}".format(arguments))
