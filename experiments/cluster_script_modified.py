@@ -59,6 +59,7 @@ def exit_orderly_in_case_of_error(error_message, db_connector, job_id):
 
 def do_experiment():
     start = datetime.now()
+    tf.logging.set_verbosity(tf.logging.ERROR)
     print(sys.argv)
     print("TensorFlow built with CUDA-support", tf.compat.v1.test.is_built_with_cuda())
     print("GPU is available", tf.compat.v1.test.is_gpu_available())
