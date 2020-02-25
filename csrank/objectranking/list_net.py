@@ -22,6 +22,7 @@ __all__ = ["ListNet"]
 class ListNet(Learner, ObjectRanker):
 
     def __init__(self, n_object_features, n_top, n_hidden=2, n_units=8, loss_function=plackett_luce_loss,
+                 loss_function_requires_x_values=False,
                  batch_normalization=False, kernel_regularizer=l2(l=1e-4), activation="selu",
                  kernel_initializer='lecun_normal', optimizer=SGD(lr=1e-4, nesterov=True, momentum=0.9),
                  metrics=[zero_one_rank_loss_for_scores_ties], batch_size=256, random_state=None, **kwargs):
@@ -87,6 +88,7 @@ class ListNet(Learner, ObjectRanker):
         self._optimizer_config = self.optimizer.get_config()
         self.n_hidden = n_hidden
         self.n_units = n_units
+        self.loss_function_requires_x_values = loss_function_requires_x_values
         keys = list(kwargs.keys())
         for key in keys:
             if key not in allowed_dense_kwargs:
@@ -153,9 +155,13 @@ class ListNet(Learner, ObjectRanker):
             **kwd
                 Keyword arguments for the fit function
         """
+
         self.n_objects = X.shape[1]
         self.logger.debug("Creating top-k dataset")
         X, Y = self._create_topk(X, Y)
+
+        if self.loss_function_requires_x_values:
+            self.loss_function = self.loss_function(self.input_layer)
         self.logger.debug("Finished creating the dataset")
 
         self.logger.debug("Creating the model")
@@ -174,7 +180,8 @@ class ListNet(Learner, ObjectRanker):
             Returns
             -------
             model: keras model :class:`Model`
-                ListNet model used to learn the utiliy function using the top-k-subrankings in the provided set of queries.
+                ListNet model used to learn the utiliy function using the top-k-subrankings in the provided set of
+                queries.
         """
         hid = [create_input_lambda(i)(self.input_layer) for i in range(self.n_top)]
         for hidden_layer in self.hidden_layers:

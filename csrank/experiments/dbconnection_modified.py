@@ -217,6 +217,7 @@ class ModifiedDBConnector(metaclass=ABCMeta):
         """
         self.init_connection()
         jobs = "{}.{}".format(self.schema, self.table_jobs)
-        update_job = """UPDATE {} set cluster_id = %s WHERE job_id = %s""".format(jobs)
-        self.cursor_db.execute(update_job, (str(cluster_id), str(job_id)))
+        update_job = """UPDATE {} set time_finished = %s WHERE job_id = %s""".format(jobs)
+        curr_time = datetime.now()
+        self.cursor_db.execute(update_job, (curr_time, str(job_id)))
         self.close_connection()

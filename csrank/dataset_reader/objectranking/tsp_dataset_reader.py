@@ -120,10 +120,8 @@ class TSPDatasetReader(DatasetReader):
             y_labels[instance] = np.asarray(np.argsort(elkai.solve_int_matrix(matrix)), dtype=int)
 
         # scale to [0, 1]
-        print("before", x_data.shape)
         x_data = np.asarray(
             [[[x_data[j, i, 0]/5200, x_data[j, i, 1]/3400] for i in range(len(x_data[j]))] for j in range(len(x_data))])
-        print("after", x_data.shape)
         return index, x_data, y_labels
 
     def get_train_test_datasets(self, n_datasets=5):

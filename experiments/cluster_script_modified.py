@@ -31,12 +31,11 @@ from docopt import docopt
 from sklearn.model_selection import ShuffleSplit
 import tensorflow as tf
 
-from csrank import FATEObjectRanker
 from csrank.experiments import *
 from csrank.experiments.dbconnection_modified import ModifiedDBConnector
 from csrank.experiments.util import learners, create_callbacks
 from csrank.metrics import make_ndcg_at_k_loss
-from csrank.tensorflow_util import configure_numpy_keras, get_mean_loss, eval_loss
+from csrank.tensorflow_util import configure_numpy_keras, get_loss_statistics
 from csrank.tuning import ParameterOptimizer
 from csrank.util import create_dir_recursively, duration_till_now, seconds_to_time, \
     print_dictionary, get_duration_seconds, setup_logging, rename_file_if_exist
@@ -47,60 +46,6 @@ OPTIMIZER_FOLDER = 'optimizers'
 PREDICTIONS_FOLDER = 'predictions'
 MODEL_FOLDER = 'models'
 ERROR_OUTPUT_STRING = 'Out of sample error %s : %0.4f'
-
-
-def get_unpicklable(instance, exception=None, string='', first_only=True):
-    """
-    Recursively go through all attributes of instance and return a list of whatever
-    can't be pickled.
-
-    Set first_only to only print the first problematic element in a list, tuple or
-    dict (otherwise there could be lots of duplication).
-    """
-    problems = []
-    if isinstance(instance, tuple) or isinstance(instance, list):
-        for k, v in enumerate(instance):
-            try:
-                pickle.dumps(v)
-            except BaseException as e:
-                problems.extend(get_unpicklable(v, e, string + f'[{k}]'))
-                if first_only:
-                    break
-    elif isinstance(instance, dict):
-        for k in instance:
-            try:
-                pickle.dumps(k)
-            except BaseException as e:
-                problems.extend(get_unpicklable(
-                    k, e, string + f'[key type={type(k).__name__}]'
-                ))
-                if first_only:
-                    break
-        for v in instance.values():
-            try:
-                pickle.dumps(v)
-            except BaseException as e:
-                problems.extend(get_unpicklable(
-                    v, e, string + f'[val type={type(v).__name__}]'
-                ))
-                if first_only:
-                    break
-    else:
-        for k, v in instance.__dict__.items():
-            try:
-                pickle.dumps(v)
-            except BaseException as e:
-                problems.extend(get_unpicklable(v, e, string + '.' + k))
-
-    # if we get here, it means pickling instance caused an exception (string is not
-    # empty), yet no member was a problem (problems is empty), thus instance itself
-    # is the problem.
-    if string != '' and not problems:
-        problems.append(
-            string + f" (Type '{type(instance).__name__}' caused: {exception})"
-        )
-
-    return problems
 
 
 # TODO comment (adapt comment above and comment functions)
@@ -115,15 +60,18 @@ def do_experiment():
     print(sys.argv)
     print("TensorFlow built with CUDA-support", tf.compat.v1.test.is_built_with_cuda())
     print("GPU is available", tf.compat.v1.test.is_gpu_available())
+
     # extract arguments
     arguments = docopt(__doc__)
     cluster_id = int(arguments["--c_index"])
     job_id = int(arguments["--job_id"])
     config_file_name = arguments["--config_file_name"]
     table_jobs = arguments["--table_name"]
+
     # configure postgres database connector
     config_file_path = os.path.join(DIR_PATH, 'config', config_file_name)
     db_connector = ModifiedDBConnector(config_file_path=config_file_path, table_jobs=table_jobs)
+
     # get job description
     job_description = db_connector.get_job_for_id(job_id=job_id, cluster_id=cluster_id)
     if job_description is not None:
@@ -182,7 +130,8 @@ def do_experiment():
                 if "TensorBoard" in learner_fit_params["callbacks"].keys():
                     # replace path
                     log_dir = learner_fit_params["callbacks"]["TensorBoard"]["log_dir"]
-                    learner_fit_params["callbacks"]["TensorBoard"]["log_dir"] = log_dir + hash_value
+                    learner_fit_params["callbacks"]["TensorBoard"]["log_dir"] = \
+                        os.path.join(log_dir, table_jobs[5:], hash_value)
 
             # # # DATA SETUP # # #
 
@@ -190,7 +139,13 @@ def do_experiment():
             dataset_params['random_state'] = random_state
             dataset_params['fold_id'] = fold_id
             dataset_reader = get_dataset_reader(dataset_name, dataset_params)
-            x_train, y, x_test, y_test = dataset_reader.get_single_train_test_split()
+            x_train, y_train, x_test, y_test = dataset_reader.get_single_train_test_split()
+
+            print("x")
+            print(x_train)
+
+            print("y")
+            print(y_train)
 
             # log data contents, get num_objects, delete internal reader info
             n_objects = log_test_train_data(x_train, x_test, logger)
@@ -211,9 +166,17 @@ def do_experiment():
             # set learner parameters
             learner_params['n_objects'], learner_params['n_object_features'] = x_train.shape[1:]
             learner_params["random_state"] = random_state
-            if learner_params["loss_function"] in util.losses.keys():
+            if "loss_function" in learner_params.keys():
                 learner_params["loss_function"] = util.losses[learner_params["loss_function"]]
             logger.info("learner params {}".format(print_dictionary(learner_params)))
+            if "optimizer" in learner_params.keys():
+                learner_params["optimizer"] = \
+                    optimizers[learner_params["optimizer"]](**learner_params["optimizer_params"])
+                del learner_params["optimizer_params"]
+            if "regularizer" in learner_params.keys():
+                learner_params["regularizer"] = \
+                    regularizers[learner_params["regularizer"]](**learner_params["regularizer_params"])
+                del learner_params["regularizer_params"]
 
             if use_hp:
                 # set hyperparameter optimizer parameters
@@ -232,7 +195,7 @@ def do_experiment():
 
                 # start hyperparameter optimizer - training
                 optimizer_model = ParameterOptimizer(**hp_params)
-                optimizer_model.fit(x_train, y, **hp_fit_params)
+                optimizer_model.fit(x_train, y_train, **hp_fit_params)
                 validation_loss = optimizer_model.validation_loss
                 learner = optimizer_model.model
 
@@ -243,7 +206,7 @@ def do_experiment():
                 learner_func = learners[learner_name]
                 learner = learner_func(**learner_params)
                 create_callbacks(learner_fit_params)
-                learner.fit(x_train, y, **learner_fit_params)
+                learner.fit(x_train, y_train, **learner_fit_params)
 
             # # # SAVING MODEL # # #
 
@@ -251,14 +214,14 @@ def do_experiment():
             #pickle.dump(learner, open(pickle_path, 'wb'))
             #logger.info("Saved model at: {}".format(pickle_path))
 
-            fate = FATEObjectRanker()
+            #fate = FATEObjectRanker()
 
             # # # PREDICTION # # #
 
             get_results_and_upload('\'test\'', x_test, y_test, db_connector, hash_value, job_id, learner
                                    , learning_problem, logger, n_objects, results_table_name)
 
-            get_results_and_upload('\'train\'', x_train, y, db_connector, hash_value, job_id, learner,
+            get_results_and_upload('\'train\'', x_train, y_train, db_connector, hash_value, job_id, learner,
                                    learning_problem, logger, n_objects, results_table_name)
 
             db_connector.finish_job(job_id=job_id, cluster_id=cluster_id)
@@ -328,23 +291,26 @@ def get_results_and_upload(case, data_x, data_y, db_connector, hash_value, job_i
             evaluation_metric = make_ndcg_at_k_loss(k=n_objects)
             predictions = y_pred
 
-        if "requiresX" in name:
-            evaluation_metric = evaluation_metric(data_x)
-
         # compute loss
-        if isinstance(data_y, dict):
-            metric_loss = get_mean_loss(evaluation_metric, data_y, predictions)
-        else:
-            metric_loss = eval_loss(evaluation_metric, data_y, predictions)
-        logger.info(ERROR_OUTPUT_STRING % (name, metric_loss))
+        metric_loss_min, metric_loss_max, metric_loss_mean, metric_loss_std = \
+            get_loss_statistics(name, evaluation_metric, data_y, predictions, data_x)
 
-        # write loss into results
-        if np.isnan(metric_loss):
-            results[name] = "\'Infinity\'"
-        else:
-            results[name] = "{0:.4f}".format(metric_loss)
+        logger.info(ERROR_OUTPUT_STRING % (name, metric_loss_mean))
+
+        write_loss_to_results(name + "_min", results, metric_loss_min)
+        write_loss_to_results(name + "_max", results, metric_loss_max)
+        write_loss_to_results(name + "_mean", results, metric_loss_mean)
+        write_loss_to_results(name + "_std", results, metric_loss_std)
     # upload results
     db_connector.insert_results(results=results, results_table_name=results_table_name)
+
+
+def write_loss_to_results(name, results, value):
+    # write loss into results
+    if np.isnan(value):
+        results[name] = "\'Infinity\'"
+    else:
+        results[name] = "{0:.4f}".format(value)
 
 
 if __name__ == "__main__":

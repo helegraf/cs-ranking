@@ -1,10 +1,11 @@
 import numpy as np
 from pygmo import hypervolume
-from scipy.spatial.distance import pdist, squareform
+from scipy.spatial.distance import pdist, squareform, cdist
 from sklearn.datasets import make_regression
-from sklearn.datasets.samples_generator import make_blobs
+from sklearn.datasets import make_blobs
 from sklearn.gaussian_process.kernels import Matern
 from sklearn.utils import check_random_state
+import elkai
 
 from csrank.constants import OBJECT_RANKING
 from csrank.numpy_util import scores_to_rankings
@@ -20,10 +21,30 @@ class ObjectRankingDatasetGenerator(SyntheticDatasetGenerator):
                                     'medoid': self.make_intransitive_medoids,
                                     'gp_transitive': self.make_gp_transitive,
                                     'gp_non_transitive': self.make_gp_non_transitive,
-                                    "hyper_volume": self.make_hv_dataset}
+                                    "hyper_volume": self.make_hv_dataset,
+                                    'tsp': self.make_tsp_dataset}
         if dataset_type not in dataset_function_options.keys():
             dataset_type = "medoid"
         self.dataset_function = dataset_function_options[dataset_type]
+
+    def make_tsp_dataset(self, n_instances, n_objects, **kwargs):
+        # 1. Generate x data
+        x = self.random_state.random_integers(low=0, high=10000, size=(n_instances, n_objects, 2))
+
+        # 2. Label the data
+        y = np.empty((n_instances, n_objects), dtype=int)
+        for instance in range(n_instances):
+            # fill matrix with distances
+            matrix = cdist(x[instance], x[instance])
+
+            # convert distances to int
+            matrix = matrix.astype(int)
+
+            # predict labels
+            y[instance] = np.asarray(np.argsort(elkai.solve_int_matrix(matrix)), dtype=int)
+
+        return x, y
+
 
     def make_linear_transitive(self, n_instances=1000, n_objects=5, noise=0.0, n_features=100, n_informative=10,
                                seed=42, **kwd):

@@ -1,17 +1,19 @@
+import numpy as np
 import tensorflow as tf
 from keras import backend as K
 
 from csrank.tensorflow_util import tensorify
 
 __all__ = ['hinged_rank_loss', 'make_smooth_ndcg_loss', 'smooth_rank_loss',
-           'plackett_luce_loss']
+           'plackett_luce_loss', 'tsp_dist_matrix_loss_wrapper', 'tsp_probability_matrix_loss']
 
 
 def identifiable(loss_function):
-    def wrap_loss(y_true, y_pred):
+    def wrap_loss(y_true, y_pred, *args, **kwargs):
         alpha = 1e-4
         ss = tf.reduce_sum(tf.square(y_pred), axis=1)
-        return alpha * ss + loss_function(y_true, y_pred)
+        ss = tf.cast(ss, tf.float32)
+        return alpha * ss + loss_function(y_true, y_pred, *args, **kwargs)
 
     return wrap_loss
 
@@ -95,6 +97,7 @@ def tsp_dist_matrix_loss_wrapper(x):
     # tensorify
     x = tensorify(x)
 
+    @identifiable
     def tsp_dist_matrix_loss(y_true, y_pred):
         """
         Computes a loss specific to TSP-datasets using actual distances between objects.
@@ -166,6 +169,7 @@ def l2_matrix(a, b):
     return K.sqrt(K.sum(K.square(a[:, None] - b[:, :, None]), axis=-1))
 
 
+@identifiable
 def tsp_probability_matrix_loss(y_true, y_pred):
     """
     Computes a loss specific to TSP-datasets using rank probabilities between objects.

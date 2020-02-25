@@ -75,6 +75,21 @@ def get_mean_loss(metric, y_true, y_pred):
     return mean_loss
 
 
+def get_loss_statistics(name, metric, y_true, y_pred, x):
+
+    losses = []
+    for i in range(len(y_true)):
+        if "requiresX" in name:
+            metric_wrapped = metric(np.asarray([x[i]]))
+        else:
+            metric_wrapped = metric
+
+        losses.append(eval_loss(metric_wrapped, np.asarray([y_true[i]]), np.asarray([y_pred[i]])))
+    losses = np.asarray(losses)
+
+    return np.nanmin(losses), np.nanmax(losses), np.nanmean(losses), np.nanstd(losses)
+
+
 def eval_loss(metric, y_true, y_pred):
     x = metric(y_true, y_pred)
     x = get_tensor_value(x)

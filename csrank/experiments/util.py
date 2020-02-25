@@ -2,6 +2,9 @@ import sys
 
 import pymc3 as pm
 from tensorflow.keras.callbacks import TensorBoard
+from keras.optimizers import SGD
+from keras.regularizers import l2
+from keras.losses import binary_crossentropy
 
 from csrank.callbacks import EarlyStoppingWithWeights, LRScheduler, DebugOutput, CyclicLR
 from csrank.choicefunction import *
@@ -10,16 +13,17 @@ from csrank.dataset_reader import *
 from csrank.dataset_reader.objectranking.tsp_dataset_reader import TSPDatasetReader
 from csrank.discretechoice import *
 from csrank.experiments.constants import *
-from csrank.losses import tsp_probability_matrix_loss, tsp_dist_matrix_loss_wrapper, hinged_rank_loss
+from csrank.losses import tsp_probability_matrix_loss, tsp_dist_matrix_loss_wrapper, hinged_rank_loss, \
+    plackett_luce_loss
 from csrank.metrics import zero_one_rank_loss, zero_one_accuracy, make_ndcg_at_k_loss, tsp_loss_absolute_wrapper, \
-    tsp_loss_relative_wrapper
+    tsp_loss_relative_wrapper, tsp_distance_wrapper
 from csrank.metrics_np import *
 from csrank.objectranking import *
 
 __all__ = ['log_test_train_data', 'get_dataset_reader', 'create_optimizer_parameters',
            'create_optimizer_parameters_no_hash_file', 'create_optimizer_parameters2', 'get_scores', 'datasets', 'cfs',
            'ranking_metrics', 'discrete_choice_metrics', 'choice_metrics',
-           'lp_metric_dict', 'metrics_on_predictions', 'callbacks_dictionary', 'learners']
+           'lp_metric_dict', 'metrics_on_predictions', 'callbacks_dictionary', 'learners', 'optimizers', 'regularizers']
 
 datasets = {SYNTHETIC_OR: ObjectRankingDatasetGenerator, DEPTH: DepthDatasetReader,
             SUSHI: SushiObjectRankingDatasetReader, IMAGE_DATASET: ImageDatasetReader,
@@ -30,7 +34,7 @@ datasets = {SYNTHETIC_OR: ObjectRankingDatasetGenerator, DEPTH: DepthDatasetRead
             TAG_GENOME_DC: TagGenomeDiscreteChoiceDatasetReader, SYNTHETIC_CHOICE: ChoiceDatasetGenerator,
             MNIST_CHOICE: MNISTChoiceDatasetReader, LETOR_CHOICE: LetorRankingChoiceDatasetReader,
             EXP_CHOICE: ExpediaChoiceDatasetReader, EXP_DC: ExpediaDiscreteChoiceDatasetReader,
-            TSP : TSPDatasetReader}
+            TSP: TSPDatasetReader}
 
 cfs = {FETA_CHOICE: FETAChoiceFunction, FATE_CHOICE: FATEChoiceFunction, GLM_CHOICE: GeneralizedLinearModel,
        RANKNET_CHOICE: RankNetChoiceFunction, CMPNET_CHOICE: CmpNetChoiceFunction,
@@ -62,7 +66,9 @@ tsp_ranking_metrics = {'KendallsTau': kendalls_tau_for_scores_np,
                        'TSPAbsoluteDifference_requiresX': tsp_loss_absolute_wrapper,
                        'TSPRelativeDifference_requiresX': tsp_loss_relative_wrapper,
                        'TSPProbabilityMatrixLoss': tsp_probability_matrix_loss,
-                       'TSPDistMatrixLoss_requiresX': tsp_dist_matrix_loss_wrapper}
+                       'TSPDistMatrixLoss_requiresX': tsp_dist_matrix_loss_wrapper,
+                       'TSPDistance_requiresX': tsp_distance_wrapper,
+                       'binary_crossentropy': binary_crossentropy}
 discrete_choice_metrics = {'CategoricalAccuracy': categorical_accuracy_np,
                            'CategoricalTopK2': topk_categorical_accuracy_np(k=2),
                            'CategoricalTopK3': topk_categorical_accuracy_np(k=3),
@@ -89,7 +95,17 @@ metrics_on_predictions = [f1_measure, precision, recall, subset_01_loss, hamming
 losses = {
     'tsp_dist_matrix_loss_wrapper': tsp_dist_matrix_loss_wrapper,
     'tsp_probability_matrix_loss': tsp_probability_matrix_loss,
-    'hinged_rank_loss': hinged_rank_loss
+    'hinged_rank_loss': hinged_rank_loss,
+    'plackett_luce_loss': plackett_luce_loss,
+    'binary_crossentropy': binary_crossentropy
+}
+
+optimizers = {
+    'SGD': SGD
+}
+
+regularizers = {
+    'l2': l2
 }
 
 def log_test_train_data(X_train, X_test, logger):

@@ -57,7 +57,7 @@ __all__ = ['zero_one_rank_loss', 'zero_one_rank_loss_for_scores',
            'make_ndcg_at_k_loss', 'kendalls_tau_for_scores',
            'spearman_correlation_for_scores', "zero_one_accuracy",
            "zero_one_accuracy_for_scores", "topk_categorical_accuracy", 'tsp_loss_absolute_wrapper',
-           'tsp_loss_relative_wrapper']
+           'tsp_loss_relative_wrapper', 'tsp_distance_wrapper']
 
 
 def zero_one_rank_loss(y_true, y_pred):
@@ -409,3 +409,18 @@ def tsp_loss_relative_wrapper(x):
 def path_len(distances, ranking):
     path = np.argsort(ranking)
     return np.sum(np.asarray([distances[path[x-1]][path[x]] for x in range(len(path))]))
+
+
+def tsp_distance_wrapper(x):
+
+    def tsp_distance(y_true, y_pred):
+
+        opt_path_len = np.empty(len(x))
+
+        for i in range(len(x)):
+            x_dist = cdist(x[i], x[i])
+            opt_path_len[i] = path_len(x_dist, y_true[i].astype(int))
+
+        return np.sum(opt_path_len) / len(opt_path_len)
+
+    return tsp_distance
