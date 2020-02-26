@@ -18,15 +18,12 @@ Options:
 """
 import inspect
 import logging
-import warnings
 
 import os
-# os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
 import pickle as pk
 import sys
 from datetime import datetime
-import pickle
 
 import h5py
 import numpy as np
@@ -60,15 +57,6 @@ def exit_orderly_in_case_of_error(error_message, db_connector, job_id):
 
 def do_experiment():
     start = datetime.now()
-  #  tf.logging.set_verbosity(tf.logging.ERROR)
-  #  tf.autograph.set_verbosity(1)
-   # tf.get_logger().setLevel('WARN')
-  #  tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
-  #  tf.compat.v1.autograph.set_verbosity(1)
-  #  logging.getLogger("tensorflow").setLevel(logging.ERROR)
-    #warnings.filterwarnings('ignore')
-
-   # tf.debugging.set_log_device_placement(False)
 
     print(sys.argv)
     print("TensorFlow built with CUDA-support", tf.compat.v1.test.is_built_with_cuda())
@@ -217,18 +205,14 @@ def do_experiment():
 
             # # # SAVING MODEL # # #
 
-            #print(get_unpicklable(learner))
-            #pickle.dump(learner, open(pickle_path, 'wb'))
-            #logger.info("Saved model at: {}".format(pickle_path))
-
-            #fate = FATEObjectRanker()
+            # TODO save model
 
             # # # PREDICTION # # #
 
-            get_results_and_upload('\'test\'', x_test, y_test, db_connector, hash_value, job_id, learner
+            get_results_and_upload('test', x_test, y_test, db_connector, hash_value, job_id, learner
                                    , learning_problem, logger, n_objects, results_table_name)
 
-            get_results_and_upload('\'train\'', x_train, y_train, db_connector, hash_value, job_id, learner,
+            get_results_and_upload('train', x_train, y_train, db_connector, hash_value, job_id, learner,
                                    learning_problem, logger, n_objects, results_table_name)
 
             db_connector.finish_job(job_id=job_id, cluster_id=cluster_id)
@@ -284,7 +268,7 @@ def get_results_and_upload(case, data_x, data_y, db_connector, hash_value, job_i
     logger.info("Saved predictions at: {}".format(pred_file))
 
     # insert results into database
-    results = {'job_id': str(job_id), 'train_test': case}
+    results = {'job_id': str(job_id), 'train_test': "\'" + case + "\'"}
     for name, evaluation_metric in lp_metric_dict[learning_problem].items():
         predictions = predicted_scores
 
