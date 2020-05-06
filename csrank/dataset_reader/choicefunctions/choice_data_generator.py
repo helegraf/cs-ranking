@@ -5,13 +5,39 @@ from csrank.constants import CHOICE_FUNCTION
 from ..synthetic_dataset_generator import SyntheticDatasetGenerator
 
 
+def knapsack_dynamic_programming(items, limit):
+    table = np.zeros((len(items)+1, limit+1))
+    taken_items = np.zeros((len(items)+1, limit+1, len(items)))
+
+    # compute solution + remember which items are taken
+    for j in range(1, len(items) + 1):
+        weight, value = items[j - 1]
+        for w in range(1, limit + 1):
+            if weight > w:
+                table[j][w] = table[j - 1][w]
+                taken_items[j][w] = taken_items[j-1][w]
+            else:
+                table[j][w] = max(table[j - 1][w],
+                                  table[j - 1][w - weight] + value)
+                if table[j-1][w] > table[j-1][w-weight]+value:
+                    taken_items[j][w]=taken_items[j-1][w]
+                else:
+                    taken_items[j][w]=taken_items[j-1][w-weight].copy()
+                    taken_items[j][w][j-1]=1
+
+    return taken_items[len(items), limit]
+
+
 class ChoiceDatasetGenerator(SyntheticDatasetGenerator):
 
     def __init__(self, dataset_type='pareto', **kwargs):
         super(ChoiceDatasetGenerator, self).__init__(
             learning_problem=CHOICE_FUNCTION, **kwargs)
         dataset_function_options = {'linear': self.make_latent_linear_choices,
-                                    "pareto": self.make_globular_pareto_choices}
+                                    "pareto": self.make_globular_pareto_choices,
+                                    'knapsack': self.make_knapsack_choice,
+                                    'min_max': self.make_min_max_choice,
+                                    'simple_max': self.make_simple_max_choice}
         if dataset_type not in dataset_function_options.keys():
             dataset_type = "pareto"
         self.dataset_function = dataset_function_options[dataset_type]
@@ -21,6 +47,44 @@ class ChoiceDatasetGenerator(SyntheticDatasetGenerator):
 
     def get_train_test_datasets(self, n_datasets=5):
         return super(ChoiceDatasetGenerator, self).get_train_test_datasets(n_datasets=n_datasets)
+
+    def make_min_max_choice(self, n_instances, n_objects, n_features, threshold=.5, seed=42, **kwargs):
+        # generate objects with a weight and value
+        random_state = check_random_state(seed)
+        x = random_state.uniform(low=0, high=1, size=(n_instances, n_objects, n_features))
+
+        # use max to determine y value
+        y = np.empty((n_instances, n_objects))
+        for instance in range(n_instances):
+            # select the lowest arg for all objects
+            minima = np.min(x[instance], axis=1)
+            y[instance] = [1 if minimum >= threshold else 0 for minimum in minima]
+
+        return x, y
+
+    def make_simple_max_choice(self, n_instances, n_objects, threshold, seed=42, **kwargs):
+        # generate objects with a weight and value
+        random_state = check_random_state(seed)
+        x = random_state.uniform(low=0, high=1, size=(n_instances, n_objects, 1))
+
+        # use max to determine y value
+        y = np.empty((n_instances, n_objects))
+        for instance in range(n_instances):
+            y[instance] = [1 if value >= threshold else 0 for value in x[instance]]
+
+        return x, y
+
+    def make_knapsack_choice(self, n_instances, n_objects, capacity, seed, **kwargs):
+        # generate objects with a weight and value
+        random_state = check_random_state(seed)
+        x = random_state.randint(low=1, high=11, size=(n_instances, n_objects, 2))
+
+        # use algorithm to determine y value
+        y = np.empty((n_instances, n_objects))
+        for instance in range(n_instances):
+            y[instance] = knapsack_dynamic_programming(x[instance], capacity)
+
+        return x, y
 
     def make_globular_pareto_choices(self, n_instances=10000, n_features=2, n_objects=10, seed=42,
                                      cluster_spread=1., cluster_size=10, **kwargs):

@@ -102,6 +102,7 @@ class ExpectedRankRegression(ObjectRanker, Learner):
                                    random_state=self.random_state)
                 self.logger.info("Ridge")
         self.logger.debug('Finished Creating the model, now fitting started')
+
         self.model.fit(x_train, y_train)
         self.weights = self.model.coef_.flatten()
         if self.fit_intercept:

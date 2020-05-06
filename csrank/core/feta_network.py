@@ -4,16 +4,17 @@ from itertools import permutations, combinations
 import numpy as np
 import tensorflow as tf
 from keras import optimizers, Input, Model, backend as K
-from keras.layers import Dense, concatenate, Lambda, add
+from keras.layers import Dense, concatenate, Lambda, add, Reshape
 from keras.optimizers import SGD
 from keras.regularizers import l2
 from sklearn.utils import check_random_state
 
+from csrank.attention.set_transformer.modules import instantiate_attention_layer
+from csrank.callbacks import configure_callbacks
 from csrank.constants import allowed_dense_kwargs
 from csrank.layers import NormalizedDense
 from csrank.learner import Learner
 from csrank.losses import hinged_rank_loss
-from csrank.numpy_util import sigmoid
 from csrank.util import print_dictionary
 
 
@@ -22,7 +23,13 @@ class FETANetwork(Learner):
                  max_number_of_objects=5, num_subsample=5, loss_function=hinged_rank_loss, batch_normalization=False,
                  kernel_regularizer=l2(l=1e-4), kernel_initializer='lecun_normal', activation='selu',
                  optimizer=SGD(lr=1e-4, nesterov=True, momentum=0.9), metrics=None, batch_size=256, random_state=None,
-                 **kwargs):
+                 attention_function_preselection=None, attention_pooling=None, **kwargs):
+        self.attention_function_preselection = instantiate_attention_layer(attention_function_preselection)
+        if not isinstance(attention_pooling, dict):
+            raise ValueError("Attention pooling layer has to be given in dictionary-form because it needs to be "
+                             "instantiated multiple times. Has to be able to be processed by "
+                             "csrank.attention.set_transformer.modules.instantiate_attention_layer")
+        self.attention_pooling = attention_pooling
         self.logger = logging.getLogger(FETANetwork.__name__)
         self.random_state = check_random_state(random_state)
         self.kernel_regularizer = kernel_regularizer
@@ -47,11 +54,17 @@ class FETANetwork(Learner):
             if key not in allowed_dense_kwargs:
                 del kwargs[key]
         self.kwargs = kwargs
+        self.set_up_input_layer()
         self._construct_layers(kernel_regularizer=self.kernel_regularizer, kernel_initializer=self.kernel_initializer,
                                activation=self.activation, **self.kwargs)
         self._pairwise_model = None
         self.model = None
         self._zero_order_model = None
+
+    def set_up_input_layer(self):
+        self.model_input_layer = Input(shape=(self.n_objects, self.n_object_features))
+        if self.attention_function_preselection is not None:
+            self.input_layer = self.attention_function_preselection(self.model_input_layer)
 
     @property
     def n_objects(self):
@@ -60,7 +73,6 @@ class FETANetwork(Learner):
         return self._n_objects
 
     def _construct_layers(self, **kwargs):
-        self.input_layer = Input(shape=(self.n_objects, self.n_object_features))
         # Todo: Variable sized input
         # X = Input(shape=(None, n_features))
         self.logger.info("n_hidden {}, n_units {}".format(self.n_hidden, self.n_units))
@@ -204,17 +216,28 @@ class FETANetwork(Learner):
 
             outputs[i].append(n_g)
             outputs[j].append(n_l)
+
         # convert rows of pairwise matrix to keras layers:
         outputs = [concatenate(x) for x in outputs]
+
         # compute utility scores:
-        sum_func = lambda s: K.mean(s, axis=1, keepdims=True)
-        scores = [Lambda(sum_func)(x) for x in outputs]
+        if self.attention_pooling is None:
+            sum_func = lambda s: K.mean(s, axis=1, keepdims=True)
+            scores = [Lambda(sum_func)(x) for x in outputs]
+        else:
+            add_dim = Reshape(target_shape=(self.n_objects - 1, 1))
+            remove_dim = Reshape(target_shape=(1,))
+            scores = [remove_dim(instantiate_attention_layer(self.attention_pooling)(add_dim(x))) for x in outputs]
+
         scores = concatenate(scores)
         self.logger.debug('1st order model finished')
         if self._use_zeroth_model:
             scores = add([scores, zeroth_order_scores])
-        model = Model(inputs=self.input_layer, outputs=scores)
+        model = Model(inputs=self.model_input_layer, outputs=scores)
+
         self.logger.debug('Compiling complete model...')
+        if self.loss_function_requires_x_values:
+            self.loss_function = self.loss_function(self.model_input_layer)
         model.compile(loss=self.loss_function, optimizer=self.optimizer, metrics=self.metrics)
         return model
 
@@ -247,6 +270,8 @@ class FETANetwork(Learner):
         X, Y = self.sub_sampling(X, Y)
         self.model = self.construct_model()
         self.logger.debug('Starting gradient descent...')
+
+        configure_callbacks(self.model, callbacks)
 
         self.model.fit(x=X, y=Y, batch_size=self.batch_size, epochs=epochs, callbacks=callbacks,
                        validation_split=validation_split, verbose=verbose, **kwd)
@@ -306,6 +331,7 @@ class FETANetwork(Learner):
         K.set_value(self.optimizer.lr, learning_rate)
         self._pairwise_model = None
         self._zero_order_model = None
+        self.set_up_input_layer()
         self._construct_layers(kernel_regularizer=self.kernel_regularizer, kernel_initializer=self.kernel_initializer,
                                activation=self.activation, **self.kwargs)
         if len(point) > 0:
@@ -330,6 +356,7 @@ class FETANetwork(Learner):
             self._pairwise_model = None
             self._zero_order_model = None
             self.optimizer = self.optimizer.from_config(self._optimizer_config)
+            self.set_up_input_layer()
             self._construct_layers(kernel_regularizer=self.kernel_regularizer,
                                    kernel_initializer=self.kernel_initializer,
                                    activation=self.activation, **self.kwargs)

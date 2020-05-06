@@ -84,7 +84,6 @@ class FETADiscreteChoiceFunction(FETANetwork, DiscreteObjectChooser):
         self.logger = logging.getLogger(FETADiscreteChoiceFunction.__name__)
 
     def _construct_layers(self, **kwargs):
-        self.input_layer = Input(shape=(self.n_objects, self.n_object_features))
         # Todo: Variable sized input
         # X = Input(shape=(None, n_features))
         if self.batch_normalization:
@@ -200,8 +199,10 @@ class FETADiscreteChoiceFunction(FETANetwork, DiscreteObjectChooser):
         #     scores = squeeze_dims()(scores)
         if not self._use_zeroth_model:
             scores = Activation('sigmoid')(scores)
-        model = Model(inputs=self.input_layer, outputs=scores)
+        model = Model(inputs=self.model_input_layer, outputs=scores)
         self.logger.debug('Compiling complete model...')
+        if self.loss_function_requires_x_values:
+            self.loss_function = self.loss_function(self.model_input_layer)
         model.compile(loss=self.loss_function, optimizer=self.optimizer, metrics=self.metrics)
         return model
 

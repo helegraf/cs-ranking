@@ -5,7 +5,59 @@ import os
 import numpy as np
 import tensorflow as tf
 from keras import backend as K
+from keras.backend import ndim
 from tensorflow.python.client import device_lib
+
+
+def softmax_along_axes(tensor, axes):
+    if isinstance(axes, int):
+        axes = [axes]
+    exp_pred = K.exp(tensor)
+    divisor = exp_pred
+    for axis in axes:
+        divisor = K.sum(divisor, axis=axis, keepdims=True)
+
+    return exp_pred / divisor
+
+
+def repeat_vector_along_new_axis(x, n):
+    """Repeats a 2d tensor.
+
+    if `x` has shape (samples, dim) and `n` is `2`,
+    the output will have shape `(2, samples, dim)`.
+
+    # Arguments
+        x: Tensor or variable.
+        n: Python integer, number of times to repeat.
+
+    # Returns
+        A tensor.
+    """
+    assert ndim(x) == 2
+    x = tf.expand_dims(x, 0)
+    pattern = tf.stack([n, 1, 1])
+    return tf.tile(x, pattern)
+
+    K.repeat()
+
+
+def repeat_3d_vector_along_new_axis_keeping_batch_size(x, n):
+    """Repeats a 3d tensor.
+
+    if `x` has shape (samples, dim) and `n` is `2`,
+    the output will have shape `(2, samples, dim)`.
+
+    # Arguments
+        x: Tensor or variable.
+        n: Python integer, number of times to repeat.
+
+    # Returns
+        A tensor.
+    """
+    assert ndim(x) == 3
+    x = tf.expand_dims(x, 1)
+    pattern = tf.stack([1, n, 1, 1])
+    return tf.tile(x, pattern)
 
 
 def scores_to_rankings(n_objects, y_pred):
@@ -58,6 +110,8 @@ def configure_numpy_keras(seed=42, log_device_placement_if_is_gpu_available=True
     np.random.seed(seed)
     logger.info("Number of GPUS {}".format(n_gpus))
 
+    return sess
+
 
 def get_mean_loss(metric, y_true, y_pred):
     if isinstance(y_pred, dict) and isinstance(y_true, dict):
@@ -95,3 +149,7 @@ def eval_loss(metric, y_true, y_pred):
     x = metric(y_true, y_pred)
     x = get_tensor_value(x)
     return np.nanmean(x)
+
+
+def slice_tensor_axis_2(tensor, size, times):
+    return [tensor[:, :, i * size: (i + 1) * size] for i in range(times)]

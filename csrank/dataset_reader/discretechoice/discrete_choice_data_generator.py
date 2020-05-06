@@ -19,11 +19,82 @@ class DiscreteChoiceDatasetGenerator(SyntheticDatasetGenerator):
                                     'nearest_neighbour_medoid': self.nearest_neighbour,
                                     'hypervolume': self.make_hv_dataset,
                                     'gp_transitive': self.make_gp_transitive,
-                                    'gp_non_transitive': self.make_gp_non_transitive}
+                                    'gp_non_transitive': self.make_gp_non_transitive,
+                                    'movie_genre': self.make_movie_genre_choices,
+                                    'simple_max': self.make_simple_max_choice,
+                                    'min_max': self.make_min_max_choice}
         if dataset_type not in dataset_function_options.keys():
             dataset_type = "medoid"
         self.logger.info("dataset type {}".format(dataset_type))
         self.dataset_function = dataset_function_options[dataset_type]
+
+    def make_min_max_choice(self, n_instances, n_objects, n_features, seed=42, **kwargs):
+        # generate objects with a weight and value
+        random_state = check_random_state(seed)
+        x = random_state.uniform(low=0, high=1, size=(n_instances, n_objects, n_features))
+
+        # use max to determine y value
+        y = np.zeros((n_instances, n_objects))
+        for instance in range(n_instances):
+            # select the lowest arg for all objects
+            minima = np.min(x[instance], axis=1)
+            y[instance][np.argmax(minima)] = 1
+
+        return x, y
+
+    def make_simple_max_choice(self, n_instances, n_objects, seed=42, **kwargs):
+        # generate objects with a weight and value
+        random_state = check_random_state(seed)
+        x = random_state.uniform(low=0, high=1, size=(n_instances, n_objects, 1))
+
+        # use max to determine y value
+        y = np.zeros((n_instances, n_objects))
+        for instance in range(n_instances):
+            y[instance][np.argmax(x[instance])] = 1
+
+        return x, y
+
+    def make_movie_genre_choices(self, n_instances, n_features, n_objects, scatter=False, similarity=0.01,
+                                 ensure_distance=True, min_distance=0.2, seed=42, **kwargs):
+        # generic x and y data
+        random_state = check_random_state(seed)
+        x = random_state.uniform(low=0, high=1, size=(n_instances, n_objects, n_features))
+        y = np.zeros((n_instances, n_objects))
+
+        # make some choices
+        for instance in range(n_instances):
+            # select feature at random
+            odd_feature = self.random_state.randint(low=0, high=n_features)
+
+            # for this feature, all but one object get a very similar value
+            # select an object at random
+            odd_object = self.random_state.randint(low=0, high=n_objects)
+
+            # select a value at random
+            regular_value = self.random_state.random()
+
+            # assign values (spread normally around the regular value)
+            if scatter:
+                regular_values = self.random_state.normal(loc=regular_value, scale=similarity, size=n_objects)
+            else:
+                regular_values = np.zeros(n_objects) + regular_value
+            for obj in range(n_objects):
+                if obj != odd_object:
+                    x[instance, obj, odd_feature] = regular_values[obj]
+
+            # ensure distance (pushes odd value away from regular value if too close
+            if ensure_distance:
+                current_distance = abs(x[instance, odd_object, odd_feature] - regular_value)
+                if current_distance < min_distance:
+                    if x[instance, odd_object, odd_feature] >= regular_value:
+                        x[instance, odd_object, odd_feature] = regular_value + min_distance
+                    else:
+                        x[instance, odd_object, odd_feature] = regular_value - min_distance
+
+            # choose odd object
+            y[instance, odd_object] = 1
+
+        return x, y
 
     def make_linear_transitive(self, n_instances=1000, n_objects=5, noise=0.0, n_features=100, n_informative=10,
                                seed=42, **kwd):

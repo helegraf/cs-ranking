@@ -174,25 +174,4 @@ class TSPDatasetReader(DatasetReader):
 # y_test = y_test.astype(int)
 #
 #
-# def plot_path(x_instances, rankings, color, line_style, label):
-#     path = np.argsort(rankings)
-#
-#     global i, x_and_y
-#     for i in range(len(path)):
-#         x_and_y = np.append(x_instances[path[i - 1]], x_instances[path[i]]).reshape((2, 2))
-#         if i == 0:
-#             plt.plot(x_and_y[:, 0], x_and_y[:, 1], color=color, linestyle=line_style, label=label)
-#         else:
-#             plt.plot(x_and_y[:, 0], x_and_y[:, 1], color=color, linestyle=line_style)
-#
-#
-# plot_path(x_test[0], y_test[0], "red", "-", "true")
-# plot_path(x_test[0], predictions[0], "blue", "--", "predicted")
-#
-# print(fate.predict_scores(x_test))
-#
-# plt.legend()
-# plt.title("Shortest Path (LKV algorithm) vs. predicted path \n(difference {}, quality {})"
-#           .format(round((loss[2]-loss[1])[0], 2),
-#                   round((loss[1][0]/loss[2][0] * 100)), 2))
-# plt.show()
+

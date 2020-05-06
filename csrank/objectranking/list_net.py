@@ -8,6 +8,7 @@ from keras.optimizers import SGD
 from keras.regularizers import l2
 from sklearn.utils import check_random_state
 
+from csrank.callbacks import configure_callbacks
 from csrank.constants import allowed_dense_kwargs
 from csrank.layers import NormalizedDense, create_input_lambda
 from csrank.learner import Learner
@@ -167,6 +168,9 @@ class ListNet(Learner, ObjectRanker):
         self.logger.debug("Creating the model")
         self.model = self.construct_model()
         self.logger.debug("Finished creating the model, now fitting...")
+
+        configure_callbacks(self.model, callbacks)
+
         self.model.fit(X, Y, batch_size=self.batch_size, epochs=epochs, callbacks=callbacks,
                        validation_split=validation_split, verbose=verbose, **kwd)
         self.logger.debug("Fitting Complete")

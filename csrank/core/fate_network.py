@@ -11,9 +11,11 @@ from keras.optimizers import SGD
 from keras.regularizers import l2
 from sklearn.utils import check_random_state
 
+from csrank.attention.set_transformer.modules import instantiate_attention_layer
 from csrank.constants import allowed_dense_kwargs
 from csrank.layers import DeepSet, create_input_lambda
 from csrank.learner import Learner
+from csrank.callbacks import configure_callbacks
 from csrank.util import print_dictionary
 
 __all__ = ['FATENetwork', 'FATENetworkCore']
@@ -147,7 +149,8 @@ class FATENetworkCore(Learner):
 
 
 class FATENetwork(FATENetworkCore):
-    def __init__(self, n_object_features, n_hidden_set_layers=1, n_hidden_set_units=1, **kwargs):
+    def __init__(self, n_object_features, n_hidden_set_layers=1, n_hidden_set_units=1,
+                 attention_function_preselection=None, attention_pooling=None, **kwargs):
         """
             Create a FATE-network architecture.
             Training and prediction complexity is linear in the number of objects.
@@ -166,6 +169,8 @@ class FATENetwork(FATENetworkCore):
         FATENetworkCore.__init__(self, **kwargs)
         self.logger_gorc = logging.getLogger(FATENetwork.__name__)
 
+        self.attention_function_preselection = instantiate_attention_layer(attention_function_preselection)
+        self.attention_pooling = instantiate_attention_layer(attention_pooling)
         self.n_hidden_set_layers = n_hidden_set_layers
         self.n_hidden_set_units = n_hidden_set_units
         self.n_object_features = n_object_features
@@ -186,7 +191,8 @@ class FATENetwork(FATENetworkCore):
         self.logger_gorc.info("Creating set layers with set units {} set layer {} ".format(self.n_hidden_set_units,
                                                                                            self.n_hidden_set_layers))
         if self.n_hidden_set_layers >= 1:
-            self.set_layer = DeepSet(units=self.n_hidden_set_units, layers=self.n_hidden_set_layers, **kwargs)
+            self.set_layer = DeepSet(units=self.n_hidden_set_units, layers=self.n_hidden_set_layers,
+                                     attention_pooling=self.attention_pooling, **kwargs)
         else:
             self.set_layer = None
 
@@ -252,6 +258,7 @@ class FATENetwork(FATENetworkCore):
 
     def _fit(self, X=None, Y=None, generator=None, epochs=35, inner_epochs=1, callbacks=None, validation_split=0.1,
              verbose=0, global_lr=1.0, global_momentum=0.9, min_bucket_size=500, refit=False, optimizer=None, **kwargs):
+        self.callbacks = callbacks
         if optimizer is not None:
             self.optimizer = optimizer
         if isinstance(X, dict):
@@ -314,6 +321,9 @@ class FATENetwork(FATENetworkCore):
 
                 self.model = self.construct_model(n_features, n_objects)
             self.logger.info("Fitting started")
+
+            configure_callbacks(self.model, callbacks)
+
             if generator is None:
                 self.model.fit(x=X, y=Y, callbacks=callbacks, epochs=epochs, validation_split=validation_split,
                                batch_size=self.batch_size, verbose=verbose, **kwargs)
@@ -345,14 +355,22 @@ class FATENetwork(FATENetworkCore):
 
         """
         input_layer = Input(shape=(n_objects, n_features), name="input_node")
-        set_repr = self.set_layer(input_layer)
-        scores = self.join_input_layers(input_layer, set_repr, n_objects=n_objects, n_layers=self.n_hidden_set_layers)
+
+        # attention preselection
+        if self.attention_function_preselection is not None:
+            input_with_attention = self.attention_function_preselection(input_layer)
+        else:
+            input_with_attention = input_layer
+
+        set_repr = self.set_layer(input_with_attention)
+        scores = self.join_input_layers(input_with_attention, set_repr, n_objects=n_objects,
+                                        n_layers=self.n_hidden_set_layers)
         model = Model(inputs=input_layer, outputs=scores)
 
         if self.loss_function_requires_x_values:
-            model.compile(loss=self.loss_function(input_layer), optimizer=self.optimizer, metrics=self.metrics)
-        else:
-            model.compile(loss=self.loss_function, optimizer=self.optimizer, metrics=self.metrics)
+            self.loss_function = self.loss_function(input_with_attention)
+
+        model.compile(loss=self.loss_function, optimizer=self.optimizer, metrics=self.metrics)
 
         return model
 
@@ -488,26 +506,30 @@ class FATENetwork(FATENetworkCore):
                 float (n_instances, n_objects)
 
         """
+        # TODO this is just commented out because I actually want to reuse the built model
+        # the code below does not necessarily do that, e.g. will not use the pre-trained attention layer but instead
+        # instantiate a new one after the first prediction
         # model = self._construct_scoring_model(n_objects)
-        X = self._get_context_representation(X, kwargs)
-        n_instances, n_objects, n_features = X.shape
-        self.logger.info("After applying the set representations features {}".format(n_features))
-        input_layer_joint = Input(shape=(n_objects, n_features), name="input_joint_model")
-        scores = []
-
-        inputs = [create_input_lambda(i)(input_layer_joint) for i in
-                  range(n_objects)]
-
-        for i in range(n_objects):
-            joint = inputs[i]
-            for j in range(self.n_hidden_joint_layers):
-                joint = self.joint_layers[j](joint)
-            scores.append(self.scorer(joint))
-        scores = concatenate(scores, name="final_scores")
-        joint_model = Model(inputs=input_layer_joint, outputs=scores)
-        predicted_scores = joint_model.predict(X)
-        self.logger.info("Done predicting scores")
-        return predicted_scores
+        # X = self._get_context_representation(X, kwargs)
+        # n_instances, n_objects, n_features = X.shape
+        # self.logger.info("After applying the set representations features {}".format(n_features))
+        # input_layer_joint = Input(shape=(n_objects, n_features), name="input_joint_model")
+        # scores = []
+        #
+        # inputs = [create_input_lambda(i)(input_layer_joint) for i in
+        #           range(n_objects)]
+        #
+        # for i in range(n_objects):
+        #     joint = inputs[i]
+        #     for j in range(self.n_hidden_joint_layers):
+        #         joint = self.joint_layers[j](joint)
+        #     scores.append(self.scorer(joint))
+        # scores = concatenate(scores, name="final_scores")
+        # joint_model = Model(inputs=input_layer_joint, outputs=scores)
+        # predicted_scores = joint_model.predict(X)
+        # self.logger.info("Done predicting scores")
+        # return predicted_scores
+        return self.model.predict(X)
 
     def clear_memory(self, n_objects=5, **kwargs):
         """

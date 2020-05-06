@@ -33,7 +33,7 @@ import tensorflow as tf
 
 from csrank.experiments import *
 from csrank.experiments.dbconnection_modified import ModifiedDBConnector
-from csrank.experiments.util import learners, create_callbacks
+from csrank.experiments.util import learners, create_callbacks, all_metrics
 from csrank.metrics import make_ndcg_at_k_loss
 from csrank.tensorflow_util import configure_numpy_keras, get_loss_statistics
 from csrank.tuning import ParameterOptimizer
@@ -46,9 +46,9 @@ OPTIMIZER_FOLDER = 'optimizers'
 PREDICTIONS_FOLDER = 'predictions'
 MODEL_FOLDER = 'models'
 ERROR_OUTPUT_STRING = 'Out of sample error %s : %0.4f'
+SAVED_DATA_FOLDER = 'saved_data'
 
 
-# TODO comment (adapt comment above and comment functions)
 def exit_orderly_in_case_of_error(error_message, db_connector, job_id):
     error_message = str(error_message)
     print("Error running evaluation for job {}\n".format(job_id), error_message)
@@ -121,18 +121,19 @@ def do_experiment():
             # set up logger
             setup_logging(log_path=log_path)
             configure_numpy_keras(seed=seed, log_device_placement_if_is_gpu_available=False)
+
             logger = logging.getLogger('Experiment')
             logger.info("DB config filePath {}".format(config_file_path))
             logger.info("Arguments {}".format(arguments))
             logger.info("Job Description {}".format(print_dictionary(job_description)))
 
-            # if there is callback, set file name to include hash for identification
             if "callbacks" in learner_fit_params.keys():
-                if "TensorBoard" in learner_fit_params["callbacks"].keys():
+                # if there is callback, set file name to include hash for identification
+                if "AdvancedTensorBoard" in learner_fit_params["callbacks"].keys():
                     # replace path
-                    log_dir = learner_fit_params["callbacks"]["TensorBoard"]["log_dir"]
-                    learner_fit_params["callbacks"]["TensorBoard"]["log_dir"] = \
-                        os.path.join(log_dir, table_jobs[5:], hash_value)
+                    log_dir = learner_fit_params["callbacks"]["AdvancedTensorBoard"]["log_dir"]
+                    learner_fit_params["callbacks"]["AdvancedTensorBoard"]["log_dir"] = \
+                        os.path.join(log_dir, table_jobs[5:], learner_name, hash_value)
 
             # # # DATA SETUP # # #
 
@@ -172,6 +173,8 @@ def do_experiment():
                 learner_params["regularizer"] = \
                     regularizers[learner_params["regularizer"]](**learner_params["regularizer_params"])
                 del learner_params["regularizer_params"]
+            if "metrics" not in learner_params.keys():
+                learner_params["metrics"] = []
 
             if use_hp:
                 # set hyperparameter optimizer parameters
@@ -198,10 +201,13 @@ def do_experiment():
                 db_connector.insert_validation_loss(validation_loss, job_id)
             else:
                 # just train
+                create_callbacks(learner_fit_params)
+
                 learner_func = learners[learner_name]
                 learner = learner_func(**learner_params)
-                create_callbacks(learner_fit_params)
                 learner.fit(x_train, y_train, **learner_fit_params)
+
+                db_connector.update_time_finished_train(job_id)
 
             # # # SAVING MODEL # # #
 
@@ -210,10 +216,10 @@ def do_experiment():
             # # # PREDICTION # # #
 
             get_results_and_upload('test', x_test, y_test, db_connector, hash_value, job_id, learner
-                                   , learning_problem, logger, n_objects, results_table_name)
+                                   , learning_problem, logger, n_objects, results_table_name, dataset_params)
 
             get_results_and_upload('train', x_train, y_train, db_connector, hash_value, job_id, learner,
-                                   learning_problem, logger, n_objects, results_table_name)
+                                   learning_problem, logger, n_objects, results_table_name, dataset_params)
 
             db_connector.finish_job(job_id=job_id, cluster_id=cluster_id)
 
@@ -238,7 +244,7 @@ def do_experiment():
 
 
 def get_results_and_upload(case, data_x, data_y, db_connector, hash_value, job_id, learner, learning_problem, logger,
-                           n_objects, results_table_name):
+                           n_objects, results_table_name, dataset_params):
     # set batch size
     if isinstance(data_x, dict):
         batch_size = 1000
@@ -264,6 +270,8 @@ def get_results_and_upload(case, data_x, data_y, db_connector, hash_value, job_i
         create_dir_recursively(pred_file, True)
         f = h5py.File(pred_file, 'w')
         f.create_dataset('scores', data=predicted_scores)
+        f.create_dataset('inputs', data=data_x)
+        f.create_dataset('outputs', data=data_y)
         f.close()
     logger.info("Saved predictions at: {}".format(pred_file))
 

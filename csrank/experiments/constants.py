@@ -28,6 +28,7 @@ LISTNET = 'listnet'
 FATELINEAR_RANKER = "fatelinear_ranker"
 FETALINEAR_RANKER = "fetalinear_ranker"
 RANDOM_RANKER = "random_ranker"
+SET_TRANSFORMER_RANKER = "set_transformer_ranker"
 
 FETA_CHOICE = 'feta_choice'
 FETALINEAR_CHOICE = "fetalinear_choice"
@@ -38,6 +39,7 @@ CMPNET_CHOICE = "cmpnet_choice"
 RANKSVM_CHOICE = "ranksvm_choice"
 GLM_CHOICE = "glm_choice"
 RANDOM_CHOICE = "random_choice"
+SET_TRANSFORMER_CHOICE = "set_transformer_choice"
 
 TAG_GENOME_OR = 'tag_genome_or'
 TAG_GENOME_DC = 'tag_genome_dc'
@@ -47,6 +49,7 @@ FATE_DC = "fate_dc"
 FATELINEAR_DC = "fatelinear_dc"
 FETALINEAR_DC = "fetalinear_dc"
 RANDOM_DC = "random_dc"
+SET_TRANSFORMER_DC = "set_transformer_dc"
 
 RANKNET_DC = "ranknet_dc"
 CMPNET_DC = "cmpnet_dc"

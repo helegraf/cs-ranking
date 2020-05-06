@@ -77,6 +77,28 @@ def make_smooth_ndcg_loss(y_true, y_pred):
     return 1 - K.sum(exped * gains, axis=-1) / idcg
 
 
+def compute_pairwise_quadratic_loss(predictions, distance_matrix):
+    entries = 1 - K.square(predictions[:, None] - predictions[:, :, None])
+    result = K.batch_dot(distance_matrix, entries)
+    return K.sum(result, axis=(1, 2)) / 2
+
+
+def pairwise_comparison_quadratic_loss_wrapper(x):
+
+    @identifiable
+    def pairwise_comparison_loss(y_true, y_pred):
+        # compute distances and normalize
+        distance_matrix = l2_matrix(x, x)
+        distance_matrix = tf.linalg.l2_normalize(distance_matrix)
+
+        true = compute_pairwise_quadratic_loss(tf.linalg.l2_normalize(y_true), distance_matrix)
+        predicted = compute_pairwise_quadratic_loss(tf.linalg.l2_normalize(y_pred), distance_matrix)
+
+        return predicted - true
+
+    return pairwise_comparison_loss
+
+
 def tsp_dist_matrix_loss_wrapper(x):
     """
     A wrapper for the function tsp_dist_matrix_loss.
@@ -120,7 +142,7 @@ def tsp_dist_matrix_loss_wrapper(x):
         y_true = tensorify(y_true)
         y_pred = tensorify(y_pred)
 
-        # compute distances
+        # compute distances and normalize
         distance_matrix = l2_matrix(x, x)
         distance_matrix = tf.linalg.l2_normalize(distance_matrix)
 
@@ -128,7 +150,7 @@ def tsp_dist_matrix_loss_wrapper(x):
         hinge_matrix = pairwise_hinge_matrix(y_true, y_pred)
 
         # sum multiplication of results
-        multiplier = distance_matrix * hinge_matrix
+        multiplier = K.batch_dot(distance_matrix, hinge_matrix)
 
         return K.sum(multiplier, axis=(1, 2))
 
@@ -197,14 +219,16 @@ def tsp_probability_matrix_loss(y_true, y_pred):
 
     # compute matrix of U_A / (U_A + U_B)
     exp_pred = K.exp(y_pred)
-    exp_matrix = exp_pred[:, None] / (exp_pred[:, None] + exp_pred[:, :, None])
+    exp_matrix = exp_pred / (exp_pred[:, None] + exp_pred[:, :, None])
 
     # compute matrix of pairwise hinge loss
     hinge_matrix = pairwise_hinge_matrix(y_true, y_pred)
-    multiplier = exp_matrix * hinge_matrix
+    multiplier = K.batch_dot(exp_matrix, hinge_matrix)
+
+    result = K.sum(multiplier, axis=(1, 2))
 
     # sum multiplication of results
-    return K.sum(multiplier, axis=(1, 2))
+    return result
 
 
 def pairwise_hinge_matrix(y_true, y_pred):
@@ -228,4 +252,8 @@ def pairwise_hinge_matrix(y_true, y_pred):
                   dtype='float32')
 
     # compute actual hinge loss
-    return mask * (1 - (y_pred[:, :, None] - y_pred[:, None]))
+    result = K.maximum(mask * (1 - (y_pred[:, :, None] - y_pred[:, None])), 0)
+
+    return result
+
+

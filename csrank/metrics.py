@@ -424,3 +424,24 @@ def tsp_distance_wrapper(x):
         return np.sum(opt_path_len) / len(opt_path_len)
 
     return tsp_distance
+
+
+def make_assign_keras_symbolic_tensors_metric(callback, model, use_tf_keras=False):
+
+    def assign_keras_symbolic_tensors_metric(_foo, _bar):
+        """
+        Return the assignment operations as a metric to have them evaluated by Keras.
+
+        This replaces `fetches` from the TF1/non-eager-execution solution.
+        """
+        # Collect assignments as list of (dest, src)
+        assignments = (
+            (callback.input, model.inputs[0]),
+            (callback.target, model._targets[0] if use_tf_keras else model.targets[0]),
+            (callback.output, model.outputs[0]),
+        )
+        for (dest, src) in assignments:
+            dest.assign(src)
+        return 0
+
+    return assign_keras_symbolic_tensors_metric

@@ -70,6 +70,7 @@ class FETAObjectRanker(FETANetwork, ObjectRanker):
             **kwargs
                 Keyword arguments for the hidden units
         """
+        self.loss_function_requires_x_values = loss_function_requires_x_values
         super().__init__(n_objects=n_objects, n_object_features=n_object_features, n_hidden=n_hidden, n_units=n_units,
                          add_zeroth_order_model=add_zeroth_order_model, max_number_of_objects=max_number_of_objects,
                          num_subsample=num_subsample, loss_function=loss_function,
@@ -77,7 +78,6 @@ class FETAObjectRanker(FETANetwork, ObjectRanker):
                          kernel_initializer=kernel_initializer, activation=activation, optimizer=optimizer,
                          metrics=metrics, batch_size=batch_size, random_state=random_state, **kwargs)
         self.logger = logging.getLogger(FETAObjectRanker.__name__)
-        self.loss_function_requires_x_values = loss_function_requires_x_values
 
     def construct_model(self):
         return super().construct_model()

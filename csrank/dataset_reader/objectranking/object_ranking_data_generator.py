@@ -1,3 +1,6 @@
+import os
+
+import h5py
 import numpy as np
 from pygmo import hypervolume
 from scipy.spatial.distance import pdist, squareform, cdist
@@ -11,6 +14,39 @@ from csrank.constants import OBJECT_RANKING
 from csrank.numpy_util import scores_to_rankings
 from ..synthetic_dataset_generator import SyntheticDatasetGenerator
 from ..util import create_pairwise_prob_matrix, quicksort
+from ...util import create_dir_recursively
+
+
+def load_tsp_dataset(n_train_instances, n_test_instances, n_objects, seed, path):
+    filename = "tsp_dataset_n_train_instances-{}_n_test_instances-{}_n_objects-{}_seed-{}"
+    filename = filename.format(n_train_instances, n_test_instances, n_objects, seed)
+    pred_file = os.path.join(path, filename + ".h5")
+    f = h5py.File(pred_file, 'r')
+
+    x_train = np.array(f.get('x_train'))
+    x_test = np.array(f.get('x_test'))
+    y_train = np.array(f.get('y_train'))
+    y_test = np.array(f.get('y_test'))
+
+    f.close()
+
+    return x_train, y_train, x_test, y_test
+
+
+def save_tsp_dataset(x_train, y_train, x_test, y_test, n_train_instances, n_test_instances, n_objects, seed,
+                     path):
+    filename = "tsp_dataset_n_train_instances-{}_n_test_instances-{}_n_objects-{}_seed-{}"
+    filename = filename.format(n_train_instances, n_test_instances, n_objects, seed)
+    pred_file = os.path.join(path, filename + ".h5")
+    create_dir_recursively(pred_file, True)
+    f = h5py.File(pred_file, 'w')
+
+    f.create_dataset('x_train', data=x_train)
+    f.create_dataset('x_test', data=x_test)
+    f.create_dataset('y_train', data=y_train)
+    f.create_dataset('y_test', data=y_test)
+
+    f.close()
 
 
 class ObjectRankingDatasetGenerator(SyntheticDatasetGenerator):
@@ -22,14 +58,46 @@ class ObjectRankingDatasetGenerator(SyntheticDatasetGenerator):
                                     'gp_transitive': self.make_gp_transitive,
                                     'gp_non_transitive': self.make_gp_non_transitive,
                                     "hyper_volume": self.make_hv_dataset,
-                                    'tsp': self.make_tsp_dataset}
+                                    'tsp': self.make_tsp_dataset,
+                                    'simple_max': self.make_simple_max_choice,
+                                    'min_max': self.make_min_max_choice}
         if dataset_type not in dataset_function_options.keys():
             dataset_type = "medoid"
         self.dataset_function = dataset_function_options[dataset_type]
 
-    def make_tsp_dataset(self, n_instances, n_objects, **kwargs):
+    def make_min_max_choice(self, n_instances, n_objects, n_features, seed=42, **kwargs):
+        # generate objects with a weight and value
+        random_state = check_random_state(seed)
+        x = random_state.uniform(low=0, high=1, size=(n_instances, n_objects, n_features))
+
+        # use max to determine y value
+        y = np.empty((n_instances, n_objects))
+        for instance in range(n_instances):
+            # select the lowest arg for all objects
+            minima = np.min(x[instance], axis=1)
+            y[instance] = np.flip(np.argsort(minima))
+
+        return x, y
+
+    def make_simple_max_choice(self, n_instances, n_objects, seed=42, **kwargs):
+        print("instances, objects", n_instances, n_objects)
+        # generate objects with a weight and value
+        random_state = check_random_state(seed)
+        x = random_state.uniform(low=0, high=1, size=(n_instances, n_objects))
+
+        # use max to determine y value
+        y = np.empty((n_instances, n_objects))
+        for instance in range(n_instances):
+            y[instance] = np.flip(np.argsort(x[instance]))
+
+        x = x.reshape(n_instances, n_objects, 1)
+
+        return x, y
+
+    def make_tsp_dataset(self, n_instances, n_objects, seed=42, **kwargs):
         # 1. Generate x data
-        x = self.random_state.random_integers(low=0, high=10000, size=(n_instances, n_objects, 2))
+        random_state = check_random_state(seed)
+        x = random_state.random_integers(low=0, high=10000, size=(n_instances, n_objects, 2))
 
         # 2. Label the data
         y = np.empty((n_instances, n_objects), dtype=int)
@@ -44,7 +112,6 @@ class ObjectRankingDatasetGenerator(SyntheticDatasetGenerator):
             y[instance] = np.asarray(np.argsort(elkai.solve_int_matrix(matrix)), dtype=int)
 
         return x, y
-
 
     def make_linear_transitive(self, n_instances=1000, n_objects=5, noise=0.0, n_features=100, n_informative=10,
                                seed=42, **kwd):

@@ -1,29 +1,11 @@
 {
   "resources": {
     "gtx1080": "1",
-    "ncpus": "1",
-    "vmem": "24g",
+    "ncpus": "2",
+    "vmem": "30g",
     "mem": "4g"
   },
   "dataset_configs": [
-    {
-      "dataset": "synthetic_or",
-      "dataset_params": {
-        "dataset_type": "tsp",
-        "n_objects": 5,
-        "n_train_instances": 51200,
-        "n_test_instances": 6400
-      }
-    },
-    {
-      "dataset": "synthetic_or",
-      "dataset_params": {
-        "dataset_type": "tsp",
-        "n_objects": 25,
-        "n_train_instances": 51200,
-        "n_test_instances": 6400
-      }
-    },
     {
       "dataset": "synthetic_or",
       "dataset_params": {
@@ -85,8 +67,54 @@
             "histogram_freq": 1
           },
           "CyclicLR": {
-            "base_lr": 0.001,
-            "max_lr": 0.006,
+            "base_lr": 0.0002,
+            "max_lr": 0.001,
+            "step_size": 800,
+            "mode": "triangular2"
+          }
+        }
+      }
+    },
+       {
+      "learner_name": "fate_ranker",
+      "learner_params": {
+        "loss_function" :  "tsp_dist_matrix_loss_wrapper",
+        "loss_function_requires_x_values" :  true,
+        "n_hidden_set_layers": 2,
+        "n_hidden_set_units": 2,
+        "n_hidden_joint_layers": 3,
+        "n_hidden_joint_units": 16,
+        "activation": "selu",
+        "kernel_initializer": "lecun_normal",
+        "batch_size": 256,
+        "kernel_regularizer": "l2",
+        "kernel_regularizer_params": {
+          "l": 0.01
+        },
+        "optimizer": "SGD",
+        "optimizer_params": {
+          "lr": 1e-4,
+          "nesterov": "true",
+          "momentum": 0.9
+        }
+      },
+      "learner_fit_params": {
+        "epochs": 64,
+        "inner_epochs": 1,
+        "validation_split": 0.1,
+        "verbose": 0,
+        "global_lr": 1.0,
+        "global_momentum": 0.9,
+        "min_bucket_size": 500,
+        "refit": false,
+        "callbacks": {
+          "TensorBoard": {
+            "log_dir": "./tensorboard_logs/",
+            "histogram_freq": 1
+          },
+          "CyclicLR": {
+            "base_lr": 0.0002,
+            "max_lr": 0.001,
             "step_size": 800,
             "mode": "triangular2"
           }
@@ -124,8 +152,47 @@
             "histogram_freq": 1
           },
           "CyclicLR": {
-            "base_lr": 0.001,
-            "max_lr": 0.006,
+            "base_lr": 0.0002,
+            "max_lr": 0.001,
+            "step_size": 800,
+            "mode": "triangular2"
+          }
+        }
+      }
+    },
+       {
+      "learner_name": "feta_ranker",
+      "learner_params": {
+        "loss_function" :  "tsp_dist_matrix_loss_wrapper",
+        "loss_function_requires_x_values" :  true,
+        "n_hidden": 3,
+        "n_units": 16,
+        "batch_size": 256,
+        "add_zeroth_order_model": false,
+        "batch_normalization": false,
+        "kernel_regularizer": "l2",
+        "kernel_regularizer_params": {
+          "l": 1e-4
+        },
+        "kernel_initializer": "lecun_normal",
+        "activation": "selu",
+        "optimizer": "SGD",
+        "optimizer_params": {
+          "lr": 1e-4,
+          "nesterov": true,
+          "momentum": 0.9
+        }
+      },
+      "learner_fit_params": {
+        "epochs": 64,
+        "callbacks": {
+          "TensorBoard": {
+            "log_dir": "./tensorboard_logs/",
+            "histogram_freq": 1
+          },
+          "CyclicLR": {
+            "base_lr": 0.0002,
+            "max_lr": 0.001,
             "step_size": 800,
             "mode": "triangular2"
           }
@@ -160,8 +227,45 @@
         "epochs": 64,
         "callbacks": {
           "CyclicLR": {
-            "base_lr": 0.001,
-            "max_lr": 0.006,
+            "base_lr": 0.0002,
+            "max_lr": 0.001,
+            "step_size": 800,
+            "mode": "triangular2"
+          }
+        }
+      }
+    },
+       {
+      "learner_name": "listnet",
+      "learner_params": {
+        "n_top": 2,
+        "n_hidden": 2,
+        "n_units": 8,
+        "batch_size": 256,
+        "loss_function" :  "tsp_probability_matrix_loss",
+        "loss_function_requires_x_values" :  false,
+        "batch_normalization": false,
+        "kernel_regularizer": "l2",
+        "kernel_regularizer_params": {
+          "l": 1e-4
+        },
+        "activation": "selu",
+        "kernel_initializer": "lecun_normal",
+        "optimizer": "SGD",
+        "optimizer_params": {
+          "lr": 1e-4,
+          "nesterov": true,
+          "momentum": 0.9
+        }
+      },
+      "learner_fit_params": {
+        "epochs": 64,
+        "validation_split": 0.1,
+        "verbose": 0,
+        "callbacks": {
+          "CyclicLR": {
+            "base_lr": 0.0002,
+            "max_lr": 0.001,
             "step_size": 800,
             "mode": "triangular2"
           }
@@ -197,8 +301,8 @@
         "verbose": 0,
         "callbacks": {
           "CyclicLR": {
-            "base_lr": 0.001,
-            "max_lr": 0.006,
+            "base_lr": 0.0002,
+            "max_lr": 0.001,
             "step_size": 800,
             "mode": "triangular2"
           }

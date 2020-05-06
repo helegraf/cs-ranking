@@ -92,6 +92,11 @@ class ModifiedDBConnector(metaclass=ABCMeta):
                 if column not in ["job_id", "train_test"]:
                     alter_table_command = 'ALTER TABLE %s ADD COLUMN %s double precision' % (results_table, column)
                     self.cursor_db.execute(alter_table_command)
+            self.cursor_db.execute('ALTER TABLE %s ADD COLUMN time_updated timestamp' % results_table)
+            self.cursor_db.execute('CREATE TRIGGER set_timestamp'
+                                   'BEFORE UPDATE ON thesis_attention.{}'
+                                   'FOR EACH ROW'
+                                   'EXECUTE PROCEDURE trigger_set_timestamp();'.format(results_table))
             self.close_connection()
             self.init_connection(cursor_factory=None)
 
@@ -164,22 +169,7 @@ class ModifiedDBConnector(metaclass=ABCMeta):
         job.update({"hash_value": self.get_hash_value_for_job(job)})
 
         columns = ', '.join(list(job.keys()))
-        values_str = []
-        for i, val in enumerate(job.values()):
-            if isinstance(val, dict):
-                val = "\'" + json.dumps(val) + "\'"
-            elif isinstance(val, str):
-                val = "\'" + val + "\'"
-            else:
-                val = str(val)
-            values_str.append(val)
-            if i == 0:
-                values = '%s'
-            else:
-                values = values + ', %s'
-
-        values_str = values % tuple(values_str)
-        print(values_str)
+        values_str = self.convert_job_to_str(job.values())
         self.init_connection()
 
         table = "{}.{}".format(self.schema, self.table_jobs)
@@ -195,6 +185,23 @@ class ModifiedDBConnector(metaclass=ABCMeta):
         self.close_connection()
 
         return id_new
+
+    def convert_job_to_str(self, list):
+        values_str = []
+        for i, val in enumerate(list):
+            if isinstance(val, dict):
+                val = "\'" + json.dumps(val) + "\'"
+            elif isinstance(val, str):
+                val = "\'" + val + "\'"
+            else:
+                val = str(val)
+            values_str.append(val)
+            if i == 0:
+                values = '%s'
+            else:
+                values = values + ', %s'
+        values_str = values % tuple(values_str)
+        return values_str
 
     def insert_validation_loss(self, validation_loss, job_id):
         self.logger.info("Inserting validation loss into db.")
@@ -221,3 +228,59 @@ class ModifiedDBConnector(metaclass=ABCMeta):
         curr_time = datetime.now()
         self.cursor_db.execute(update_job, (curr_time, str(job_id)))
         self.close_connection()
+
+    def update_time_finished_train(self, job_id):
+        self.init_connection()
+        jobs = "{}.{}".format(self.schema, self.table_jobs)
+        update_job = """UPDATE {} set time_finished_train = %s WHERE job_id = %s""".format(jobs)
+        curr_time = datetime.now()
+        self.cursor_db.execute(update_job, (curr_time, str(job_id)))
+        self.close_connection()
+
+    def get_ready_jobs(self):
+        self.init_connection()
+        jobs = "{}.{}".format(self.schema, self.table_jobs)
+
+        self.cursor_db.execute("SELECT job_id, resources, duration FROM {} WHERE time_start IS NULL".format(jobs))
+        records = self.cursor_db.fetchall()
+        data = []
+        for row in records:
+            data.append({"job_id": row[0], "resources": row[1], "duration": row[2]})
+        self.close_connection()
+
+        return data
+
+    def copy_configs(self, jobs_to_copy):
+        self.init_connection()
+        jobs = "{}.{}".format(self.schema, self.table_jobs)
+
+        for job in jobs_to_copy:
+            self.cursor_db.execute("SELECT resources, dataset, dataset_params, fold_id, n_inner_folds, "
+                                   "learning_problem, seed, learner_name, learner_params, learner_fit_params, use_hp, "
+                                   "hp_iterations, hp_ranges, hp_fit_params, duration, time_out_eval, "
+                                   "results_table_name, hash_value "
+                                   "FROM {} WHERE job_id={}".format(jobs, job))
+            record = self.cursor_db.fetchone()
+            print(record)
+
+            record_str = self.convert_job_to_str(record)
+
+            self.cursor_db.execute("INSERT INTO {} ("
+                                   "resources, dataset, dataset_params, fold_id, n_inner_folds, learning_problem, "
+                                   "seed, learner_name, learner_params, learner_fit_params, use_hp, hp_iterations, "
+                                   "hp_ranges, hp_fit_params, duration, time_out_eval, results_table_name, hash_value"
+                                   ") VALUES ({})".format(jobs, record_str))
+
+        self.close_connection()
+
+    def get_results_for_job(self, job_ids, results_table_name):
+        self.init_connection()
+
+        jobs = "{}.{}".format(self.schema, results_table_name)
+        self.cursor_db.execute("SELECT * FROM {} WHERE job_id IN ({})".format(jobs, str(job_ids)[1:-1]))
+        colnames = [desc[0] for desc in self.cursor_db.description]
+        results = self.cursor_db.fetchall()
+
+        self.close_connection()
+
+        return colnames, results

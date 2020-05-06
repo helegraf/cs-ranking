@@ -1,8 +1,9 @@
 import logging
 
-from keras.layers import BatchNormalization, Dense, Activation, Input, Lambda
+from keras.layers import BatchNormalization, Dense, Activation, Input, Lambda, Concatenate, Reshape
 from keras.layers.merge import average
 from keras.models import Model
+import tensorflow as tf
 
 __all__ = ['NormalizedDense', 'DeepSet', 'create_input_lambda']
 
@@ -79,6 +80,7 @@ class DeepSet(object):
                  kernel_initializer='lecun_normal',
                  kernel_regularizer=None,
                  input_shape=None,
+                 attention_pooling=None,
                  **kwargs):
         self.logger = logging.getLogger("DeepSets")
         self.n_units = units
@@ -90,6 +92,7 @@ class DeepSet(object):
         self.activation = activation
         self.kernel_initializer = kernel_initializer
         self.kernel_regularizer = kernel_regularizer
+        self.attention_pooling = attention_pooling
 
         self.cached_models = dict()
         self._construct_layers(kernel_initializer=kernel_initializer,
@@ -123,10 +126,17 @@ class DeepSet(object):
             set_mappings.append((i, curr))
 
         # TODO: is feature_repr used outside?
-        feature_repr = average([x for (j, x) in set_mappings])
+        if self.attention_pooling is None:
+            feature_repr = average([x for (j, x) in set_mappings])
+        else:
+            reshape_layer = Reshape(target_shape=(1, self.n_units))
+            feature_repr = self.attention_pooling(Concatenate(axis=1)([reshape_layer(x) for (j, x) in set_mappings]))
+            feature_repr = Reshape(target_shape=(self.n_units,))(feature_repr)
 
         self.cached_models[n_objects] = Model(inputs=input_layer,
                                               outputs=feature_repr)
+
+        print(self.cached_models[n_objects].summary())
 
     def __call__(self, x):
         shape = x.shape
