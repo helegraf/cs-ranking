@@ -14,7 +14,7 @@ class SetTransformer(Learner):
     def __init__(self, loss_function, loss_function_requires_x_values=False,
                  optimizer=SGD(lr=1e-4, nesterov=True, momentum=0.9), metrics=[], stacking_height=3,
                  attention_layer_config=None, batch_size=256, num_layers_dense=0, num_units_dense=8, seed=42,
-                 n_objects=None, n_object_features=None, random_state=None):
+                 n_objects=None, n_object_features=None, random_state=None, metrics_requiring_x=[]):
         if attention_layer_config is None:
             attention_layer_config = {"SAB": {"mab": {"MAB": {"multi_head": {
                 "MultiHeadAttention": {"num_heads": 1, "attention": {"ScaledDotProductAttention": {}}}}}}}}
@@ -38,6 +38,7 @@ class SetTransformer(Learner):
         self.batch_size = batch_size
         self.model = None
         self.metrics = metrics
+        self.metrics_requiring_x = metrics_requiring_x
         self.logger = logging.getLogger(SetTransformer.__name__)
 
         self.attention_layers = []
@@ -106,7 +107,9 @@ class SetTransformer(Learner):
         if self.loss_function_requires_x_values:
             self.loss_function = self.loss_function(input_layer)
 
-        model.compile(loss=self.loss_function, optimizer=self.optimizer, metrics=self.metrics)
+        additional_metric = [metric(input_layer) for metric in self.metrics_requiring_x]
+
+        model.compile(loss=self.loss_function, optimizer=self.optimizer, metrics=self.metrics.extend(additional_metric))
 
         return model
 

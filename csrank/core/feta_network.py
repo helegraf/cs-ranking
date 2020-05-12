@@ -24,7 +24,7 @@ class FETANetwork(Learner):
                  kernel_regularizer=l2(l=1e-4), kernel_initializer='lecun_normal', activation='selu',
                  optimizer=SGD(lr=1e-4, nesterov=True, momentum=0.9), metrics=None, batch_size=256, random_state=None,
                  attention_pooling_config=None, attention_preselection_config=None,
-                 num_attention_preselection_layers=0, **kwargs):
+                 num_attention_preselection_layers=0, metrics_requiring_x=[], **kwargs):
         if attention_pooling_config is not None and not isinstance(attention_pooling_config, dict):
             raise ValueError("Attention pooling layer has to be given in dictionary-form because it needs to be "
                              "instantiated multiple times. Has to be able to be processed by "
@@ -47,6 +47,7 @@ class FETANetwork(Learner):
         self.activation = activation
         self.loss_function = loss_function
         self.metrics = metrics
+        self.metrics_requiring_x = metrics_requiring_x
         self._n_objects = n_objects
         self.max_number_of_objects = max_number_of_objects
         self.num_subsample = num_subsample
@@ -262,7 +263,8 @@ class FETANetwork(Learner):
         self.logger.debug('Compiling complete model...')
         if self.loss_function_requires_x_values:
             self.loss_function = self.loss_function(self.input_layer)
-        model.compile(loss=self.loss_function, optimizer=self.optimizer, metrics=self.metrics)
+        additional_metric = [metric(self.input_layer) for metric in self.metrics_requiring_x]
+        model.compile(loss=self.loss_function, optimizer=self.optimizer, metrics=self.metrics.extend(additional_metric))
         return model
 
     def fit(self, X, Y, epochs=10, callbacks=None, validation_split=0.1, verbose=0, **kwd):

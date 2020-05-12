@@ -82,12 +82,6 @@ class RankNetCore(Learner):
         merged_inputs = add([enc_x1, neg_x2])
         output = self.output_node(merged_inputs)
         model = Model(inputs=[self.x1, self.x2], outputs=output)
-        print("x1")
-        print(self.x1)
-        print("x2")
-        print(self.x2)
-        if self.loss_function_requires_x_values:
-            self.loss_function = self.loss_function(np.append(self.x1, self.x2))
         model.compile(loss=self.loss_function, optimizer=self.optimizer, metrics=self.metrics)
         return model
 

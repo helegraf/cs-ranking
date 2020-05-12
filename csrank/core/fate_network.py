@@ -151,7 +151,7 @@ class FATENetworkCore(Learner):
 class FATENetwork(FATENetworkCore):
     def __init__(self, n_object_features, n_hidden_set_layers=1, n_hidden_set_units=1,
                  attention_preselection_config=None, num_attention_preselection_layers=1,
-                 attention_pooling=None, **kwargs):
+                 attention_pooling=None, metrics_requiring_x=[], **kwargs):
         """
             Create a FATE-network architecture.
             Training and prediction complexity is linear in the number of objects.
@@ -185,6 +185,7 @@ class FATENetwork(FATENetworkCore):
         self.is_variadic = True
         self.hash_file = None
         self.loss_function_requires_x_values = False
+        self.metrics_requiring_x = metrics_requiring_x
 
     def _create_set_layers(self, **kwargs):
         """
@@ -395,9 +396,11 @@ class FATENetwork(FATENetworkCore):
         model = Model(inputs=input_layer, outputs=scores)
 
         if self.loss_function_requires_x_values:
-            self.loss_function = self.loss_function(input_with_attention)
+            self.loss_function = self.loss_function(input_layer)
 
-        model.compile(loss=self.loss_function, optimizer=self.optimizer, metrics=self.metrics)
+        additional_metric =[metric(input_layer) for metric in self.metrics_requiring_x]
+
+        model.compile(loss=self.loss_function, optimizer=self.optimizer, metrics=self.metrics.extend(additional_metric))
 
         return model
 

@@ -1,8 +1,4 @@
-import datetime
-import multiprocessing
-
 import numpy as np
-from keras.callbacks import TensorBoard
 
 np.random.seed(1)
 import pytest
