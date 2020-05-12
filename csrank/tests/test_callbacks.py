@@ -5,7 +5,7 @@ from keras import Input, Model
 from keras.layers import TimeDistributed, Dense, Reshape
 import keras.backend as K
 
-from csrank import FETAObjectRanker, ObjectRankingDatasetGenerator
+from csrank import FETAObjectRanker, ObjectRankingDatasetGenerator, FATEObjectRanker
 from csrank.attention.set_transformer.modules import ScaledDotProductAttention
 from csrank.callbacks import AdvancedTensorBoard
 from csrank.visualization.weights import visualize_attention_scores
@@ -17,15 +17,13 @@ def metric_with_x_wrapper(x):
 
     return metric_with_x
 
-
-def test_feta_attention_ranking_tsp():
+def test_fate_attention_ranking_tsp():
     random_state = np.random.RandomState(seed=42)
     gen = ObjectRankingDatasetGenerator(dataset_type="tsp", n_objects=5, n_train_instances=100,
                                         n_test_instances=5,
                                         random_state=random_state)
     x_train, y_train, x_test, y_test = gen.get_single_train_test_split()
 
-    attention = {"ScaledDotProductAttention":{"weighted": False, "biased": False}}
     callbacks = [AdvancedTensorBoard(
         inputs=np.asarray([x_train[0]]),
         targets=np.asarray([y_train[0]]),
@@ -44,13 +42,87 @@ def test_feta_attention_ranking_tsp():
         update_freq="epoch",
         log_dir="./tensorboard_logs/feta_ranker_tsp/" + datetime.now().strftime("%Y%m%d-%H%M%S")
     )]
-    attention_pooling = {"PMA": {"k": 1, "mab": {"MAB": {"multi_head": {
-        "MultiHeadAttention": {"num_heads": 1, "attention_config": {"ScaledDotProductAttention":
-                                                                        {"weighted": False, "biased": False}}}}}}}}
-    learner = FETAObjectRanker(n_objects=5, n_hidden=2, n_units=8, add_zeroth_order_model=True,
-                               max_number_of_objects=5, n_object_features=2, attention_function_preselection_config=attention,
+
+    attention_preselection = {"ScaledDotProductAttention": {"weighted": False, "biased": False}}
+    attention_pooling = {
+        "PMA": {
+            "k": 1,
+            "mab": {
+                "MAB": {
+                    "multi_head": {
+                        "MultiHeadAttention": {
+                            "num_heads": 1,
+                            "attention_config": {
+                                "ScaledDotProductAttention": {
+                                    "weighted": False,
+                                    "biased": False}}}}}}}}
+
+    learner = FATEObjectRanker(n_object_features=1, attention_function_preselection=attention_preselection,
+                               n_hidden_joint_layers=3, n_hidden_joint_units=3, attention_pooling=attention_pooling)
+
+    learner.fit(x_train, y_train, epochs=5, verbose=2, callbacks=callbacks)
+
+    print(learner.model.summary())
+
+    # K.clear_session()
+    prediction = learner.predict(x_test)
+    print("prediction")
+    print(prediction)
+    print("true")
+    print(y_test)
+
+
+def test_feta_attention_ranking_tsp():
+    random_state = np.random.RandomState(seed=42)
+    gen = ObjectRankingDatasetGenerator(dataset_type="tsp", n_objects=5, n_train_instances=100,
+                                        n_test_instances=5,
+                                        random_state=random_state)
+    x_train, y_train, x_test, y_test = gen.get_single_train_test_split()
+
+    callbacks = [AdvancedTensorBoard(
+        inputs=np.asarray([x_train[0]]),
+        targets=np.asarray([y_train[0]]),
+        prediction_visualization="tsp_2d",
+        metric_for_visualization="TSPRelativeDifference_requiresX",
+        metric_for_visualization_requires_x=True,
+        log_gradient_norms="all",
+        log_attention=True,
+        save_space=True,
+        log_lr=True,
+        histogram_freq=1,
+        write_graph=False,
+        write_grads=False,
+        write_images=False,
+        embeddings_freq=0,
+        update_freq="epoch",
+        log_dir="./tensorboard_logs/feta_ranker_tsp/" + datetime.now().strftime("%Y%m%d-%H%M%S")
+    )]
+
+    attention_preselection = {"ScaledDotProductAttention": {"weighted": False, "biased": False}}
+    attention_pooling = {
+        "PMA": {
+            "k": 1,
+            "mab": {
+                "MAB": {
+                    "multi_head": {
+                        "MultiHeadAttention": {
+                            "num_heads": 1,
+                            "attention_config": {
+                                "ScaledDotProductAttention": {
+                                    "weighted": False,
+                                    "biased": False}}}}}}}}
+
+    learner = FETAObjectRanker(n_objects=5,
+                               n_hidden=2,
+                               n_units=8,
+                               add_zeroth_order_model=True,
+                               max_number_of_objects=5,
+                               n_object_features=2,
+                               attention_preselection_config=attention_preselection,
                                num_attention_function_preselection_layers=1,
-                               n_hidden_joint_layers=3, n_hidden_joint_units=3, attention_pooling=None)
+                               n_hidden_joint_layers=3,
+                               n_hidden_joint_units=3,
+                               attention_pooling_config=attention_pooling)
 
     learner.fit(x_train, y_train, epochs=5, verbose=2, callbacks=callbacks)
 
@@ -118,7 +190,7 @@ def test_advanced_tensorboard():
                                      embeddings_freq=0,
                                      update_freq="epoch",
                                      log_dir="./tensorboard_logs/set_transformer/" + datetime.now().strftime(
-                                                  "%Y%m%d-%H%M%S")
+                                         "%Y%m%d-%H%M%S")
                                      )]
     callbacks[0].set_additional_intermediate_tensors_to_evaluate([attention_1, attention_2])
 

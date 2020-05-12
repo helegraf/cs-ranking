@@ -23,20 +23,20 @@ class FETANetwork(Learner):
                  max_number_of_objects=5, num_subsample=5, loss_function=hinged_rank_loss, batch_normalization=False,
                  kernel_regularizer=l2(l=1e-4), kernel_initializer='lecun_normal', activation='selu',
                  optimizer=SGD(lr=1e-4, nesterov=True, momentum=0.9), metrics=None, batch_size=256, random_state=None,
-                 attention_pooling_config=None, attention_function_preselection_config=None,
-                 num_attention_function_preselection_layers=0, **kwargs):
+                 attention_pooling_config=None, attention_preselection_config=None,
+                 num_attention_preselection_layers=0, **kwargs):
         if attention_pooling_config is not None and not isinstance(attention_pooling_config, dict):
             raise ValueError("Attention pooling layer has to be given in dictionary-form because it needs to be "
                              "instantiated multiple times. Has to be able to be processed by "
                              "csrank.attention.set_transformer.modules.instantiate_attention_layer")
-        if attention_function_preselection_config is not None and \
-                not isinstance(attention_function_preselection_config, dict):
+        if attention_preselection_config is not None and \
+                not isinstance(attention_preselection_config, dict):
             raise ValueError("Attention preselection layer has to be given in dictionary-form because it needs to be "
                              "instantiated multiple times. Has to be able to be processed by "
                              "csrank.attention.set_transformer.modules.instantiate_attention_layer")
-        self.attention_function_preselection_config = attention_function_preselection_config
-        self.attention_function_preselection_layers = None
-        self.num_attention_function_preselection_layers = num_attention_function_preselection_layers
+        self.attention_preselection_config = attention_preselection_config
+        self.attention_preselection_layers = None
+        self.num_attention_preselection_layers = num_attention_preselection_layers
         self.attention_pooling_config = attention_pooling_config
         self.attention_pooling_layers = None
         self.logger = logging.getLogger(FETANetwork.__name__)
@@ -72,11 +72,11 @@ class FETANetwork(Learner):
 
     def set_up_input_layer(self):
         self.input_layer = Input(shape=(self.n_objects, self.n_object_features))
-        if self.attention_function_preselection_config is not None:
-            self.attention_function_preselection_layers = \
-                [instantiate_attention_layer(self.attention_function_preselection_config)]
+        if self.attention_preselection_config is not None:
+            self.attention_preselection_layers = \
+                [instantiate_attention_layer(self.attention_preselection_config)]
             self.attention_preselected_input = self.input_layer
-            for layer in self.attention_function_preselection_layers:
+            for layer in self.attention_preselection_layers:
                 self.attention_preselected_input = layer(self.attention_preselected_input)
         else:
             self.attention_preselected_input = None
@@ -249,9 +249,8 @@ class FETANetwork(Learner):
         else:
             add_dim = Reshape(target_shape=(self.n_objects - 1, 1))
             remove_dim = Reshape(target_shape=(1,))
-            self.attention_pooling_layers = [instantiate_attention_layer(self.attention_pooling) for _ in outputs]
+            self.attention_pooling_layers = [instantiate_attention_layer(self.attention_pooling_config) for _ in outputs]
 
-            #scores = [remove_dim(instantiate_attention_layer(self.attention_pooling_config)(add_dim(x))) for x in outputs]
             scores = [remove_dim(self.attention_pooling_layers[x_obj](add_dim(outputs[x_obj]))) for x_obj in range(len(outputs))]
 
         scores = concatenate(scores)
@@ -305,8 +304,8 @@ class FETANetwork(Learner):
 
     def set_up_callbacks(self, callbacks):
         attention_outputs = []
-        if self.attention_function_preselection_layers is not None:
-            for preselection_layer in self.attention_function_preselection_layers:
+        if self.attention_preselection_layers is not None:
+            for preselection_layer in self.attention_preselection_layers:
                 outputs = preselection_layer.get_attention_layer_inputs_outputs()
 
                 for output_num in range(len(outputs)):
