@@ -150,7 +150,8 @@ class FATENetworkCore(Learner):
 
 class FATENetwork(FATENetworkCore):
     def __init__(self, n_object_features, n_hidden_set_layers=1, n_hidden_set_units=1,
-                 attention_function_preselection=None, attention_pooling=None, **kwargs):
+                 attention_preselection_config=None, num_attention_preselection_layers=1,
+                 attention_pooling=None, **kwargs):
         """
             Create a FATE-network architecture.
             Training and prediction complexity is linear in the number of objects.
@@ -169,8 +170,10 @@ class FATENetwork(FATENetworkCore):
         FATENetworkCore.__init__(self, **kwargs)
         self.logger_gorc = logging.getLogger(FATENetwork.__name__)
 
-        self.attention_function_preselection = instantiate_attention_layer(attention_function_preselection)
-        self.attention_pooling = instantiate_attention_layer(attention_pooling)
+        self.attention_preselection_config = attention_preselection_config
+        self.num_attention_preselection_layers = num_attention_preselection_layers
+        self.attention_preselection_layers = None
+        self.attention_pooling_layer = instantiate_attention_layer(attention_pooling)
         self.n_hidden_set_layers = n_hidden_set_layers
         self.n_hidden_set_units = n_hidden_set_units
         self.n_object_features = n_object_features
@@ -192,7 +195,7 @@ class FATENetwork(FATENetworkCore):
                                                                                            self.n_hidden_set_layers))
         if self.n_hidden_set_layers >= 1:
             self.set_layer = DeepSet(units=self.n_hidden_set_units, layers=self.n_hidden_set_layers,
-                                     attention_pooling=self.attention_pooling, **kwargs)
+                                     attention_pooling=self.attention_pooling_layer, **kwargs)
         else:
             self.set_layer = None
 
@@ -322,7 +325,7 @@ class FATENetwork(FATENetworkCore):
                 self.model = self.construct_model(n_features, n_objects)
             self.logger.info("Fitting started")
 
-            configure_callbacks(self.model, callbacks)
+            self.set_up_callbacks(callbacks)
 
             if generator is None:
                 self.model.fit(x=X, y=Y, callbacks=callbacks, epochs=epochs, validation_split=validation_split,
@@ -331,6 +334,27 @@ class FATENetwork(FATENetworkCore):
                 self.model.fit_generator(generator=generator, callbacks=callbacks, epochs=epochs, verbose=verbose,
                                          **kwargs)
             self.logger.info("Fitting complete")
+
+    def set_up_callbacks(self, callbacks):
+        attention_outputs = []
+        if self.attention_preselection_layers is not None:
+            for preselection_layer in self.attention_preselection_layers:
+                outputs = preselection_layer.get_attention_layer_inputs_outputs()
+
+                for output_num in range(len(outputs)):
+                    output = outputs[output_num]
+                    output["name"] = "fate_preselection_{}_{}".format(output_num, output["name"])
+
+                attention_outputs.extend(outputs)
+        if self.attention_pooling_layer is not None:
+            outputs = self.attention_pooling_layer.get_attention_layer_inputs_outputs()
+
+            for output_num in range(len(outputs)):
+                output = outputs[output_num]
+                output["name"] = "fate_pooling_{}_{}".format(output_num, output["name"])
+
+            attention_outputs.extend(outputs)
+        configure_callbacks(callbacks, attention_outputs)
 
     def construct_model(self, n_features, n_objects):
         """
@@ -357,8 +381,11 @@ class FATENetwork(FATENetworkCore):
         input_layer = Input(shape=(n_objects, n_features), name="input_node")
 
         # attention preselection
-        if self.attention_function_preselection is not None:
-            input_with_attention = self.attention_function_preselection(input_layer)
+        if self.attention_preselection_config is not None:
+            input_with_attention = input_layer
+            self.attention_preselection_layers = [instantiate_attention_layer(self.attention_preselection_config)]
+            for layer in self.attention_preselection_layers:
+                input_with_attention = layer(input_with_attention)
         else:
             input_with_attention = input_layer
 

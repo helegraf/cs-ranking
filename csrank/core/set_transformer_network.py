@@ -70,7 +70,7 @@ class SetTransformer(Learner):
 
             attention_outputs.extend(outputs)
 
-        configure_callbacks(self.model, callbacks, attention_outputs=attention_outputs)
+        configure_callbacks(callbacks, attention_outputs=attention_outputs)
 
         if generator is None:
             self.model.fit(x=X, y=Y, callbacks=callbacks, epochs=epochs, validation_split=validation_split,

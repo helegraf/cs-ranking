@@ -33,12 +33,13 @@ def hinton(matrix, max_weight=None, ax=None):
 
 
 def visualize_attention_scores(query, key, scores):
+    n_obj_key = len(key)
+    n_obj_query = len(query)
     key = np.transpose(key)
-    n_obj_total = len(scores)
     n_features = len(key)
 
     fig = plt.figure(figsize=(8, 8))
-    gs = fig.add_gridspec(2, 2,  width_ratios=(n_features, n_obj_total), height_ratios=(n_features, n_obj_total),
+    gs = fig.add_gridspec(2, 2,  width_ratios=(n_features, n_obj_key), height_ratios=(n_features, n_obj_query),
                           left=0.1, right=0.9, bottom=0.1, top=0.9,
                           wspace=0.05, hspace=0.05)
 

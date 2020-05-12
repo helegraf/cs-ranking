@@ -4,10 +4,12 @@ import numpy as np
 from keras import Input, Model
 from keras.layers import TimeDistributed, Dense, Reshape
 import keras.backend as K
+from keras.optimizers import SGD
 
 from csrank import FETAObjectRanker, ObjectRankingDatasetGenerator, FATEObjectRanker
 from csrank.attention.set_transformer.modules import ScaledDotProductAttention
 from csrank.callbacks import AdvancedTensorBoard
+from csrank.objectranking.set_transformer_object_ranker import SetTransformerObjectRanker
 from csrank.visualization.weights import visualize_attention_scores
 
 
@@ -16,6 +18,60 @@ def metric_with_x_wrapper(x):
         return K.sum(y - z) + K.sum(x)
 
     return metric_with_x
+
+
+def test_set_transformer_ranking_tsp():
+    random_state = np.random.RandomState(seed=42)
+    gen = ObjectRankingDatasetGenerator(dataset_type="tsp", n_objects=5, n_train_instances=100,
+                                        n_test_instances=5,
+                                        random_state=random_state)
+    x_train, y_train, x_test, y_test = gen.get_single_train_test_split()
+
+    callbacks = [AdvancedTensorBoard(
+        inputs=np.asarray([x_train[0]]),
+        targets=np.asarray([y_train[0]]),
+        prediction_visualization="tsp_2d",
+        metric_for_visualization="TSPRelativeDifference_requiresX",
+        metric_for_visualization_requires_x=True,
+        log_gradient_norms="all",
+        log_attention=True,
+        save_space=True,
+        log_lr=True,
+        histogram_freq=1,
+        write_graph=False,
+        write_grads=False,
+        write_images=False,
+        embeddings_freq=0,
+        update_freq="epoch",
+        log_dir="./tensorboard_logs/set_transformer_tsp/" + datetime.now().strftime("%Y%m%d-%H%M%S")
+    )]
+
+    layer_options = {"SAB": {
+        "mab": {
+            "MAB": {
+                "multi_head": {
+                    "MultiHeadAttention": {
+                        "num_heads": 1,
+                        "attention_config": {
+                            "ScaledDotProductAttention": {
+                                "weighted": False,
+                                "biased": False}}}}}}}}
+
+    learner = SetTransformerObjectRanker(stacking_height=1, attention_layer_config=layer_options,
+                                             num_layers_dense=2, num_units_dense=8, seed=10,
+                                             optimizer=SGD(lr=1e-2, nesterov=True, momentum=0.9), batch_size=10)
+
+    learner.fit(x_train, y_train, epochs=5, verbose=2, callbacks=callbacks)
+
+    print(learner.model.summary())
+
+    # K.clear_session()
+    prediction = learner.predict(x_test)
+    print("prediction")
+    print(prediction)
+    print("true")
+    print(y_test)
+
 
 def test_fate_attention_ranking_tsp():
     random_state = np.random.RandomState(seed=42)
@@ -40,7 +96,7 @@ def test_fate_attention_ranking_tsp():
         write_images=False,
         embeddings_freq=0,
         update_freq="epoch",
-        log_dir="./tensorboard_logs/feta_ranker_tsp/" + datetime.now().strftime("%Y%m%d-%H%M%S")
+        log_dir="./tensorboard_logs/fate_ranker_tsp/" + datetime.now().strftime("%Y%m%d-%H%M%S")
     )]
 
     attention_preselection = {"ScaledDotProductAttention": {"weighted": False, "biased": False}}
@@ -57,7 +113,7 @@ def test_fate_attention_ranking_tsp():
                                     "weighted": False,
                                     "biased": False}}}}}}}}
 
-    learner = FATEObjectRanker(n_object_features=1, attention_function_preselection=attention_preselection,
+    learner = FATEObjectRanker(n_object_features=1, attention_preselection_config=attention_preselection,
                                n_hidden_joint_layers=3, n_hidden_joint_units=3, attention_pooling=attention_pooling)
 
     learner.fit(x_train, y_train, epochs=5, verbose=2, callbacks=callbacks)

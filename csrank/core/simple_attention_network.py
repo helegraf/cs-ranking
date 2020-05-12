@@ -51,7 +51,6 @@ class SimpleAttentionNetwork(Learner):
 
         n_inst, n_objects, n_features = X.shape
         self.model = self.construct_model(n_objects, n_features)
-        configure_callbacks(self.model, callbacks)
 
         if generator is None:
             self.model.fit(x=X, y=Y, callbacks=callbacks, epochs=epochs, validation_split=validation_split,
