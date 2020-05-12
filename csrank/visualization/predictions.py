@@ -113,7 +113,7 @@ def plot_path(x_instances, rankings, color, line_style, label):
 def create_image_plotting_graph(iteration):
     matplotlib_img_bytes = tf.placeholder(dtype='string')
     tensorflow_img = bytes_to_tensor(matplotlib_img_bytes)
-    summary_img = tf.summary.image("prediction_vis/"+iteration, tensor=tensorflow_img)
+    summary_img = tf.summary.image("prediction_vis/"+str(iteration), tensor=tensorflow_img)
     merged = tf.summary.merge([summary_img])
 
     return matplotlib_img_bytes, merged
@@ -122,7 +122,7 @@ def create_image_plotting_graph(iteration):
 def create_attention_plotting_graph(iteration, layer_name):
     matplotlib_img_bytes = tf.placeholder(dtype='string')
     tensorflow_img = bytes_to_tensor(matplotlib_img_bytes)
-    summary_img = tf.summary.image("attention_vis/{}/{}".format(layer_name,iteration), tensor=tensorflow_img)
+    summary_img = tf.summary.image("attention_vis/{}/{}".format(layer_name, str(iteration)), tensor=tensorflow_img)
     merged = tf.summary.merge([summary_img])
 
     return matplotlib_img_bytes, merged

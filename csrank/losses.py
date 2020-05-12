@@ -219,7 +219,7 @@ def tsp_probability_matrix_loss(y_true, y_pred):
 
     # compute matrix of U_A / (U_A + U_B)
     exp_pred = K.exp(y_pred)
-    exp_matrix = exp_pred / (exp_pred[:, None] + exp_pred[:, :, None])
+    exp_matrix = exp_pred[:, None] / (exp_pred[:, None] + exp_pred[:, :, None])
 
     # compute matrix of pairwise hinge loss
     hinge_matrix = pairwise_hinge_matrix(y_true, y_pred)

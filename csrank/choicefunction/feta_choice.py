@@ -130,7 +130,7 @@ class FETAChoiceFunction(FETANetwork, ChoiceFunctions):
             zeroth_order_outputs = []
             inputs = []
             for i in range(self.n_objects):
-                x = create_input_lambda(i)(self.input_layer)
+                x = create_input_lambda(i)(self.attention_preselected_input)
                 inputs.append(x)
                 for hidden in self.hidden_layers_zeroth:
                     x = hidden(x)
@@ -144,8 +144,8 @@ class FETAChoiceFunction(FETANetwork, ChoiceFunctions):
                 x1 = inputs[i]
                 x2 = inputs[j]
             else:
-                x1 = create_input_lambda(i)(self.input_layer)
-                x2 = create_input_lambda(j)(self.input_layer)
+                x1 = create_input_lambda(i)(self.attention_preselected_input)
+                x2 = create_input_lambda(j)(self.attention_preselected_input)
             x1x2 = concatenate([x1, x2])
             x2x1 = concatenate([x2, x1])
 
@@ -171,10 +171,10 @@ class FETAChoiceFunction(FETANetwork, ChoiceFunctions):
         if self._use_zeroth_model:
             scores = add([scores, zeroth_order_scores])
         scores = Activation('sigmoid')(scores)
-        model = Model(inputs=self.model_input_layer, outputs=scores)
+        model = Model(inputs=self.input_layer, outputs=scores)
         self.logger.debug('Compiling complete model...')
         if self.loss_function_requires_x_values:
-            self.loss_function = self.loss_function(self.model_input_layer)
+            self.loss_function = self.loss_function(self.input_layer)
         model.compile(loss=self.loss_function, optimizer=self.optimizer, metrics=self.metrics)
         return model
 

@@ -2,11 +2,14 @@ import logging
 import math
 import os
 import warnings
+from datetime import datetime
 
 import h5py
 import numpy as np
+from keras import backend as K
 from keras.callbacks import *
 import tensorflow as tf
+from keras.callbacks import TensorBoard
 
 from csrank.metrics import tsp_loss_absolute_wrapper, tsp_distance_wrapper, tsp_loss_relative_wrapper
 from csrank.metrics_np import kendalls_tau_for_scores_np, spearman_correlation_for_scores_scipy, \
@@ -297,382 +300,443 @@ class WeightPrinterCallback(Callback):
             print(layer.get_weights())
 
 
-class AdvancedTensorBoard(TensorBoard):
-    def __init__(self, data_visualization_func=None, metric_for_visualization=None,
-                 metric_for_visualization_requires_x=False,
-                 num_visualizations_per_epoch=3, log_lr=True, log_gradient_norms=True, save_space=True,
-                 visualization_frequency=None, save_visualization_data=False, metrics=[], metric_requires_x=[],
-                 log_attention=False, **kwargs):
-        super(AdvancedTensorBoard, self).__init__(**kwargs)
-
-        # set up logging
-        self.logger = logging.getLogger('Advanced_Tensorboard')
-
-        # create plotting function if necessary
-        func_dict = {
-            'tsp_2d': tsp_figure
-        }
-        if data_visualization_func is not None and isinstance(data_visualization_func, str):
-            self.data_visualizing_func = func_dict[data_visualization_func]
-        else:
-            self.data_visualizing_func = data_visualization_func
-
-        # to avoid circular imports this dictionary converts give metrics
-        all_metrics = {'KendallsTau': kendalls_tau_for_scores_np,
-                       'SpearmanCorrelation': spearman_correlation_for_scores_scipy,
-                       'ZeroOneRankLoss': zero_one_rank_loss_for_scores_np,
-                       'ZeroOneRankLossTies': zero_one_rank_loss_for_scores_ties_np,
-                       'ZeroOneAccuracy': zero_one_accuracy_for_scores_np,
-                       'TSPAbsoluteDifference_requiresX': tsp_loss_absolute_wrapper,
-                       'TSPRelativeDifference_requiresX': tsp_loss_relative_wrapper,
-                       'TSPDistance_requiresX': tsp_distance_wrapper,
-                       'CategoricalAccuracy': categorical_accuracy_np,
-                       'CategoricalTopK2': topk_categorical_accuracy_np(k=2),
-                       'CategoricalTopK3': topk_categorical_accuracy_np(k=3),
-                       'CategoricalTopK4': topk_categorical_accuracy_np(k=4),
-                       'CategoricalTopK5': topk_categorical_accuracy_np(k=5),
-                       'CategoricalTopK6': topk_categorical_accuracy_np(k=6),
-                       'F1Score': f1_measure, 'Precision': precision, 'Recall': recall,
-                       'Subset01loss': subset_01_loss, 'HammingLoss': hamming, 'Informedness': instance_informedness,
-                       "AucScore": auc_score, "AveragePrecisionScore": average_precision
-                       }
-
-        # create metric for the plot
-        if metric_for_visualization is not None:
-            if isinstance(metric_for_visualization, str):
-                self.metric_for_logging_func = all_metrics[metric_for_visualization]
-            else:
-                self.metric_for_logging_func = metric_for_visualization
-        self.metric_for_logging_func_requires_x = metric_for_visualization_requires_x
-
-        # create metrics that should be tracked
-        self.metrics = [all_metrics[metric] for metric in metrics]
-        self.metric_requires_x = metric_requires_x
-
-        # check if data needs to be saved
-        if data_visualization_func is not None or len(metrics) > 0 or log_attention or save_visualization_data:
-            self.save_data = True
-
-            self.inputs = []
-            self.targets = []
-            self.outputs = []
-
-            self.tmp_inputs = tf.Variable(0., validate_shape=False)
-            self.tmp_targets = tf.Variable(0., validate_shape=False)
-            self.tmp_outputs = tf.Variable(0., validate_shape=False)
-
-            self.batches_per_epoch = [0]
-            self.current_epoch = 0
-        else:
-            self.save_data = False
-
-        # check if attention data shall be saved
-        if log_attention:
-            self.tmp_attention_keys = {}
-            self.tmp_attention_queries = {}
-            self.tmp_attention_scores = {}
-            # maps attention vis names to their variables
-            self.attention_keys = {}
-            self.attention_queries = {}
-            self.attention_scores = {}
-        self.log_attention = log_attention
-
-        # set visualization frequency
-        if visualization_frequency is not None:
-            self.visualization_frequency = visualization_frequency
-        else:
-            self.visualization_frequency = self.histogram_freq
-
-        # save all other parameters
-        self.num_visualizations_per_epoch = num_visualizations_per_epoch
-        self.log_lr = log_lr
-        self.log_gradient_norms = log_gradient_norms
-        self.save_space = save_space
-        self.save_visualization_data = save_visualization_data
-
-    def set_model(self, model):
-        # create scalar and histograms for gradient norms
-        if self.log_gradient_norms and self.histogram_freq and self.merged is None:
-            all_gradients = []
-            for layer in model.layers:
-                for weight in layer.weights:
-                    mapped_weight_name = weight.name.replace(':', '_')
-                    if self.log_gradient_norms and weight in layer.trainable_weights:
-                        grads = model.optimizer.get_gradients(model.total_loss,
-                                                              weight)
-
-                        def is_indexed_slices(grad):
-                            return type(grad).__name__ == 'IndexedSlices'
-
-                        grads = [tf.norm(grad.values) if is_indexed_slices(grad) else tf.norm(grad) for grad in grads]
-                        for grad in grads:
-                            all_gradients.append(grad)
-
-                        tf.summary.histogram(name='{}_grad_norm'.format(mapped_weight_name), values=grads)
-
-            global_norm = tf.linalg.global_norm(all_gradients)
-            tf.summary.scalar(name='global_norm', tensor=global_norm)
-
-        super(AdvancedTensorBoard, self).set_model(model)
-
-    def on_batch_end(self, batch, logs=None):
-        # if data needs to be saved, convert data from batch to numpy arrays and save
-        if self.save_data and self.current_epoch % self.visualization_frequency == 0:
-            # get data
-            self.inputs.append(K.eval(self.tmp_inputs))
-            self.targets.append(K.eval(self.tmp_targets))
-            self.outputs.append(K.eval(self.tmp_outputs))
-
-            if self.log_attention:
-                for attention_layer, query in self.tmp_attention_queries.items():
-                    self.attention[attention_layer].append(K.eval(query))
-                for attention_layer, key in self.tmp_attention_keys.items():
-                    self.attention[attention_layer].append(K.eval(query))
-                for attention_layer, score in self.tmp_attention_scores.items():
-                    self.attention[attention_layer].append(K.eval(score))
-
-            # increase batch counter by 1
-            self.batches_per_epoch[-1] += 1
-
-        super(AdvancedTensorBoard, self).on_batch_end(batch, logs)
-
-    def on_epoch_end(self, epoch, logs=None):
-        # if the learning rate is logged, note the value
-        if self.log_lr:
-            logs = logs or {}
-            logs.update({'learning_rate': K.eval(self.model.optimizer.lr)})
-
-        # if in the next epoch input data is to be logged, reset batches per epoch
-        if self.save_data:
-            self.current_epoch += 1
-            if self.current_epoch % self.visualization_frequency == 0:
-                self.batches_per_epoch.append(0)
-
-        super(AdvancedTensorBoard, self).on_epoch_end(epoch, logs)
-
-    def on_train_end(self, logs):
-        self.logger.info("Training has ended; starting to do visualizations and additional scalars")
-
-        if self.save_data:
-            # if any prediction visualizations are to be made, we choose the first k instances (k is however many
-            # instances should be visualized) from the first batch in the first epoch, and identify them in all
-            # following epochs, which needs to be done as instances are shuffled between epochs during training.
-
-            # find the correct instances
-            inputs, outputs, targets = self.extract_needed_instances()
-
-            # prepare data structures for saving visualization data for later
-            if self.save_visualization_data:
-                save_data = self.prepare_save_data()
-
-            with tf.Session() as sess:
-
-                # plot images (or just save the data for it)
-                if self.data_visualizing_func is not None or self.save_visualization_data or self.log_attention:
-                    for j in range(self.num_visualizations_per_epoch):
-                        # create prediction visualization graph
-                        if self.data_visualizing_func is not None:
-                            matplotlib_img_bytes, prediction_merged = create_image_plotting_graph(str(j))
-
-                        # create attention activation visualization graph
-                        if self.log_attention:
-                            attention_img_bytes, attention_merged = [create_attention_plotting_graph(str(i), layer_name)
-                                                   for layer_name in self.attention_keys.keys()]
-
-                        previous_prediction = np.empty(shape=1)
-
-                        for i in range(len(inputs)):
-                            current_prediction = scores_to_rankings(np.asarray([outputs[i][j]]))
-
-                            # if space is saved, images are only plotted if the actual ranking has changed from one
-                            # epoch to another in order not to plot an unnecessary amount of images
-                            if (self.save_space and not np.array_equal(previous_prediction, current_prediction)) \
-                                    or not self.save_space:
-
-                                if self.save_visualization_data:
-                                    save_data['epoch'].append(i * self.visualization_frequency)
-                                    save_data['instance_index'].append(j)
-
-                                if self.metric_for_logging_func is not None and self.save_visualization_data:
-                                    metric = self.create_metric(i, inputs, j, outputs, targets)
-                                    save_data['metric'].append(metric)
-                                else:
-                                    metric = None
-
-                                if self.data_visualizing_func is not None:
-                                    self.plot_data_prediction(i, inputs, j, matplotlib_img_bytes, prediction_merged,
-                                                              metric, outputs, sess, targets)
-                                    if self.save_visualization_data:
-                                        self.save_image_plotting_data(i, inputs, j, outputs, save_data, targets)
-
-                                if self.log_attention:
-                                    for layer_name in self.attention_keys.keys():
-                                        self.plot_data_attention(i=i, queries=self.attention_queries[layer_name], j=j,
-                                                                 attention_img_bytes=attention_img_bytes,
-                                                                 merged=attention_merged,
-                                                                 keys=self.attention_keys[layer_name],
-                                                                 scores=self.attention_scores[layer_name],
-                                                                 sess=sess)
-
-                                previous_prediction = current_prediction
-
-                self.logger.info("Done with visualizations, starting scalars")
-
-                # plot the metric if any is given
-                if len(self.metrics) > 0:
-                    self.add_metric_plots(sess)
-
-                self.logger.info("Done with scalars")
-
-            self.writer.flush()
-
-        # write data used to create the visualizations to a file
-        if self.save_visualization_data:
-            self.logger.info("Saving visualization raw origin data")
-            self.write_visualizations_file(save_data)
-            self.logger.info("Done saving data")
-
-        self.logger.info("Custom train end done")
-
-        super(AdvancedTensorBoard, self).on_train_end(logs)
-
-    def plot_data_prediction(self, i, inputs, j, matplotlib_img_bytes, merged, metric, outputs, sess, targets):
-        figure = figure_to_bytes(self.data_visualizing_func(inputs[i][j], targets[i][j],
-                                                            outputs[i][j], metric,
-                                                            i * self.visualization_frequency))
-        run_summary = sess.run(fetches=merged, feed_dict={matplotlib_img_bytes: figure})
-        self.writer.add_summary(run_summary, i * self.visualization_frequency)
-
-    def plot_data_attention(self, i, queries, j, attention_img_bytes, merged, keys, sess, scores):
-        figure = figure_to_bytes(visualize_attention_scores(queries[i][j], keys[i][j], scores[i][j]))
-
-        run_summary = sess.run(fetches=merged, feed_dict={attention_img_bytes: figure})
-        self.writer.add_summary(run_summary, i * self.visualization_frequency)
-
-    def add_metric_plots(self, sess):
-        metric_values_in_epoch = {}
-        for metric in self.metrics:
-            metric_values_in_epoch[metric] = []
-        # go through the data epoch by epoch
-        batches_so_far = 0
-        for epoch in self.batches_per_epoch:
-            metric_values = {}
-            for metric in self.metrics:
-                metric_values[metric] = []
-
-            for batch in range(batches_so_far, batches_so_far + self.batches_per_epoch[epoch]):
-                for metric in range(len(self.metrics)):
-                    if self.metric_requires_x[metric]:
-                        metric_values_in_batch = self.metrics[metric] \
-                            (self.inputs[batch]) \
-                            (self.targets[batch], self.outputs[batch])
-                    else:
-                        metric_values_in_batch = self.metrics[metric] \
-                            (self.targets[batch], self.outputs[batch])
-
-                    metric_value_in_batch_list = metric_values_in_batch.tolist()
-                    if isinstance(metric_value_in_batch_list, list):
-                        metric_values[self.metrics[metric]].extend(metric_values_in_batch)
-                    else:
-                        metric_values[self.metrics[metric]].append(metric_values_in_batch)
-
-                for metric in self.metrics:
-                    avg = np.average(metric_values[metric])
-                    metric_values_in_epoch[metric].append(avg)
-                    metric_values[metric] = []
-
-            batches_so_far += self.batches_per_epoch[epoch]
-        # plot data
-        value_placeholders = []
-        summary_scalars = []
-        for metric in self.metrics:
-            value_placeholder, summary_scalar = create_scalar_plotting_graph(metric.__name__)
-            value_placeholders.append(value_placeholder)
-            summary_scalars.append(summary_scalar)
-        merged = tf.summary.merge(summary_scalars)
-        for epoch in range(len(self.batches_per_epoch)):
-            data = [metric_values_in_epoch[metric][epoch] for metric in self.metrics]
-            run_summary = sess.run(fetches=merged, feed_dict={input_: data_entry for input_, data_entry in
-                                                              zip(value_placeholders, data)})
-            self.writer.add_summary(run_summary, epoch * self.visualization_frequency)
-
-    def write_visualizations_file(self, save_data):
-        pred_file = os.path.join(self.log_dir, "visualizations.h5")
-        create_dir_recursively(pred_file, True)
-        f = h5py.File(pred_file, 'w')
-        f.create_dataset('epoch', data=np.asarray(save_data['epoch']))
-        f.create_dataset('instance_index', data=np.asarray(save_data['instance_index']))
-        f.create_dataset('inputs', data=np.asarray(save_data['inputs']))
-        f.create_dataset('outputs', data=np.asarray(save_data['outputs']))
-        f.create_dataset('targets', data=np.asarray(save_data['targets']))
-        if self.metric_for_logging_func is not None:
-            data_set = f.create_dataset('metric', data=np.asarray(save_data['metric']))
-            data_set.attrs['metric_name'] = self.metric_for_logging_func.__name__
-        f.close()
-
-    def save_image_plotting_data(self, i, inputs, j, outputs, save_data, targets):
-        save_data['inputs'].append(inputs[i][j])
-        save_data['outputs'].append(outputs[i][j])
-        save_data['targets'].append(targets[i][j])
-
-    def prepare_save_data(self):
-        save_data = {
-            'epoch': [],
-            'instance_index': [],
-            'inputs': [],
-            'outputs': [],
-            'targets': []
-        }
-        if self.metric_for_logging_func is not None:
-            save_data['metric'] = []
-        return save_data
-
-    def create_metric(self, i, inputs, j, outputs, targets):
-        if self.metric_for_logging_func is not None:
-            if self.metric_for_logging_func_requires_x:
-                metric_func = self.metric_for_logging_func([inputs[i][j]])
-                metric = metric_func([targets[i][j]], [outputs[i][j]])
-            else:
-                metric = self.metric_for_logging_func(targets[i][j], outputs[i][j])
-            return metric
-        else:
-            return None
-
-    def extract_needed_instances(self):
-        inputs = [self.inputs[0][0:self.num_visualizations_per_epoch]]
-        outputs = [self.outputs[0][0:self.num_visualizations_per_epoch]]
-        targets = [self.targets[0][0:self.num_visualizations_per_epoch]]
-        # for every epoch (except the first)
-        last_element = self.batches_per_epoch[-1]
-        if last_element == 0:
-            del self.batches_per_epoch[-1]
-        batches_so_far = self.batches_per_epoch[0]
-        for epoch in range(1, len(self.batches_per_epoch)):
-            inputs.append(np.empty(inputs[0].shape))
-            outputs.append(np.empty(outputs[0].shape))
-            targets.append(np.empty(targets[0].shape))
-
-            # for every correctly ordered instance
-            for correct_instance in range(len(inputs[0])):
-                input_, output, target = self.find_correct_instance(
-                    batches_so_far, self.batches_per_epoch[epoch], inputs[0][correct_instance])
-
-                inputs[epoch][correct_instance] = input_
-                outputs[epoch][correct_instance] = output
-                targets[epoch][correct_instance] = target
-
-            batches_so_far += self.batches_per_epoch[epoch]
-        return inputs, outputs, targets
-
-    def find_correct_instance(self, batches_so_far, num_batches_per_epoch, correct_instance):
-        # for every batch in that epoch
-        for batch in range(batches_so_far, batches_so_far + num_batches_per_epoch):
-            # for every instance in that
-            for instance in range(len(self.inputs[batch])):
-                if np.array_equal(self.inputs[batch][instance], correct_instance):
-                    return self.inputs[batch][instance], self.outputs[batch][instance], self.targets[batch][instance]
-
-        raise ValueError("didnt find instance \n {} :(".format(correct_instance))
+# class AdvancedTensorBoard(TensorBoard):
+#     def __init__(self, data_visualization_func=None, metric_for_visualization=None,
+#                  metric_for_visualization_requires_x=False, num_visualizations_per_epoch=3, log_lr=True,
+#                  log_gradient_norms=True, save_space=True, visualization_frequency=1, save_visualization_data=False,
+#                  metrics=[], metric_requires_x=[], log_attention=False, **kwargs):
+#         super(AdvancedTensorBoard, self).__init__(**kwargs)
+#
+#         if (data_visualization_func is not None or save_visualization_data or log_attention) \
+#                 and (visualization_frequency is None or not visualization_frequency):
+#             raise ValueError("If visualizations shall be made or saved, "
+#                              "the visualization frequency needs to be at least 1.")
+#
+#         # set up logging
+#         self.logger = logging.getLogger('Advanced_Tensorboard')
+#
+#         # create plotting function if necessary
+#         func_dict = {
+#             'tsp_2d': tsp_figure
+#         }
+#         if data_visualization_func is not None and isinstance(data_visualization_func, str):
+#             self.data_visualizing_func = func_dict[data_visualization_func]
+#         else:
+#             self.data_visualizing_func = data_visualization_func
+#
+#         # to avoid circular imports this dictionary converts give metrics
+#         all_metrics = {'KendallsTau': kendalls_tau_for_scores_np,
+#                        'SpearmanCorrelation': spearman_correlation_for_scores_scipy,
+#                        'ZeroOneRankLoss': zero_one_rank_loss_for_scores_np,
+#                        'ZeroOneRankLossTies': zero_one_rank_loss_for_scores_ties_np,
+#                        'ZeroOneAccuracy': zero_one_accuracy_for_scores_np,
+#                        'TSPAbsoluteDifference_requiresX': tsp_loss_absolute_wrapper,
+#                        'TSPRelativeDifference_requiresX': tsp_loss_relative_wrapper,
+#                        'TSPDistance_requiresX': tsp_distance_wrapper,
+#                        'CategoricalAccuracy': categorical_accuracy_np,
+#                        'CategoricalTopK2': topk_categorical_accuracy_np(k=2),
+#                        'CategoricalTopK3': topk_categorical_accuracy_np(k=3),
+#                        'CategoricalTopK4': topk_categorical_accuracy_np(k=4),
+#                        'CategoricalTopK5': topk_categorical_accuracy_np(k=5),
+#                        'CategoricalTopK6': topk_categorical_accuracy_np(k=6),
+#                        'F1Score': f1_measure, 'Precision': precision, 'Recall': recall,
+#                        'Subset01loss': subset_01_loss, 'HammingLoss': hamming, 'Informedness': instance_informedness,
+#                        "AucScore": auc_score, "AveragePrecisionScore": average_precision
+#                        }
+#
+#         # create metric for the plot
+#         if metric_for_visualization is not None:
+#             if isinstance(metric_for_visualization, str):
+#                 self.metric_for_logging_func = all_metrics[metric_for_visualization]
+#             else:
+#                 self.metric_for_logging_func = metric_for_visualization
+#         else:
+#             self.metric_for_logging_func = None
+#         self.metric_for_logging_func_requires_x = metric_for_visualization_requires_x
+#
+#         # create metrics that should be tracked
+#         self.metrics = [all_metrics[metric] for metric in metrics]
+#         self.metric_requires_x = metric_requires_x
+#
+#         # check if data needs to be saved
+#         if data_visualization_func is not None or len(metrics) > 0 or log_attention or save_visualization_data:
+#             self.save_data = True
+#
+#             self.inputs = []
+#             self.targets = []
+#             self.outputs = []
+#
+#             self.tmp_inputs = tf.Variable(0., validate_shape=False)
+#             self.tmp_targets = tf.Variable(0., validate_shape=False)
+#             self.tmp_outputs = tf.Variable(0., validate_shape=False)
+#
+#             self.batches_per_epoch = [0]
+#             self.current_epoch = 0
+#         else:
+#             self.save_data = False
+#
+#         # check if attention data shall be saved
+#         if log_attention:
+#             self.tmp_attention_keys = {}
+#             self.tmp_attention_queries = {}
+#             self.tmp_attention_scores = {}
+#             # maps attention vis names to their variables
+#             self.attention_keys = {}
+#             self.attention_queries = {}
+#             self.attention_scores = {}
+#         self.log_attention = log_attention
+#
+#         # set visualization frequency
+#         if visualization_frequency is not None:
+#             self.visualization_frequency = visualization_frequency
+#         else:
+#             self.visualization_frequency = self.histogram_freq
+#
+#         # save all other parameters
+#         self.num_visualizations_per_epoch = num_visualizations_per_epoch
+#         self.log_lr = log_lr
+#         self.log_gradient_norms = log_gradient_norms
+#         self.save_space = save_space
+#         self.save_visualization_data = save_visualization_data
+#
+#     def set_model(self, model):
+#         # create scalar and histograms for gradient norms
+#         if self.log_gradient_norms and self.histogram_freq and self.merged is None:
+#             all_gradients = []
+#             for layer in model.layers:
+#                 for weight in layer.weights:
+#                     mapped_weight_name = weight.name.replace(':', '_')
+#                     if self.log_gradient_norms and weight in layer.trainable_weights:
+#                         grads = model.optimizer.get_gradients(model.total_loss,
+#                                                               weight)
+#
+#                         def is_indexed_slices(grad):
+#                             return type(grad).__name__ == 'IndexedSlices'
+#
+#                         grads = [tf.norm(grad.values) if is_indexed_slices(grad) else tf.norm(grad) for grad in grads]
+#                         for grad in grads:
+#                             all_gradients.append(grad)
+#
+#                         tf.summary.histogram(name='{}_grad_norm'.format(mapped_weight_name), values=grads)
+#
+#             global_norm = tf.linalg.global_norm(all_gradients)
+#             tf.summary.scalar(name='global_norm', tensor=global_norm)
+#
+#         super(AdvancedTensorBoard, self).set_model(model)
+#
+#     def on_batch_end(self, batch, logs=None):
+#         # if data needs to be saved, convert data from batch to numpy arrays and save
+#         if self.save_data and self.current_epoch % self.visualization_frequency == 0:
+#             # get data
+#             self.inputs.append(K.eval(self.tmp_inputs))
+#             self.targets.append(K.eval(self.tmp_targets))
+#             self.outputs.append(K.eval(self.tmp_outputs))
+#
+#             if self.log_attention:
+#                 for attention_layer, query in self.tmp_attention_queries.items():
+#                     self.attention_queries[attention_layer].append(K.eval(query))
+#                 for attention_layer, key in self.tmp_attention_keys.items():
+#                     self.attention_keys[attention_layer].append(K.eval(key))
+#                 for attention_layer, score in self.tmp_attention_scores.items():
+#                     self.attention_scores[attention_layer].append(K.eval(score))
+#
+#             # increase batch counter by 1
+#             self.batches_per_epoch[-1] += 1
+#
+#         super(AdvancedTensorBoard, self).on_batch_end(batch, logs)
+#
+#     def on_epoch_end(self, epoch, logs=None):
+#         # if the learning rate is logged, note the value
+#         if self.log_lr:
+#             logs = logs or {}
+#             logs.update({'learning_rate': K.eval(self.model.optimizer.lr)})
+#
+#         # if in the next epoch input data is to be logged, reset batches per epoch
+#         if self.save_data:
+#             self.current_epoch += 1
+#             if self.current_epoch % self.visualization_frequency == 0:
+#                 self.batches_per_epoch.append(0)
+#
+#         super(AdvancedTensorBoard, self).on_epoch_end(epoch, logs)
+#
+#     def on_train_end(self, logs):
+#         self.logger.info("Training has ended; starting to do visualizations and additional scalars")
+#         self.train_end_time = datetime.now()
+#
+#         if self.save_data:
+#             # if any prediction visualizations are to be made, we choose the first k instances (k is however many
+#             # instances should be visualized) from the first batch in the first epoch, and identify them in all
+#             # following epochs, which needs to be done as instances are shuffled between epochs during training.
+#
+#             # find the correct instances
+#             if not self.log_attention:
+#                 inputs, outputs, targets = self.extract_needed_instances()
+#             else:
+#                 inputs, outputs, targets, queries, keys, scores = self.extract_needed_instances()
+#
+#             # prepare data structures for saving visualization data for later
+#             if self.save_visualization_data:
+#                 save_data = self.prepare_save_data()
+#
+#             with tf.Session() as sess:
+#
+#                 # plot images (or just save the data for it)
+#                 if self.data_visualizing_func is not None or self.save_visualization_data or self.log_attention:
+#                     for j in range(self.num_visualizations_per_epoch):
+#                         # create prediction visualization graph
+#                         if self.data_visualizing_func is not None:
+#                             matplotlib_img_bytes, prediction_merged = create_image_plotting_graph(str(j))
+#
+#                         # create attention activation visualization graph
+#                         if self.log_attention:
+#                             attention_for_layers = {}
+#                             for layer_name in self.attention_keys.keys():
+#                                 attention_for_layers[layer_name] = create_attention_plotting_graph(str(j), layer_name)
+#
+#                         previous_prediction = np.empty(shape=1)
+#
+#                         for i in range(len(inputs)):
+#                             current_prediction = scores_to_rankings(np.asarray([outputs[i][j]]))
+#
+#                             # if space is saved, images are only plotted if the actual ranking has changed from one
+#                             # epoch to another in order not to plot an unnecessary amount of images
+#                             if (self.save_space and not np.array_equal(previous_prediction, current_prediction)) \
+#                                     or not self.save_space:
+#                                 if self.save_visualization_data:
+#                                     save_data['epoch'].append(i * self.visualization_frequency)
+#                                     save_data['instance_index'].append(j)
+#
+#                                 if self.metric_for_logging_func is not None and self.save_visualization_data:
+#                                     metric = self.create_metric(i, inputs, j, outputs, targets)
+#                                     save_data['metric'].append(metric)
+#                                 else:
+#                                     metric = None
+#
+#                                 if self.data_visualizing_func is not None:
+#                                     self.plot_data_prediction(i, inputs, j, matplotlib_img_bytes, prediction_merged,
+#                                                               metric, outputs, sess, targets)
+#                                     if self.save_visualization_data:
+#                                         self.save_image_plotting_data(i, inputs, j, outputs, save_data, targets)
+#
+#                                 if self.log_attention:
+#                                     for layer_name in self.attention_keys.keys():
+#                                         self.plot_data_attention(i=i, queries=self.attention_queries[layer_name], j=j,
+#                                                                  attention_img_bytes=attention_for_layers[layer_name][
+#                                                                      0],
+#                                                                  merged=attention_for_layers[layer_name][1],
+#                                                                  keys=self.attention_keys[layer_name],
+#                                                                  scores=self.attention_scores[layer_name],
+#                                                                  sess=sess)
+#
+#                                 previous_prediction = current_prediction
+#
+#                 self.logger.info("Done with visualizations, starting scalars")
+#
+#                 # plot the metric if any is given
+#                 if len(self.metrics) > 0:
+#                     self.add_metric_plots(sess)
+#
+#                 self.logger.info("Done with scalars")
+#
+#             self.writer.flush()
+#
+#         # write data used to create the visualizations to a file
+#         if self.save_visualization_data:
+#             self.logger.info("Saving visualization raw origin data")
+#             self.write_visualizations_file(save_data)
+#             self.logger.info("Done saving data")
+#
+#         self.logger.info("Custom train end done")
+#
+#         super(AdvancedTensorBoard, self).on_train_end(logs)
+#
+#     def plot_data_prediction(self, i, inputs, j, matplotlib_img_bytes, merged, metric, outputs, sess, targets):
+#         figure = figure_to_bytes(self.data_visualizing_func(inputs[i][j], targets[i][j],
+#                                                             outputs[i][j], metric,
+#                                                             i * self.visualization_frequency))
+#         run_summary = sess.run(fetches=merged, feed_dict={matplotlib_img_bytes: figure})
+#         self.writer.add_summary(run_summary, i * self.visualization_frequency)
+#
+#     def plot_data_attention(self, i, queries, j, attention_img_bytes, merged, keys, sess, scores):
+#         figure = figure_to_bytes(visualize_attention_scores(queries[i][j], keys[i][j], scores[i][j]))
+#
+#         run_summary = sess.run(fetches=merged, feed_dict={attention_img_bytes: figure})
+#         self.writer.add_summary(run_summary, i * self.visualization_frequency)
+#
+#     def add_metric_plots(self, sess):
+#         metric_values_in_epoch = {}
+#         for metric in self.metrics:
+#             metric_values_in_epoch[metric] = []
+#         # go through the data epoch by epoch
+#         batches_so_far = 0
+#         for epoch in self.batches_per_epoch:
+#             metric_values = {}
+#             for metric in self.metrics:
+#                 metric_values[metric] = []
+#
+#             for batch in range(batches_so_far, batches_so_far + self.batches_per_epoch[epoch]):
+#                 for metric in range(len(self.metrics)):
+#                     if self.metric_requires_x[metric]:
+#                         metric_values_in_batch = self.metrics[metric] \
+#                             (self.inputs[batch]) \
+#                             (self.targets[batch], self.outputs[batch])
+#                     else:
+#                         metric_values_in_batch = self.metrics[metric] \
+#                             (self.targets[batch], self.outputs[batch])
+#
+#                     metric_value_in_batch_list = metric_values_in_batch.tolist()
+#                     if isinstance(metric_value_in_batch_list, list):
+#                         metric_values[self.metrics[metric]].extend(metric_values_in_batch)
+#                     else:
+#                         metric_values[self.metrics[metric]].append(metric_values_in_batch)
+#
+#                 for metric in self.metrics:
+#                     avg = np.average(metric_values[metric])
+#                     metric_values_in_epoch[metric].append(avg)
+#                     metric_values[metric] = []
+#
+#             batches_so_far += self.batches_per_epoch[epoch]
+#         # plot data
+#         value_placeholders = []
+#         summary_scalars = []
+#         for metric in self.metrics:
+#             value_placeholder, summary_scalar = create_scalar_plotting_graph(metric.__name__)
+#             value_placeholders.append(value_placeholder)
+#             summary_scalars.append(summary_scalar)
+#         merged = tf.summary.merge(summary_scalars)
+#         for epoch in range(len(self.batches_per_epoch)):
+#             data = [metric_values_in_epoch[metric][epoch] for metric in self.metrics]
+#             run_summary = sess.run(fetches=merged, feed_dict={input_: data_entry for input_, data_entry in
+#                                                               zip(value_placeholders, data)})
+#             self.writer.add_summary(run_summary, epoch * self.visualization_frequency)
+#
+#     def write_visualizations_file(self, save_data):
+#         pred_file = os.path.join(self.log_dir, "visualizations.h5")
+#         create_dir_recursively(pred_file, True)
+#         f = h5py.File(pred_file, 'w')
+#         f.create_dataset('epoch', data=np.asarray(save_data['epoch']))
+#         f.create_dataset('instance_index', data=np.asarray(save_data['instance_index']))
+#         f.create_dataset('inputs', data=np.asarray(save_data['inputs']))
+#         f.create_dataset('outputs', data=np.asarray(save_data['outputs']))
+#         f.create_dataset('targets', data=np.asarray(save_data['targets']))
+#         if self.metric_for_logging_func is not None:
+#             data_set = f.create_dataset('metric', data=np.asarray(save_data['metric']))
+#             data_set.attrs['metric_name'] = self.metric_for_logging_func.__name__
+#         f.close()
+#
+#     def save_image_plotting_data(self, i, inputs, j, outputs, save_data, targets):
+#         save_data['inputs'].append(inputs[i][j])
+#         save_data['outputs'].append(outputs[i][j])
+#         save_data['targets'].append(targets[i][j])
+#
+#     def prepare_save_data(self):
+#         save_data = {
+#             'epoch': [],
+#             'instance_index': [],
+#             'inputs': [],
+#             'outputs': [],
+#             'targets': []
+#         }
+#         if self.metric_for_logging_func is not None:
+#             save_data['metric'] = []
+#         return save_data
+#
+#     def create_metric(self, i, inputs, j, outputs, targets):
+#         if self.metric_for_logging_func is not None:
+#             if self.metric_for_logging_func_requires_x:
+#                 metric_func = self.metric_for_logging_func([inputs[i][j]])
+#                 metric = metric_func([targets[i][j]], [outputs[i][j]])
+#             else:
+#                 metric = self.metric_for_logging_func(targets[i][j], outputs[i][j])
+#             return metric
+#         else:
+#             return None
+#
+#     def extract_needed_instances(self):
+#         inputs = [self.inputs[0][0:self.num_visualizations_per_epoch]]
+#         outputs = [self.outputs[0][0:self.num_visualizations_per_epoch]]
+#         targets = [self.targets[0][0:self.num_visualizations_per_epoch]]
+#
+#         if self.log_attention:
+#             queries = {}
+#             keys = {}
+#             scores = {}
+#
+#             for layer_name in self.attention_queries.keys():
+#                 queries[layer_name] = [self.attention_queries[layer_name][0][0:self.num_visualizations_per_epoch]]
+#                 keys[layer_name] = [self.attention_keys[layer_name][0][0:self.num_visualizations_per_epoch]]
+#                 scores[layer_name] = [self.attention_scores[layer_name][0][0:self.num_visualizations_per_epoch]]
+#
+#         # for every epoch (except the first)
+#         last_element = self.batches_per_epoch[-1]
+#         if last_element == 0:
+#             del self.batches_per_epoch[-1]
+#         batches_so_far = self.batches_per_epoch[0]
+#         for epoch in range(1, len(self.batches_per_epoch)):
+#             inputs.append(np.empty(inputs[0].shape))
+#             outputs.append(np.empty(outputs[0].shape))
+#             targets.append(np.empty(targets[0].shape))
+#
+#             if self.log_attention:
+#                 for layer_name in self.attention_queries.keys():
+#                     queries[layer_name].append(np.empty(queries[layer_name][0].shape))
+#                     keys[layer_name].append(np.empty(keys[layer_name][0].shape))
+#                     scores[layer_name].append(np.empty(scores[layer_name][0].shape))
+#
+#             # for every correctly ordered instance
+#             for correct_instance in range(len(inputs[0])):
+#                 if not self.log_attention:
+#                     input_, output, target = self.find_correct_instance(
+#                         batches_so_far, self.batches_per_epoch[epoch], inputs[0][correct_instance])
+#                 else:
+#                     input_, output, target, query, key, score = self.find_correct_instance(
+#                         batches_so_far, self.batches_per_epoch[epoch], inputs[0][correct_instance])
+#
+#                 inputs[epoch][correct_instance] = input_
+#                 outputs[epoch][correct_instance] = output
+#                 targets[epoch][correct_instance] = target
+#
+#                 if self.log_attention:
+#                     for layer_name in self.attention_queries.keys():
+#                         queries[layer_name][epoch][correct_instance] = query[layer_name]
+#                         keys[layer_name][epoch][correct_instance] = key[layer_name]
+#                         scores[layer_name][epoch][correct_instance] = score[layer_name]
+#
+#             batches_so_far += self.batches_per_epoch[epoch]
+#
+#         if not self.log_attention:
+#             return inputs, outputs, targets
+#         else:
+#             return inputs, outputs, targets, queries, keys, scores
+#
+#     def find_correct_instance(self, batches_so_far, num_batches_per_epoch, correct_instance):
+#         # for every batch in that epoch
+#         for batch in range(batches_so_far, batches_so_far + num_batches_per_epoch):
+#             # for every instance in that
+#             for instance in range(len(self.inputs[batch])):
+#                 if np.array_equal(self.inputs[batch][instance], correct_instance):
+#                     if not self.log_attention:
+#                         return self.inputs[batch][instance], \
+#                                self.outputs[batch][instance], \
+#                                self.targets[batch][instance]
+#                     else:
+#                         correct_queries = {}
+#                         correct_keys = {}
+#                         correct_scores = {}
+#
+#                         for layer_name in self.attention_queries.keys():
+#                             correct_queries[layer_name] = self.attention_queries[layer_name][batch][instance]
+#                             correct_keys[layer_name] = self.attention_keys[layer_name][batch][instance]
+#                             correct_scores[layer_name] = self.attention_scores[layer_name][batch][instance]
+#
+#                         return self.inputs[batch][instance], \
+#                                self.outputs[batch][instance], \
+#                                self.targets[batch][instance], \
+#                                correct_queries, \
+#                                correct_keys, \
+#                                correct_scores
+#
+#         raise ValueError("didnt find instance \n {} :(".format(correct_instance))
 
 
 class DebugOutput(Callback):
@@ -694,22 +758,245 @@ class DebugOutput(Callback):
             self.logger.debug('Epoch {} of the training finished.'.format(self.epoch))
 
 
-def configure_callbacks(model, list_of_callbacks):
+# def configure_callbacks(model, list_of_callbacks, attention_outputs=None):
+# #     # if tracking callback present, add to model fetches
+# #     if list_of_callbacks is not None:
+# #         for callback in list_of_callbacks:
+# #             if isinstance(callback, AdvancedTensorBoard):
+# #                 if model._function_kwargs is not None and 'fetches' in model._function_kwargs.keys():
+# #                     fetches = model._function_kwargs['fetches']
+# #                 else:
+# #                     fetches = []
+# #
+# #                 if callback.save_data:
+# #                     fetches.append(tf.assign(callback.tmp_inputs, model.inputs[0], validate_shape=False))
+# #                     fetches.append(tf.assign(callback.tmp_targets, model.targets[0], validate_shape=False))
+# #                     fetches.append(tf.assign(callback.tmp_outputs, model.outputs[0], validate_shape=False))
+# #
+# #                 if callback.log_attention:
+# #                     if attention_outputs is None:
+# #                         raise ValueError("No attention outputs for callback detected.")
+# #
+# #                     for attention_output in attention_outputs:
+# #                         name = attention_output["name"]
+# #                         query_var = tf.Variable(0., validate_shape=False)
+# #                         callback.tmp_attention_queries[name] = query_var
+# #                         key_var = tf.Variable(0., validate_shape=False)
+# #                         callback.tmp_attention_keys[name] = key_var
+# #                         scores_var = tf.Variable(0., validate_shape=False)
+# #                         callback.tmp_attention_scores[name] = scores_var
+# #
+# #                         callback.attention_queries[name] = []
+# #                         callback.attention_keys[name] = []
+# #                         callback.attention_scores[name] = []
+# #
+# #                         fetches.append(tf.assign(query_var, attention_output["query"], validate_shape=False))
+# #                         fetches.append(tf.assign(key_var, attention_output["key"], validate_shape=False))
+# #                         fetches.append(tf.assign(scores_var, attention_output["scores"], validate_shape=False))
+# #
+# #                 model._function_kwargs = {'fetches': fetches}
+
+
+def configure_callbacks(list_of_callbacks, attention_outputs=None):
     # if tracking callback present, add to model fetches
     if list_of_callbacks is not None:
         for callback in list_of_callbacks:
             if isinstance(callback, AdvancedTensorBoard):
-                if model._function_kwargs is not None and 'fetches' in model._function_kwargs.keys():
-                    fetches = model._function_kwargs['fetches']
-                else:
-                    fetches = []
-
-                if callback.save_data:
-                    fetches.append(tf.assign(callback.tmp_inputs, model.inputs[0], validate_shape=False))
-                    fetches.append(tf.assign(callback.tmp_targets, model.targets[0], validate_shape=False))
-                    fetches.append(tf.assign(callback.tmp_outputs, model.outputs[0], validate_shape=False))
-
                 if callback.log_attention:
-                    fetches.append(tf.assign(callback.tmp_attention, model.layers[1].outputs[0], validate_shape=False))
+                    if attention_outputs is None:
+                        raise ValueError("No attention outputs for callback detected.")
 
-                model._function_kwargs = {'fetches': fetches}
+                    for attention_output in attention_outputs:
+                        name = attention_output["name"]
+                        callback.attention_queries[name] = attention_output["query"]
+                        callback.attention_keys[name] = attention_output["key"]
+                        callback.attention_scores[name] = attention_output["scores"]
+
+
+class AdvancedTensorBoard(TensorBoard):
+    def __init__(self, inputs=None, targets=None, log_lr=False, log_gradient_norms=None,
+                 prediction_visualization=None, metric_for_visualization=None,
+                 metric_for_visualization_requires_x=False, log_attention=False, save_space=False,
+                 **kwargs):
+        super(AdvancedTensorBoard, self).__init__(**kwargs)
+
+        self.logger = logging.getLogger(self.__class__.__name__)
+
+        # check options
+        if log_gradient_norms is not None and log_gradient_norms not in ["all", "global"]:
+            raise ValueError("Allowed options for log_gradient_norms are: \"all\", \"global\", None\"")
+        func_dict = {
+            'tsp_2d': tsp_figure
+        }
+        if prediction_visualization is not None and isinstance(prediction_visualization, str):
+            self.prediction_visualization = func_dict[prediction_visualization]
+        else:
+            self.prediction_visualization = prediction_visualization
+
+        # create metric for the plot
+        # to avoid circular imports this dictionary converts give metrics
+        all_metrics = {'KendallsTau': kendalls_tau_for_scores_np,
+                       'SpearmanCorrelation': spearman_correlation_for_scores_scipy,
+                       'ZeroOneRankLoss': zero_one_rank_loss_for_scores_np,
+                       'ZeroOneRankLossTies': zero_one_rank_loss_for_scores_ties_np,
+                       'ZeroOneAccuracy': zero_one_accuracy_for_scores_np,
+                       'TSPAbsoluteDifference_requiresX': tsp_loss_absolute_wrapper,
+                       'TSPRelativeDifference_requiresX': tsp_loss_relative_wrapper,
+                       'TSPDistance_requiresX': tsp_distance_wrapper,
+                       'CategoricalAccuracy': categorical_accuracy_np,
+                       'CategoricalTopK2': topk_categorical_accuracy_np(k=2),
+                       'CategoricalTopK3': topk_categorical_accuracy_np(k=3),
+                       'CategoricalTopK4': topk_categorical_accuracy_np(k=4),
+                       'CategoricalTopK5': topk_categorical_accuracy_np(k=5),
+                       'CategoricalTopK6': topk_categorical_accuracy_np(k=6),
+                       'F1Score': f1_measure, 'Precision': precision, 'Recall': recall,
+                       'Subset01loss': subset_01_loss, 'HammingLoss': hamming, 'Informedness': instance_informedness,
+                       "AucScore": auc_score, "AveragePrecisionScore": average_precision
+                       }
+        if metric_for_visualization is not None:
+            if isinstance(metric_for_visualization, str):
+                self.metric_for_visualization = all_metrics[metric_for_visualization]
+            else:
+                self.metric_for_visualization = metric_for_visualization
+        else:
+            self.metric_for_visualization = None
+        self.metric_for_visualization_requires_x = metric_for_visualization_requires_x
+
+        # inputs and targets
+        self.x = inputs
+        self.y = targets
+
+        # options
+        self.log_lr = log_lr
+        self.log_gradient_norms = log_gradient_norms
+        self.save_space = save_space
+        self.log_attention = log_attention
+
+        # other attributes
+        self.symbolic_inputs = None
+        self.prediction_plotting_graphs = None
+        self.attention_plotting_graphs = {}
+        self.previous_prediction = None
+        self.attention_queries = {}
+        self.attention_keys = {}
+        self.attention_scores = {}
+
+    def on_train_begin(self, logs=None):
+        super(AdvancedTensorBoard, self).on_train_begin(logs)
+
+        if self.prediction_visualization is not None:
+            # create plotting graphs
+            self.prediction_plotting_graphs = np.asarray([create_image_plotting_graph(num_visualization)
+                                                          for num_visualization in range(len(self.x))])
+            # initial previous
+            self.previous_prediction = np.empty(shape=self.y.shape)
+
+        # create attention activation visualization graph
+        if self.log_attention:
+            for layer_name in self.attention_keys.keys():
+                self.attention_plotting_graphs[layer_name] = \
+                    np.asarray([create_attention_plotting_graph(num_visualization, layer_name)
+                                for num_visualization in range(len(self.x))])
+
+    def on_epoch_end(self, epoch, logs=None):
+        if self.histogram_freq and epoch % self.histogram_freq == 0:
+            # if the learning rate is logged, note the value
+            if self.log_lr:
+                logs = logs or {}
+                logs.update({'learning_rate': K.eval(self.model.optimizer.lr)})
+
+            # prediction
+            outputs = self.model.predict(self.x)
+            predictions_as_rankings = scores_to_rankings(outputs)
+
+            # metric set up
+            if self.metric_for_visualization is not None:
+                metrics = [self.metric_for_visualization(self.x)(self.y, predictions_as_rankings)
+                           if self.metric_for_visualization_requires_x else
+                           self.metric_for_visualization(self.y, predictions_as_rankings)]
+            else:
+                metrics = [None for _ in self.x]
+
+            # attention set up
+            if self.log_attention:
+                queries = {}
+                keys = {}
+                scores = {}
+                for layer_name in self.attention_keys.keys():
+                    # check if equal to input; in that case dont fetch and just use input
+                    print("feed", self.symbolic_inputs)
+                    print("fetch", self.attention_queries[layer_name])
+                    queries[layer_name] = self.eval_attention_tensor(self.attention_queries[layer_name])
+                    keys[layer_name] = self.eval_attention_tensor(self.attention_keys[layer_name])
+                    scores[layer_name] = self.eval_attention_tensor(self.attention_scores[layer_name])
+
+            # visualize
+            for num_visualization in range(len(self.x)):
+                if not self.save_space or self.save_space and \
+                        not np.array_equal(predictions_as_rankings[num_visualization],
+                                           self.previous_prediction[num_visualization]):
+                    # prediction
+                    if self.prediction_visualization is not None:
+                        prediction_img_bytes = self.prediction_plotting_graphs[num_visualization][0]
+                        prediction_merged = self.prediction_plotting_graphs[num_visualization][1]
+                        vis_data = self.prediction_visualization(self.x[num_visualization],
+                                                                 self.y[num_visualization],
+                                                                 predictions_as_rankings[num_visualization],
+                                                                 metrics[num_visualization],
+                                                                 epoch)
+                        prediction_figure = figure_to_bytes(vis_data)
+                        run_summary = self.sess.run(fetches=prediction_merged,
+                                                    feed_dict={prediction_img_bytes: prediction_figure})
+                        self.writer.add_summary(run_summary, epoch)
+
+                    # attention
+                    if self.log_attention:
+                        for layer_name in self.attention_keys.keys():
+                            attention_img_bytes = self.attention_plotting_graphs[layer_name][num_visualization][0]
+                            attention_merged = self.attention_plotting_graphs[layer_name][num_visualization][1]
+                            attention_figure = figure_to_bytes(
+                                visualize_attention_scores(queries[layer_name][num_visualization],
+                                                           keys[layer_name][num_visualization],
+                                                           scores[layer_name][num_visualization]))
+                            run_summary = self.sess.run(fetches=attention_merged,
+                                                        feed_dict={attention_img_bytes: attention_figure})
+                            self.writer.add_summary(run_summary, epoch)
+
+                    self.previous_prediction[num_visualization] = predictions_as_rankings[num_visualization]
+
+        super(AdvancedTensorBoard, self).on_epoch_end(epoch, logs)
+
+    def eval_attention_tensor(self, symbolic_attention_tensor):
+        if self.symbolic_inputs[0] == symbolic_attention_tensor:
+            evaluated_attention_tensor = self.x
+        else:
+            evaluated_attention_tensor = K.function(self.symbolic_inputs, symbolic_attention_tensor)(self.x)
+        return evaluated_attention_tensor
+
+    def set_model(self, model):
+        # create scalar and histograms for gradient norms
+        if self.log_gradient_norms is not None and self.histogram_freq and self.merged is None:
+            all_gradients = []
+            for layer in model.layers:
+                for weight in layer.weights:
+                    mapped_weight_name = weight.name.replace(':', '_')
+                    if self.log_gradient_norms and weight in layer.trainable_weights:
+                        grads = model.optimizer.get_gradients(model.total_loss, weight)
+
+                        def is_indexed_slices(grad):
+                            return type(grad).__name__ == 'IndexedSlices'
+
+                        grads = [tf.norm(grad.values) if is_indexed_slices(grad) else tf.norm(grad) for grad in grads]
+                        for grad in grads:
+                            all_gradients.append(grad)
+
+                        if self.log_gradient_norms == "all":
+                            tf.summary.histogram(name='{}_grad_norm'.format(mapped_weight_name), values=grads)
+
+            global_norm = tf.linalg.global_norm(all_gradients)
+            tf.summary.scalar(name='global_norm', tensor=global_norm)
+
+        # save symbolic model inputs
+        self.symbolic_inputs = model.inputs
+
+        super(AdvancedTensorBoard, self).set_model(model)

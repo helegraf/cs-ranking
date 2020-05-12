@@ -61,7 +61,7 @@ def extract_input_sizes(input_shape):
     return d_q, d_k, d_v, n, m
 
 
-class AttentionLayer(Layer):
+class AttentionContainingLayer(Layer):
     def get_attention_layer_inputs_outputs(self):
         raise NotImplementedError()
 
@@ -85,7 +85,7 @@ class AttentionLayer(Layer):
     #     return Model(inputs=inputs, outputs=outputs)
 
 
-class BaseAttention(AttentionLayer):
+class BaseAttention(AttentionContainingLayer):
     def __init__(self, activation=None, biased=False, **kwargs):
         super(BaseAttention, self).__init__(**kwargs)
 
@@ -145,7 +145,7 @@ class BaseAttention(AttentionLayer):
             return output_shape
 
     def get_attention_layer_inputs_outputs(self):
-        return self.query, self.key, self.scores
+        return [{"name": self.__class__.__name__, "query": self.query, "key": self.key, "scores": self.scores}]
 
 
 class ScaledDotProductAttention(BaseAttention):
@@ -306,11 +306,11 @@ class SimilarityAttention(BaseAttention):
         return K.batch_dot(query_, K.permute_dimensions(key_, (0, 2, 1)))
 
 
-class MultiHeadAttention(AttentionLayer):
-    def __init__(self, attention, num_heads=None, weights_initializer="glorot_uniform", **kwargs):
+class MultiHeadAttention(AttentionContainingLayer):
+    def __init__(self, attention_config, num_heads=None, weights_initializer="glorot_uniform", **kwargs):
         # hyperparameters
         self.num_heads = num_heads
-        self.attention = instantiate_attention_layer(attention)
+        self.attention_config = attention_config
         self.weights_initializer = weights_initializer
 
         # runtime shape information
@@ -345,8 +345,8 @@ class MultiHeadAttention(AttentionLayer):
         self.d_v_prime = int(d_v / self.num_heads)
 
         self.w_0 = self.add_weight(name='w_0',
-                                           shape=(d_v, d_v),
-                                           initializer=self.weights_initializer)
+                                   shape=(d_v, d_v),
+                                   initializer=self.weights_initializer)
 
         self.w_q = self.add_weight(name='w_q',
                                    shape=(d_q, d_q),
@@ -371,12 +371,13 @@ class MultiHeadAttention(AttentionLayer):
         key_ = K.dot(key, self.w_k)
         value_ = K.dot(value, self.w_v)
 
-        self.attention_heads = [self.attention([query_[:, :, i * self.d_q_prime: (i + 1) * self.d_q_prime],
-                                                key_[:, :, i * self.d_k_prime: (i + 1) * self.d_k_prime],
-                                                value_[:, :, i * self.d_v_prime: (i + 1) * self.d_v_prime]])
-                                for i in range(self.num_heads)]
+        self.attention_heads = [instantiate_attention_layer(self.attention_config) for i in range(self.num_heads)]
+        attention_head_results = [self.attention_heads[i]([query_[:, :, i * self.d_q_prime: (i + 1) * self.d_q_prime],
+                                                           key_[:, :, i * self.d_k_prime: (i + 1) * self.d_k_prime],
+                                                           value_[:, :, i * self.d_v_prime: (i + 1) * self.d_v_prime]])
+                                  for i in range(self.num_heads)]
 
-        result = K.concatenate(self.attention_heads, axis=2)
+        result = K.concatenate(attention_head_results, axis=2)
 
         return K.dot(result, self.w_0)
 
@@ -395,10 +396,17 @@ class MultiHeadAttention(AttentionLayer):
             return batch_size, row_dim, column_dim
 
     def get_attention_layer_inputs_outputs(self):
-        return [head.get_attention_layer_inputs_outputs() for head in self.attention_heads]
+        outputs = []
+        for att_head in range(self.num_heads):
+            head = self.attention_heads[att_head]
+            layer_output = head.get_attention_layer_inputs_outputs()
+            for layer in layer_output:
+                layer["name"] = "multihead-{}_{}".format(str(att_head), layer["name"])
+                outputs.append(layer)
+        return outputs
 
 
-class MAB(AttentionLayer):
+class MAB(AttentionContainingLayer):
     def __init__(self, multi_head, depth_rff=0, rff_config={"activation": "relu"}, **kwargs):
         """
 
@@ -453,10 +461,15 @@ class MAB(AttentionLayer):
         return self.multi_head.compute_output_shape([input_shape[0], input_shape[1], input_shape[1]])
 
     def get_attention_layer_inputs_outputs(self):
-        return self.multi_head.get_attention_layer_inputs_outputs()
+        outputs = self.multi_head.get_attention_layer_inputs_outputs()
+
+        for output in outputs:
+            output["name"] = "mab_ " + output["name"]
+
+        return outputs
 
 
-class SAB(AttentionLayer):
+class SAB(AttentionContainingLayer):
     def __init__(self, mab, **kwargs):
         super(SAB, self).__init__(**kwargs)
         self.mab = instantiate_attention_layer(mab)
@@ -471,10 +484,15 @@ class SAB(AttentionLayer):
         return self.mab.compute_output_shape([input_shape, input_shape])
 
     def get_attention_layer_inputs_outputs(self):
-        return self.mab.get_attention_layer_inputs_outputs()
+        outputs = self.mab.get_attention_layer_inputs_outputs()
+
+        for output in outputs:
+            output["name"] = "sab_ " + output["name"]
+
+        return outputs
 
 
-class ISAB(AttentionLayer):
+class ISAB(AttentionContainingLayer):
     def __init__(self, num_inducing_points_m, mab_inner, mab_outer, **kwargs):
         super(ISAB, self).__init__(**kwargs)
 
@@ -501,11 +519,20 @@ class ISAB(AttentionLayer):
         return self.mab_outer.compute_output_shape([input_shape, inner_output_shape])
 
     def get_attention_layer_inputs_outputs(self):
-        return {"inner": self.mab_inner.get_attention_layer_inputs_outputs(),
-                "outer": self.mab_outer.get_attention_layer_inputs_outputs()}
+        outputs_inner = self.mab_inner.get_attention_layer_inputs_outputs()
+
+        for output in outputs_inner:
+            output["name"] = "isab_inner_ " + output["name"]
+
+        outputs_outer = self.mab_outer.get_attention_layer_inputs_outputs()
+
+        for output in outputs_outer:
+            output["name"] = "isab_outer_ " + output["name"]
+
+        return outputs_inner.extend(outputs_outer)
 
 
-class PMA(AttentionLayer):
+class PMA(AttentionContainingLayer):
     def __init__(self, k, mab, depth_rff=1, rff_config={"activation": "relu"}, **kwargs):
         """
 
@@ -561,7 +588,12 @@ class PMA(AttentionLayer):
         return mab_out
 
     def get_attention_layer_inputs_outputs(self):
-        return self.mab.get_attention_layer_inputs_outputs()
+        outputs = self.mab.get_attention_layer_inputs_outputs()
+
+        for output in outputs:
+            output["name"] = "pma_ " + output["name"]
+
+        return outputs
 
 
 attention_blocks = {
@@ -607,8 +639,8 @@ def instantiate_attention_layer(layer):
     >>> created_layer = instantiate_attention_layer(layer)
     >>> created_layer.weighted
     True
-    >>> created_layer.biased
     True
+    >>> created_layer.biased
     """
     if isinstance(layer, dict):
         layer_name = list(layer.keys())[0]

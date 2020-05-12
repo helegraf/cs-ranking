@@ -6,7 +6,7 @@ from keras.optimizers import SGD
 from keras.regularizers import l2
 from keras.losses import binary_crossentropy
 
-from csrank.callbacks import EarlyStoppingWithWeights, LRScheduler, DebugOutput, CyclicLR, AdvancedTensorBoard
+from csrank.callbacks import EarlyStoppingWithWeights, LRScheduler, CyclicLR, AdvancedTensorBoard, DebugOutput
 from csrank.choicefunction import *
 from csrank.choicefunction.set_transformer_choice import SetTransformerChoice
 from csrank.constants import *
@@ -253,6 +253,7 @@ def get_scores(object, batch_size, X_test, Y_test, logger):
             logger.error("Unexpected Error {}".format(sys.exc_info()[0]))
             s_pred = None
             batch_size = int(batch_size / 10)
+    print("predict for scores ", s_pred)
     y_pred = object.predict_for_scores(s_pred)
 
     return s_pred, y_pred

@@ -92,11 +92,12 @@ class ModifiedDBConnector(metaclass=ABCMeta):
                 if column not in ["job_id", "train_test"]:
                     alter_table_command = 'ALTER TABLE %s ADD COLUMN %s double precision' % (results_table, column)
                     self.cursor_db.execute(alter_table_command)
-            self.cursor_db.execute('ALTER TABLE %s ADD COLUMN time_updated timestamp' % results_table)
-            self.cursor_db.execute('CREATE TRIGGER set_timestamp'
-                                   'BEFORE UPDATE ON thesis_attention.{}'
-                                   'FOR EACH ROW'
-                                   'EXECUTE PROCEDURE trigger_set_timestamp();'.format(results_table))
+            self.cursor_db.execute('ALTER TABLE %s ADD COLUMN inserted_at timestamp' % results_table)
+            self.cursor_db.execute('CREATE TRIGGER insertion_timestamp '
+                                   'BEFORE INSERT ON {} '
+                                   'FOR EACH ROW '
+                                   'EXECUTE PROCEDURE thesis_attention.trigger_insertion_timestamp(); '
+                                   .format(results_table))
             self.close_connection()
             self.init_connection(cursor_factory=None)
 
@@ -229,12 +230,18 @@ class ModifiedDBConnector(metaclass=ABCMeta):
         self.cursor_db.execute(update_job, (curr_time, str(job_id)))
         self.close_connection()
 
-    def update_time_finished_train(self, job_id):
+    def set_end_time(self, job_id, time_finished_vis, time_finished_train):
         self.init_connection()
         jobs = "{}.{}".format(self.schema, self.table_jobs)
-        update_job = """UPDATE {} set time_finished_train = %s WHERE job_id = %s""".format(jobs)
-        curr_time = datetime.now()
-        self.cursor_db.execute(update_job, (curr_time, str(job_id)))
+        update_job = """UPDATE {} set time_finished_train = %s, time_finished_vis = %s WHERE job_id = %s""".format(jobs)
+        self.cursor_db.execute(update_job, (time_finished_train, time_finished_vis, str(job_id)))
+        self.close_connection()
+
+    def log_start_training(self, job_id, time_start_train):
+        self.init_connection()
+        jobs = "{}.{}".format(self.schema, self.table_jobs)
+        update_job = """UPDATE {} set time_start_train = %s WHERE job_id = %s""".format(jobs)
+        self.cursor_db.execute(update_job, (time_start_train, str(job_id)))
         self.close_connection()
 
     def get_ready_jobs(self):

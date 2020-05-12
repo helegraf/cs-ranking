@@ -1,6 +1,10 @@
+import datetime
 import multiprocessing
 
 import numpy as np
+from keras.callbacks import TensorBoard
+
+np.random.seed(1)
 import pytest
 from keras import Input, Model
 from keras.engine import Layer
@@ -16,9 +20,9 @@ import tensorflow as tf
 from csrank import DiscreteChoiceDatasetGenerator, ChoiceDatasetGenerator, ObjectRankingDatasetGenerator, \
     FATEObjectRanker, FETAObjectRanker
 from csrank.attention.set_transformer.modules import ScaledDotProductAttention, MultiHeadAttention, MAB, SAB, ISAB, PMA, \
-    SimilarityAttention, AdditiveAttention
+    SimilarityAttention, AdditiveAttention, instantiate_attention_layer
 from csrank.attention.set_transformer.util import split_features_to_batch, combine_batch_to_features
-from csrank.callbacks import WeightPrinterCallback
+from csrank.callbacks import WeightPrinterCallback, AdvancedTensorBoard
 from csrank.choicefunction.set_transformer_choice import SetTransformerChoice
 from csrank.discretechoice.set_transformer_discrete_choice import SetTransformerDiscreteChoice
 from csrank.objectranking.set_transformer_object_ranker import SetTransformerObjectRanker
@@ -79,16 +83,18 @@ def make_predictions_with_layer \
 @pytest.fixture(scope="module")
 def seed_execution():
     seed(1)
-    set_random_seed(2)
+    set_random_seed(1)
+    np.random.seed(1)
 
 
 @pytest.fixture(scope="module")
 def set_tf_config():
-    config = tf.ConfigProto(intra_op_parallelism_threads=1, inter_op_parallelism_threads=1,
-                            allow_soft_placement=True, log_device_placement=False,
-                            device_count={'CPU': multiprocessing.cpu_count() - 2})
-    sess = tf.Session(config=config)
-    K.set_session(sess)
+    # config = tf.ConfigProto(intra_op_parallelism_threads=1, inter_op_parallelism_threads=1,
+    #                         allow_soft_placement=True, log_device_placement=False,
+    #                         device_count={'CPU': multiprocessing.cpu_count() - 2})
+    # sess = tf.Session(config=config)
+    # K.set_session(sess)
+    pass
 
 
 @pytest.fixture(scope="module",
@@ -310,7 +316,7 @@ def test_concat_attention_bahdanau_biased(input_data):
 
 
 def test_multi_head_attention(input_data):
-    attention_layer = MultiHeadAttention(attention=ScaledDotProductAttention(scale=False, weighted=False))
+    attention_layer = MultiHeadAttention(attention_config=ScaledDotProductAttention(scale=False, weighted=False))
     predictions = make_predictions_with_layer(attention_layer, **input_data, epochs=10, learning_rate=1e-4)
 
     assert not np.any(np.isnan(predictions))
@@ -320,7 +326,7 @@ def test_multi_head_attention(input_data):
 
 def test_multi_head_attention_weighted_biased_sordoni(input_data):
     attention_layer = MultiHeadAttention(
-        attention=ScaledDotProductAttention(scale=False, weighted=True, biased=True, sordoni_biased=True))
+        attention_config=ScaledDotProductAttention(scale=False, weighted=True, biased=True, sordoni_biased=True))
     predictions = make_predictions_with_layer(attention_layer, **input_data, epochs=10, learning_rate=1e-2)
 
     assert not np.any(np.isnan(predictions))
@@ -336,7 +342,8 @@ def test_mab(input_data):
         num_features = input_data["feat_query"]
         result = input_data["result"]
 
-        attention_layer = MAB(MultiHeadAttention(attention=ScaledDotProductAttention(scale=False, weighted=False)),
+        attention_layer = MAB(MultiHeadAttention(
+            attention_config=ScaledDotProductAttention(scale=False, weighted=False)),
                               depth_rff=2, rff_config={"units": 4})
 
         if len(input_data) == 4:
@@ -384,7 +391,8 @@ def test_sab(input_data):
         num_features = input_data["feat_query"]
         result = input_data["result"]
 
-        attention_layer = SAB(MAB(MultiHeadAttention(attention=ScaledDotProductAttention(scale=False, weighted=False))))
+        attention_layer = SAB(MAB(MultiHeadAttention(
+            attention_config=ScaledDotProductAttention(scale=False, weighted=False))))
         inputs = Input(shape=(num_objects, num_features))
         output = attention_layer(inputs)
 
@@ -419,8 +427,8 @@ def test_isab(input_data):
         result = input_data["result"]
 
         attention_layer = \
-            ISAB(5, MAB(MultiHeadAttention(attention=ScaledDotProductAttention(scale=True, weighted=False))),
-                 MAB(MultiHeadAttention(attention=ScaledDotProductAttention(scale=True, weighted=False)))
+            ISAB(5, MAB(MultiHeadAttention(attention_config=ScaledDotProductAttention(scale=True, weighted=False))),
+                 MAB(MultiHeadAttention(attention_config=ScaledDotProductAttention(scale=True, weighted=False)))
                  )
         inputs = Input(shape=(num_objects, num_features))
         output = attention_layer(inputs)
@@ -463,7 +471,7 @@ def test_pma(input_data):
 
         attention_layer = PMA(k,
                               mab=MAB(
-                                  multi_head=MultiHeadAttention(attention=ScaledDotProductAttention(
+                                  multi_head=MultiHeadAttention(attention_config=ScaledDotProductAttention(
                                       scale=False,
                                       weighted=False))),
                               depth_rff=2, rff_config={"units": 4})
@@ -513,7 +521,7 @@ def test_set_transformer_d_c():
     layer_options = {"SAB": {"mab": {"MAB": {"multi_head": {
         "MultiHeadAttention": {"num_heads": 1, "attention": {"ScaledDotProductAttention":
                                                                  {"weighted": False, "biased": False}}}}}}}}
-    transformer = SetTransformerDiscreteChoice(stacking_height=1, attention_layer=layer_options,
+    transformer = SetTransformerDiscreteChoice(stacking_height=1, attention_layer_config=layer_options,
                                                num_layers_dense=3, num_units_dense=6)
 
     callbacks = []
@@ -552,7 +560,7 @@ def test_set_transformer_choice():
     layer_options = {"SAB": {"mab": {"MAB": {"multi_head": {
         "MultiHeadAttention": {"num_heads": 1, "attention": {"ScaledDotProductAttention":
                                                                  {"weighted": False, "biased": False}}}}}}}}
-    transformer = SetTransformerChoice(stacking_height=1, attention_layer=layer_options,
+    transformer = SetTransformerChoice(stacking_height=1, attention_layer_config=layer_options,
                                        num_layers_dense=3, num_units_dense=6, seed=10)
 
     # callbacks = [AdvancedTensorBoard(log_gradient_norms=True, visualization_frequency=1, log_attention=True)]
@@ -576,7 +584,7 @@ def test_set_transformer_ranking():
     layer_options = {"SAB": {"mab": {"MAB": {"multi_head": {
         "MultiHeadAttention": {"num_heads": 1, "attention": {"ScaledDotProductAttention":
                                                                  {"weighted": False, "biased": False}}}}}}}}
-    transformer = SetTransformerObjectRanker(stacking_height=3, attention_layer=layer_options,
+    transformer = SetTransformerObjectRanker(stacking_height=3, attention_layer_config=layer_options,
                                              num_layers_dense=2, num_units_dense=8, seed=10,
                                              optimizer=SGD(lr=1e-2, nesterov=True, momentum=0.9))
 
@@ -586,6 +594,59 @@ def test_set_transformer_ranking():
 
     print(transformer.model.summary())
 
+    prediction = transformer.predict(x_test)
+    print("prediction")
+    print(prediction)
+    scores = transformer.predict_scores(x_test)
+    print("scores")
+    print(scores)
+    print("true")
+    print(y_test)
+
+
+def test_set_transformer_ranking_callback():
+    random_state = np.random.RandomState(seed=42)
+    gen = ObjectRankingDatasetGenerator(dataset_type="simple_max", n_objects=5, n_train_instances=20,
+                                        n_test_instances=5,
+                                        random_state=random_state)
+    # gen = ObjectRankingDatasetGenerator(dataset_type="min_max", n_objects=5, n_train_instances=10,
+    #                                      n_test_instances=5,
+    #                                      random_state=random_state, n_features=2)
+
+    x_train, y_train, x_test, y_test = gen.get_single_train_test_split()
+
+    print(np.sum(x_train), np.sum(y_train), np.sum(x_test), np.sum(y_test))
+
+    layer_options = {"SAB": {"mab": {"MAB": {"multi_head": {
+        "MultiHeadAttention": {"num_heads": 1, "attention_config": {"ScaledDotProductAttention":
+                                                                 {"weighted": False, "biased": False}}}}}}}}
+
+    transformer = SetTransformerObjectRanker(stacking_height=1, attention_layer_config=layer_options,
+                                             num_layers_dense=2, num_units_dense=8, seed=10,
+                                             optimizer=SGD(lr=1e-2, nesterov=True, momentum=0.9), batch_size=10)
+
+    callbacks = [AdvancedTensorBoard(log_gradient_norms=True,
+                                     visualization_frequency=1,
+                                     log_attention=True,
+                                     save_space=True,
+                                     log_lr=True,
+                                     save_visualization_data=True,
+                                     num_visualizations_per_epoch=1,
+                                     histogram_freq=1,
+                                     # batch_size=256,
+                                     write_graph=False,
+                                     write_grads=False,
+                                     write_images=False,
+                                     embeddings_freq=0,
+                                     update_freq="epoch",
+                                     log_dir="./tensorboard_logs/set_transformer/" + datetime.datetime.now().strftime(
+                                         "%Y%m%d-%H%M%S")
+                                     )]
+    transformer.fit(x_train, y_train, epochs=10, verbose=2, callbacks=callbacks)
+
+    print(transformer.model.summary())
+
+    K.clear_session()
     prediction = transformer.predict(x_test)
     print("prediction")
     print(prediction)
@@ -620,9 +681,56 @@ def test_fate_attention_ranking():
     print(y_test)
 
 
-def test_feta_attention_ranking():
+def test_feta_attention_ranking_tsp():
     random_state = np.random.RandomState(seed=42)
-    gen = ObjectRankingDatasetGenerator(dataset_type="simple_max", n_objects=5, n_train_instances=100,
+    gen = ObjectRankingDatasetGenerator(dataset_type="tsp", n_objects=5, n_train_instances=100,
+                                        n_test_instances=5,
+                                        random_state=random_state)
+    x_train, y_train, x_test, y_test = gen.get_single_train_test_split()
+
+    attention = ScaledDotProductAttention(scale=False, weighted=False)
+    callbacks = [AdvancedTensorBoard(
+                            # data_visualization_func="tsp_2d",
+                            # metric_for_visualization="TSPRelativeDifference_requiresX",
+                            # metric_for_visualization_requires_x=True,
+                            log_gradient_norms=False,
+                            visualization_frequency=1,
+                            log_attention=False,
+                            save_space=True,
+                            log_lr=False,
+                            save_visualization_data=False,
+                            num_visualizations_per_epoch=1,
+                            histogram_freq=10,
+                            write_graph=False,
+                            write_grads=False,
+                            write_images=False,
+                            embeddings_freq=0,
+                            update_freq="epoch",
+                            log_dir="./tensorboard_logs/feta_ranker_tsp/" + datetime.datetime.now().strftime(
+                             "%Y%m%d-%H%M%S")
+                            )]
+    attention_pooling = {"PMA": {"k": 1, "mab": {"MAB": {"multi_head": {
+        "MultiHeadAttention": {"num_heads": 1, "attention_config": {"ScaledDotProductAttention":
+                                                                 {"weighted": False, "biased": False}}}}}}}}
+    learner = FETAObjectRanker(n_objects=5, n_hidden=2, n_units=8, add_zeroth_order_model=True,
+                               max_number_of_objects=5, n_object_features=2, attention_function_preselection=None,
+                               n_hidden_joint_layers=3, n_hidden_joint_units=3, attention_pooling=None)
+
+    learner.fit(x_train, y_train, epochs=5, verbose=2, callbacks=callbacks)
+
+    print(learner.model.summary())
+
+    # K.clear_session()
+    prediction = learner.predict(x_test)
+    print("prediction")
+    print(prediction)
+    print("true")
+    print(y_test)
+
+
+def test_feta_attention_ranking_with_callback():
+    random_state = np.random.RandomState(seed=42)
+    gen = ObjectRankingDatasetGenerator(dataset_type="medoid", n_objects=5, n_train_instances=100,
                                         n_test_instances=5,
                                         random_state=random_state)
     x_train, y_train, x_test, y_test = gen.get_single_train_test_split()
@@ -631,11 +739,28 @@ def test_feta_attention_ranking():
     attention_pooling = {"PMA": {"k": 1, "mab": {"MAB": {"multi_head": {
         "MultiHeadAttention": {"num_heads": 1, "attention": {"ScaledDotProductAttention":
                                                                  {"weighted": False, "biased": False}}}}}}}}
-    learner = FETAObjectRanker(n_objects=5, n_hidden=2, n_units=8, add_zeroth_order_model=True,
-                               max_number_of_objects=5, n_object_features=1, attention_function_preselection=attention,
-                               n_hidden_joint_layers=3, n_hidden_joint_units=3, attention_pooling=attention_pooling)
 
-    learner.fit(x_train, y_train, epochs=5, verbose=2)
+    learner = FETAObjectRanker(n_objects=5, n_hidden=2, n_units=8, add_zeroth_order_model=False,
+                               max_number_of_objects=5, n_object_features=100,
+                               attention_function_preselection=attention,
+                               n_hidden_joint_layers=3, n_hidden_joint_units=3, attention_pooling=None)
+
+    callbacks = [AdvancedTensorBoard(log_gradient_norms=False,
+                                     visualization_frequency=1,
+                                     log_attention=True,
+                                     save_space=True,
+                                     log_lr=True,
+                                     save_visualization_data=False,
+                                     histogram_freq=2,
+                                     # batch_size=256,
+                                     write_graph=False,
+                                     write_grads=False,
+                                     write_images=False,
+                                     embeddings_freq=0,
+                                     update_freq="epoch",
+                                     log_dir="./tensorboard_logs/feta_attention/" + datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
+                                     )]
+    learner.fit(x_train, y_train, epochs=5, verbose=2, callbacks=callbacks)
 
     print(learner.model.summary())
 

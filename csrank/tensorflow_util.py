@@ -41,6 +41,27 @@ def repeat_vector_along_new_axis(x, n):
     K.repeat()
 
 
+def repeat_3d_vector_along_new_axis(x, n):
+    """Repeats a 2d tensor.
+
+    if `x` has shape (samples, dim) and `n` is `2`,
+    the output will have shape `(2, samples, dim)`.
+
+    # Arguments
+        x: Tensor or variable.
+        n: Python integer, number of times to repeat.
+
+    # Returns
+        A tensor.
+    """
+    assert ndim(x) == 3
+    x = tf.expand_dims(x, 0)
+    pattern = tf.stack([n, 1, 1, 1])
+    return tf.tile(x, pattern)
+
+    K.repeat()
+
+
 def repeat_3d_vector_along_new_axis_keeping_batch_size(x, n):
     """Repeats a 3d tensor.
 

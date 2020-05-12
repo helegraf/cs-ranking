@@ -36,8 +36,6 @@ def visualize_attention_scores(query, key, scores):
     key = np.transpose(key)
     n_obj_total = len(scores)
     n_features = len(key)
-    print("obj", n_obj_total)
-    print("feat", n_features)
 
     fig = plt.figure(figsize=(8, 8))
     gs = fig.add_gridspec(2, 2,  width_ratios=(n_features, n_obj_total), height_ratios=(n_features, n_obj_total),

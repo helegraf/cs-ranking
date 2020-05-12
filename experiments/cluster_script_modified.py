@@ -27,13 +27,15 @@ from datetime import datetime
 
 import h5py
 import numpy as np
+np.random.seed(0)
 from docopt import docopt
 from sklearn.model_selection import ShuffleSplit
 import tensorflow as tf
 
+from csrank.callbacks import AdvancedTensorBoard
 from csrank.experiments import *
 from csrank.experiments.dbconnection_modified import ModifiedDBConnector
-from csrank.experiments.util import learners, create_callbacks, all_metrics
+from csrank.experiments.util import learners, create_callbacks
 from csrank.metrics import make_ndcg_at_k_loss
 from csrank.tensorflow_util import configure_numpy_keras, get_loss_statistics
 from csrank.tuning import ParameterOptimizer
@@ -176,6 +178,9 @@ def do_experiment():
             if "metrics" not in learner_params.keys():
                 learner_params["metrics"] = []
 
+            time_start_train = datetime.now()
+            db_connector.log_start_training(job_id, time_start_train)
+
             if use_hp:
                 # set hyperparameter optimizer parameters
                 hp_params = create_optimizer_parameters_no_hash_file(learner_fit_params, hp_ranges, learner_params,
@@ -207,7 +212,15 @@ def do_experiment():
                 learner = learner_func(**learner_params)
                 learner.fit(x_train, y_train, **learner_fit_params)
 
-                db_connector.update_time_finished_train(job_id)
+            # timing
+            time_finished_train = datetime.now()
+            time_finished_vis = datetime.now()
+            if "callbacks" in learner_fit_params.keys():
+                for callback in learner_fit_params["callbacks"]:
+                    if isinstance(callback, AdvancedTensorBoard):
+                        time_finished_train = callback.train_end_time
+
+            db_connector.set_end_time(job_id, time_finished_vis, time_finished_train)
 
             # # # SAVING MODEL # # #
 

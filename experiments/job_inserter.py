@@ -52,8 +52,8 @@ def gen_jobs(configuration_file_path):
 
 
 config_file_path = "database_configs/db.json"
-connector = ModifiedDBConnector(config_file_path, table_jobs="jobs_tsp_experiment_3")
+connector = ModifiedDBConnector(config_file_path, table_jobs="jobs_general_experiment")
 
-jobs = gen_jobs("experiment_configs/tsp_experiment_3.json")
+jobs = gen_jobs("experiment_configs/general_experiment.json")
 for combo_job in jobs:
     connector.insert_new_job(combo_job)

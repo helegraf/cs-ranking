@@ -23,13 +23,22 @@ class FETANetwork(Learner):
                  max_number_of_objects=5, num_subsample=5, loss_function=hinged_rank_loss, batch_normalization=False,
                  kernel_regularizer=l2(l=1e-4), kernel_initializer='lecun_normal', activation='selu',
                  optimizer=SGD(lr=1e-4, nesterov=True, momentum=0.9), metrics=None, batch_size=256, random_state=None,
-                 attention_function_preselection=None, attention_pooling=None, **kwargs):
-        self.attention_function_preselection = instantiate_attention_layer(attention_function_preselection)
-        if not isinstance(attention_pooling, dict):
+                 attention_pooling_config=None, attention_function_preselection_config=None,
+                 num_attention_function_preselection_layers=0, **kwargs):
+        if attention_pooling_config is not None and not isinstance(attention_pooling_config, dict):
             raise ValueError("Attention pooling layer has to be given in dictionary-form because it needs to be "
                              "instantiated multiple times. Has to be able to be processed by "
                              "csrank.attention.set_transformer.modules.instantiate_attention_layer")
-        self.attention_pooling = attention_pooling
+        if attention_function_preselection_config is not None and \
+                not isinstance(attention_function_preselection_config, dict):
+            raise ValueError("Attention preselection layer has to be given in dictionary-form because it needs to be "
+                             "instantiated multiple times. Has to be able to be processed by "
+                             "csrank.attention.set_transformer.modules.instantiate_attention_layer")
+        self.attention_function_preselection_config = attention_function_preselection_config
+        self.attention_function_preselection_layers = None
+        self.num_attention_function_preselection_layers = num_attention_function_preselection_layers
+        self.attention_pooling_config = attention_pooling_config
+        self.attention_pooling_layers = None
         self.logger = logging.getLogger(FETANetwork.__name__)
         self.random_state = check_random_state(random_state)
         self.kernel_regularizer = kernel_regularizer
@@ -62,9 +71,15 @@ class FETANetwork(Learner):
         self._zero_order_model = None
 
     def set_up_input_layer(self):
-        self.model_input_layer = Input(shape=(self.n_objects, self.n_object_features))
-        if self.attention_function_preselection is not None:
-            self.input_layer = self.attention_function_preselection(self.model_input_layer)
+        self.input_layer = Input(shape=(self.n_objects, self.n_object_features))
+        if self.attention_function_preselection_config is not None:
+            self.attention_function_preselection_layers = \
+                [instantiate_attention_layer(self.attention_function_preselection_config)]
+            self.attention_preselected_input = self.input_layer
+            for layer in self.attention_function_preselection_layers:
+                self.attention_preselected_input = layer(self.attention_preselected_input)
+        else:
+            self.attention_preselected_input = None
 
     @property
     def n_objects(self):
@@ -95,6 +110,7 @@ class FETANetwork(Learner):
 
     @property
     def zero_order_model(self):
+        print("OH NO USING ZERO ORDER MODEL!")
         if self._zero_order_model is None and self._use_zeroth_model:
             self.logger.info('Creating zeroth model')
             inp = Input(shape=(self.n_object_features,))
@@ -111,6 +127,7 @@ class FETANetwork(Learner):
     @property
     def pairwise_model(self):
         if self._pairwise_model is None:
+            print("creating the stoopid pairwise model")
             self.logger.info('Creating pairwise model')
             x1 = Input(shape=(self.n_object_features,))
             x2 = Input(shape=(self.n_object_features,))
@@ -180,12 +197,17 @@ class FETANetwork(Learner):
         def create_input_lambda(i):
             return Lambda(lambda x: x[:, i])
 
+        if self.attention_preselected_input is not None:
+            input_for_model = self.attention_preselected_input
+        else:
+            input_for_model = self.input_layer
+
         if self._use_zeroth_model:
             self.logger.debug('Create 0th order model')
             zeroth_order_outputs = []
             inputs = []
             for i in range(self.n_objects):
-                x = create_input_lambda(i)(self.input_layer)
+                x = create_input_lambda(i)(input_for_model)
                 inputs.append(x)
                 for hidden in self.hidden_layers_zeroth:
                     x = hidden(x)
@@ -199,8 +221,8 @@ class FETANetwork(Learner):
                 x1 = inputs[i]
                 x2 = inputs[j]
             else:
-                x1 = create_input_lambda(i)(self.input_layer)
-                x2 = create_input_lambda(j)(self.input_layer)
+                x1 = create_input_lambda(i)(input_for_model)
+                x2 = create_input_lambda(j)(input_for_model)
             x1x2 = concatenate([x1, x2])
             x2x1 = concatenate([x2, x1])
 
@@ -221,23 +243,26 @@ class FETANetwork(Learner):
         outputs = [concatenate(x) for x in outputs]
 
         # compute utility scores:
-        if self.attention_pooling is None:
+        if self.attention_pooling_config is None:
             sum_func = lambda s: K.mean(s, axis=1, keepdims=True)
             scores = [Lambda(sum_func)(x) for x in outputs]
         else:
             add_dim = Reshape(target_shape=(self.n_objects - 1, 1))
             remove_dim = Reshape(target_shape=(1,))
-            scores = [remove_dim(instantiate_attention_layer(self.attention_pooling)(add_dim(x))) for x in outputs]
+            self.attention_pooling_layers = [instantiate_attention_layer(self.attention_pooling) for _ in outputs]
+
+            #scores = [remove_dim(instantiate_attention_layer(self.attention_pooling_config)(add_dim(x))) for x in outputs]
+            scores = [remove_dim(self.attention_pooling_layers[x_obj](add_dim(outputs[x_obj]))) for x_obj in range(len(outputs))]
 
         scores = concatenate(scores)
         self.logger.debug('1st order model finished')
         if self._use_zeroth_model:
             scores = add([scores, zeroth_order_scores])
-        model = Model(inputs=self.model_input_layer, outputs=scores)
+        model = Model(inputs=self.input_layer, outputs=scores)
 
         self.logger.debug('Compiling complete model...')
         if self.loss_function_requires_x_values:
-            self.loss_function = self.loss_function(self.model_input_layer)
+            self.loss_function = self.loss_function(self.input_layer)
         model.compile(loss=self.loss_function, optimizer=self.optimizer, metrics=self.metrics)
         return model
 
@@ -271,12 +296,34 @@ class FETANetwork(Learner):
         self.model = self.construct_model()
         self.logger.debug('Starting gradient descent...')
 
-        configure_callbacks(self.model, callbacks)
+        self.set_up_callbacks(callbacks)
 
         self.model.fit(x=X, y=Y, batch_size=self.batch_size, epochs=epochs, callbacks=callbacks,
                        validation_split=validation_split, verbose=verbose, **kwd)
         if self.hash_file is not None:
             self.model.save_weights(self.hash_file)
+
+    def set_up_callbacks(self, callbacks):
+        attention_outputs = []
+        if self.attention_function_preselection_layers is not None:
+            for preselection_layer in self.attention_function_preselection_layers:
+                outputs = preselection_layer.get_attention_layer_inputs_outputs()
+
+                for output_num in range(len(outputs)):
+                    output = outputs[output_num]
+                    output["name"] = "feta_preselection_{}_{}".format(output_num, output["name"])
+
+                attention_outputs.extend(outputs)
+        if self.attention_pooling_layers is not None:
+            for pooling_layer in self.attention_pooling_layers:
+                outputs = pooling_layer.get_attention_layer_inputs_outputs()
+
+                for output_num in range(len(outputs)):
+                    output = outputs[output_num]
+                    output["name"] = "feta_pooling_{}_{}".format(output_num, output["name"])
+
+                attention_outputs.extend(outputs)
+        configure_callbacks(callbacks, attention_outputs)
 
     def sub_sampling(self, X, Y):
         if self._n_objects > self.max_number_of_objects:
