@@ -169,7 +169,7 @@ class ListNet(Learner, ObjectRanker):
         self.model = self.construct_model()
         self.logger.debug("Finished creating the model, now fitting...")
 
-        configure_callbacks(self.model, callbacks)
+        configure_callbacks(callbacks)
 
         self.model.fit(X, Y, batch_size=self.batch_size, epochs=epochs, callbacks=callbacks,
                        validation_split=validation_split, verbose=verbose, **kwd)

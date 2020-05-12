@@ -61,8 +61,7 @@ ranking_metrics = {'KendallsTau': kendalls_tau_for_scores_np,
                    'SpearmanCorrelation': spearman_correlation_for_scores_scipy,
                    'ZeroOneRankLoss': zero_one_rank_loss_for_scores_np,
                    'ZeroOneRankLossTies': zero_one_rank_loss_for_scores_ties_np,
-                   "ZeroOneAccuracy": zero_one_accuracy_for_scores_np,
-                   "NDCGTopAll": make_ndcg_at_k_loss_np}
+                   "ZeroOneAccuracy": zero_one_accuracy_for_scores_np}
 tsp_ranking_metrics = {'KendallsTau': kendalls_tau_for_scores_np,
                        'SpearmanCorrelation': spearman_correlation_for_scores_scipy,
                        'ZeroOneRankLoss': zero_one_rank_loss_for_scores_np,
@@ -193,11 +192,20 @@ def create_optimizer_parameters_no_hash_file(fit_params, hp_ranges, learner_para
     return hp_params
 
 
-def create_callbacks(fit_params, hp_ranges={}):
+def create_callbacks(fit_params, hp_ranges={}, x=None, y=None):
     if "callbacks" in fit_params.keys():
         callbacks = []
         for key, value in fit_params.get("callbacks", {}).items():
             callback = callbacks_dictionary[key]
+
+            if key == "AdvancedTensorBoard":
+                if "num_visualizations_per_epoch" in value.keys():
+                    num_vis = int(value["num_visualizations_per_epoch"])
+                    if num_vis > 0:
+                        del value["num_visualizations_per_epoch"]
+                        value["inputs"] = x[:num_vis]
+                        value["targets"] = y[:num_vis]
+
             callback = callback(**value)
             callbacks.append(callback)
             if key in hp_ranges.keys():
@@ -253,7 +261,6 @@ def get_scores(object, batch_size, X_test, Y_test, logger):
             logger.error("Unexpected Error {}".format(sys.exc_info()[0]))
             s_pred = None
             batch_size = int(batch_size / 10)
-    print("predict for scores ", s_pred)
     y_pred = object.predict_for_scores(s_pred)
 
     return s_pred, y_pred

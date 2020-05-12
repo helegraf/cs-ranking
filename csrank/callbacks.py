@@ -18,9 +18,9 @@ from csrank.metrics_np import kendalls_tau_for_scores_np, spearman_correlation_f
     average_precision, hamming, subset_01_loss, auc_score
 from csrank.numpy_util import scores_to_rankings
 from csrank.tunable import Tunable
-from csrank.util import print_dictionary, create_dir_recursively
+from csrank.util import print_dictionary
 from csrank.visualization.predictions import tsp_figure, figure_to_bytes, create_image_plotting_graph, \
-    create_scalar_plotting_graph, create_attention_plotting_graph
+    create_attention_plotting_graph
 from csrank.visualization.weights import visualize_attention_scores
 
 
@@ -402,16 +402,18 @@ class AdvancedTensorBoard(TensorBoard):
         self.attention_queries = {}
         self.attention_keys = {}
         self.attention_scores = {}
+        self.train_end_time = None
 
     def on_train_begin(self, logs=None):
         super(AdvancedTensorBoard, self).on_train_begin(logs)
 
+        # initial previous
+        self.previous_prediction = np.empty(shape=self.y.shape)
+
+        # create prediction plotting graphs
         if self.prediction_visualization is not None:
-            # create plotting graphs
             self.prediction_plotting_graphs = np.asarray([create_image_plotting_graph(num_visualization)
                                                           for num_visualization in range(len(self.x))])
-            # initial previous
-            self.previous_prediction = np.empty(shape=self.y.shape)
 
         # create attention activation visualization graph
         if self.log_attention:
@@ -446,8 +448,6 @@ class AdvancedTensorBoard(TensorBoard):
                 scores = {}
                 for layer_name in self.attention_keys.keys():
                     # check if equal to input; in that case dont fetch and just use input
-                    print("feed", self.symbolic_inputs)
-                    print("fetch", self.attention_queries[layer_name])
                     queries[layer_name] = self.eval_attention_tensor(self.attention_queries[layer_name])
                     keys[layer_name] = self.eval_attention_tensor(self.attention_keys[layer_name])
                     scores[layer_name] = self.eval_attention_tensor(self.attention_scores[layer_name])
@@ -522,3 +522,8 @@ class AdvancedTensorBoard(TensorBoard):
         self.symbolic_inputs = model.inputs
 
         super(AdvancedTensorBoard, self).set_model(model)
+
+    def on_train_end(self, logs):
+        self.train_end_time = datetime.now()
+
+        super(AdvancedTensorBoard, self).on_train_end(logs)

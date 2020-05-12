@@ -206,7 +206,7 @@ def do_experiment():
                 db_connector.insert_validation_loss(validation_loss, job_id)
             else:
                 # just train
-                create_callbacks(learner_fit_params)
+                create_callbacks(learner_fit_params, x=x_train, y=y_train)
 
                 learner_func = learners[learner_name]
                 learner = learner_func(**learner_params)
