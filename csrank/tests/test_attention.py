@@ -24,6 +24,12 @@ from csrank.discretechoice.set_transformer_discrete_choice import SetTransformer
 from csrank.objectranking.set_transformer_object_ranker import SetTransformerObjectRanker
 
 
+def test_soft_ax():
+    matrix = np.random.random_integers(0, 10, size=(5, 2))
+
+    print(matrix)
+    print(soft_max(matrix))
+
 def soft_max(x):
     exp = np.exp(x)
     total_sum = np.sum(exp, axis=-1)[:, None]
