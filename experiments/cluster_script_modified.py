@@ -37,7 +37,7 @@ from csrank.experiments import *
 from csrank.experiments.dbconnection_modified import ModifiedDBConnector
 from csrank.experiments.util import learners, create_callbacks
 from csrank.metrics import make_ndcg_at_k_loss
-from csrank.tensorflow_util import configure_numpy_keras, get_loss_statistics
+from csrank.tensorflow_util import configure_numpy_keras, get_loss_statistics, get_mean_loss
 from csrank.tuning import ParameterOptimizer
 from csrank.util import create_dir_recursively, duration_till_now, seconds_to_time, \
     print_dictionary, get_duration_seconds, setup_logging, rename_file_if_exist
@@ -144,6 +144,8 @@ def do_experiment():
             dataset_params['fold_id'] = fold_id
             dataset_reader = get_dataset_reader(dataset_name, dataset_params)
             x_train, y_train, x_test, y_test = dataset_reader.get_single_train_test_split()
+
+            print_dictionary(x_train, y_train, x_test, y_test)
 
             # log data contents, get num_objects, delete internal reader info
             n_objects = log_test_train_data(x_train, x_test, logger)
@@ -269,6 +271,9 @@ def get_results_and_upload(case, data_x, data_y, db_connector, hash_value, job_i
     # do the actual predictions
     predicted_scores, y_pred = get_scores(learner, batch_size, data_x, data_y, logger)
 
+    print("predicted_scores:", predicted_scores)
+    print("y_pred:", y_pred)
+
     # # # WRITING BACK RESULTS # # #
 
     # write predicted scores to file
@@ -293,6 +298,8 @@ def get_results_and_upload(case, data_x, data_y, db_connector, hash_value, job_i
     for name, evaluation_metric in lp_metric_dict[learning_problem].items():
         predictions = predicted_scores
 
+        print("compute metric",name)
+
         # set predictions accordingly if metric works on labels instead of scores
         if evaluation_metric in metrics_on_predictions:
             logger.info("Metric on predictions")
@@ -304,8 +311,13 @@ def get_results_and_upload(case, data_x, data_y, db_connector, hash_value, job_i
             predictions = y_pred
 
         # compute loss
-        metric_loss_min, metric_loss_max, metric_loss_mean, metric_loss_std = \
-            get_loss_statistics(name, evaluation_metric, data_y, predictions, data_x)
+        if name not in ["Informedness"]:
+            metric_loss_min, metric_loss_max, metric_loss_mean, metric_loss_std = \
+                get_loss_statistics(name, evaluation_metric, data_y, predictions, data_x)
+        else:
+            metric_loss_mean = get_mean_loss(evaluation_metric, data_y, y_pred)
+            metric_loss_min = metric_loss_max = metric_loss_mean
+            metric_loss_std = 0
 
         logger.info(ERROR_OUTPUT_STRING % (name, metric_loss_mean))
 

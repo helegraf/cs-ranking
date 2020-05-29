@@ -160,7 +160,7 @@ def get_loss_statistics(name, metric, y_true, y_pred, x):
         else:
             metric_wrapped = metric
 
-        losses.append(eval_loss(metric_wrapped, np.asarray([y_true[i]]), np.asarray([y_pred[i]])))
+        losses.append(metric_wrapped(np.asarray([y_true[i]]), np.asarray([y_pred[i]])))
     losses = np.asarray(losses)
 
     return np.nanmin(losses), np.nanmax(losses), np.nanmean(losses), np.nanstd(losses)
@@ -169,7 +169,8 @@ def get_loss_statistics(name, metric, y_true, y_pred, x):
 def eval_loss(metric, y_true, y_pred):
     x = metric(y_true, y_pred)
     x = get_tensor_value(x)
-    return np.nanmean(x)
+    m = np.nanmean(x)
+    return m
 
 
 def slice_tensor_axis_2(tensor, size, times):

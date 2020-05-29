@@ -56,6 +56,9 @@ class ChoiceDatasetGenerator(SyntheticDatasetGenerator):
         # use max to determine y value
         y = np.empty((n_instances, n_objects))
         for instance in range(n_instances):
+            if np.all(x[instance] < threshold):
+                min = np.argmin(instance)
+                instance[min] = threshold
             # select the lowest arg for all objects
             minima = np.min(x[instance], axis=1)
             y[instance] = [1 if minimum >= threshold else 0 for minimum in minima]
@@ -70,6 +73,10 @@ class ChoiceDatasetGenerator(SyntheticDatasetGenerator):
         # use max to determine y value
         y = np.empty((n_instances, n_objects))
         for instance in range(n_instances):
+            # ensure at least 1 chosen
+            if np.all(x[instance] < threshold):
+                min = np.argmin(x[instance])
+                x[instance][min] = threshold
             y[instance] = [1 if value >= threshold else 0 for value in x[instance]]
 
         return x, y
