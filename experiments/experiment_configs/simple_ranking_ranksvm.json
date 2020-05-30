@@ -69,7 +69,7 @@
     {
       "learner_name": "ranksvm",
       "learner_params": {
-        "C": 0.001,
+        "C": 1e-2,
         "tol": 1e-4,
         "normalize": true,
         "fit_intercept": true
@@ -79,8 +79,8 @@
     {
       "learner_name": "ranksvm",
       "learner_params": {
-        "C": 0.001,
-        "tol": 1e-4,
+        "C": 1e-1,
+        "tol": 1e-10,
         "normalize": true,
         "fit_intercept": true
       },
@@ -89,8 +89,8 @@
     {
       "learner_name": "ranksvm",
       "learner_params": {
-        "C": 0.001,
-        "tol": 1e-4,
+        "C": 1e1,
+        "tol": 1e-2,
         "normalize": true,
         "fit_intercept": true
       },
@@ -99,8 +99,8 @@
     {
       "learner_name": "ranksvm",
       "learner_params": {
-        "C": 0.001,
-        "tol": 1e-4,
+        "C": 1e2,
+        "tol": 1e-8,
         "normalize": true,
         "fit_intercept": true
       },
@@ -109,8 +109,8 @@
     {
       "learner_name": "ranksvm",
       "learner_params": {
-        "C": 0.001,
-        "tol": 1e-4,
+        "C": 1e0,
+        "tol": 1e-6,
         "normalize": true,
         "fit_intercept": true
       },

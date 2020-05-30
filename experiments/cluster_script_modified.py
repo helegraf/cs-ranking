@@ -145,7 +145,7 @@ def do_experiment():
             dataset_reader = get_dataset_reader(dataset_name, dataset_params)
             x_train, y_train, x_test, y_test = dataset_reader.get_single_train_test_split()
 
-            print_dictionary(x_train, y_train, x_test, y_test)
+            print(x_train, y_train, x_test, y_test)
 
             # log data contents, get num_objects, delete internal reader info
             n_objects = log_test_train_data(x_train, x_test, logger)
@@ -221,6 +221,7 @@ def do_experiment():
                 for callback in learner_fit_params["callbacks"]:
                     if isinstance(callback, AdvancedTensorBoard):
                         time_finished_train = callback.train_end_time
+                        print("time finished train from tensorbaord is", time_finished_train)
 
             db_connector.set_end_time(job_id, time_finished_vis, time_finished_train)
 

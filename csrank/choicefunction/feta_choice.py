@@ -18,7 +18,8 @@ from .choice_functions import ChoiceFunctions
 class FETAChoiceFunction(FETANetwork, ChoiceFunctions):
     def __init__(self, n_objects, n_object_features, n_hidden=2, n_units=8, add_zeroth_order_model=False,
                  max_number_of_objects=10, num_subsample=5, loss_function=binary_crossentropy,
-                 batch_normalization=False, kernel_regularizer=l2(l=1e-4), kernel_initializer='lecun_normal',
+                 loss_function_requires_x_values=False, batch_normalization=False,
+                 kernel_regularizer=l2(l=1e-4), kernel_initializer='lecun_normal',
                  activation='selu', optimizer=SGD(lr=1e-4, nesterov=True, momentum=0.9),
                  metrics=['binary_accuracy'], batch_size=256, random_state=None,
                  **kwargs):
@@ -84,6 +85,7 @@ class FETAChoiceFunction(FETANetwork, ChoiceFunctions):
                          metrics=metrics, batch_size=batch_size, random_state=random_state, **kwargs)
         self.threshold = 0.5
         self.logger = logging.getLogger(FETAChoiceFunction.__name__)
+        self.loss_function_requires_x_values = loss_function_requires_x_values
 
     def _construct_layers(self, **kwargs):
         # Todo: Variable sized input
@@ -125,12 +127,17 @@ class FETAChoiceFunction(FETANetwork, ChoiceFunctions):
         def create_input_lambda(i):
             return Lambda(lambda x: x[:, i])
 
+        if self.attention_preselected_input is not None:
+            input_for_model = self.attention_preselected_input
+        else:
+            input_for_model = self.input_layer
+
         if self._use_zeroth_model:
             self.logger.debug('Create 0th order model')
             zeroth_order_outputs = []
             inputs = []
             for i in range(self.n_objects):
-                x = create_input_lambda(i)(self.attention_preselected_input)
+                x = create_input_lambda(i)(input_for_model)
                 inputs.append(x)
                 for hidden in self.hidden_layers_zeroth:
                     x = hidden(x)
@@ -144,8 +151,8 @@ class FETAChoiceFunction(FETANetwork, ChoiceFunctions):
                 x1 = inputs[i]
                 x2 = inputs[j]
             else:
-                x1 = create_input_lambda(i)(self.attention_preselected_input)
-                x2 = create_input_lambda(j)(self.attention_preselected_input)
+                x1 = create_input_lambda(i)(input_for_model)
+                x2 = create_input_lambda(j)(input_for_model)
             x1x2 = concatenate([x1, x2])
             x2x1 = concatenate([x2, x1])
 

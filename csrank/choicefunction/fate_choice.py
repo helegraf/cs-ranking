@@ -147,16 +147,23 @@ class FATEChoiceFunction(FATENetwork, ChoiceFunctions):
             **kwargs :
                 Keyword arguments for the fit function
         """
+        print("callbacks received by fate choice", callbacks)
         if tune_size > 0:
             X_train, X_val, Y_train, Y_val = train_test_split(X, Y, test_size=tune_size, random_state=self.random_state)
             try:
-                super().fit(X_train, Y_train, **kwargs)
+                super().fit(X=X_train, Y=Y_train, epochs=epochs, inner_epochs=inner_epochs, callbacks=callbacks,
+                            validation_split=validation_split, verbose=verbose, global_lr=global_lr,
+                            global_momentum=global_momentum, min_bucket_size=min_bucket_size, refit=refit, **kwargs)
             finally:
                 self.logger.info('Fitting utility function finished. Start tuning threshold.')
                 self.threshold = self._tune_threshold(X_val, Y_val, thin_thresholds=thin_thresholds, verbose=verbose)
         else:
-            super().fit(X, Y, **kwargs)
+            super().fit(X=X, Y=Y, epochs=epochs, inner_epochs=inner_epochs, callbacks=callbacks,
+                            validation_split=validation_split, verbose=verbose, global_lr=global_lr,
+                            global_momentum=global_momentum, min_bucket_size=min_bucket_size, refit=refit, **kwargs)
             self.threshold = 0.5
+
+        print(self.model.summary())
 
     def _predict_scores_fixed(self, X, **kwargs):
         return super()._predict_scores_fixed(X, **kwargs)

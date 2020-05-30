@@ -136,8 +136,6 @@ class DeepSet(object):
         self.cached_models[n_objects] = Model(inputs=input_layer,
                                               outputs=feature_repr)
 
-        print(self.cached_models[n_objects].summary())
-
     def __call__(self, x):
         shape = x.shape
         n_objects = shape[1].value

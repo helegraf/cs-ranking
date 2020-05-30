@@ -171,6 +171,7 @@ class FATENetwork(FATENetworkCore):
         self.logger_gorc = logging.getLogger(FATENetwork.__name__)
 
         self.attention_preselection_config = attention_preselection_config
+        print("setting attention preselection config to", self.attention_preselection_config)
         self.num_attention_preselection_layers = num_attention_preselection_layers
         self.attention_preselection_layers = None
         self.attention_pooling_layer = instantiate_attention_layer(attention_pooling)
@@ -387,8 +388,10 @@ class FATENetwork(FATENetworkCore):
             self.attention_preselection_layers = [instantiate_attention_layer(self.attention_preselection_config)]
             for layer in self.attention_preselection_layers:
                 input_with_attention = layer(input_with_attention)
+            print("added attention preselection layers!! :)")
         else:
             input_with_attention = input_layer
+            print("attention preselection not there")
 
         set_repr = self.set_layer(input_with_attention)
         scores = self.join_input_layers(input_with_attention, set_repr, n_objects=n_objects,
@@ -447,6 +450,7 @@ class FATENetwork(FATENetworkCore):
             **kwargs :
                 Keyword arguments for the fit function
         """
+        print("callbacks received by fate network", callbacks)
         self._fit(X=X, Y=Y, epochs=epochs, inner_epochs=inner_epochs, callbacks=callbacks,
                   validation_split=validation_split, verbose=verbose, global_lr=global_lr,
                   global_momentum=global_momentum, min_bucket_size=min_bucket_size, refit=refit, **kwargs)

@@ -40,7 +40,7 @@ script = "#!/bin/bash\n" \
          "#CCS -N {}\n" \
          "#CCS --res=rset=1{}\n" \
          "#CCS -M hgraf@mail.upb.de\n" \
-         "#CCS -mea\n" \
+         "#CCS -ma\n" \
          "#CCS -t {}\n" \
          "\n" \
          "cd /upb/scratch/departments/pc2/groups/hpc-prf-isys/hgraf/attention\n" \
