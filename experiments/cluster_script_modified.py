@@ -139,7 +139,7 @@ def do_experiment():
                         # replace path
                         log_dir = learner_fit_params["callbacks"]["AdvancedTensorBoard"]["log_dir"]
                         learner_fit_params["callbacks"]["AdvancedTensorBoard"]["log_dir"] = \
-                            os.path.join(log_dir, table_jobs[5:], learner_name, hash_value)
+                            os.path.join(log_dir, table_jobs[5:], dataset_params["dataset_type"], learner_name, hash_value)
 
             # # # DATA SETUP # # #
 
@@ -176,10 +176,10 @@ def do_experiment():
                     learner_params["optimizer"] = \
                         optimizers[learner_params["optimizer"]](**learner_params["optimizer_params"])
                     del learner_params["optimizer_params"]
-                if "regularizer" in learner_params.keys():
-                    learner_params["regularizer"] = \
-                        regularizers[learner_params["regularizer"]](**learner_params["regularizer_params"])
-                    del learner_params["regularizer_params"]
+                if "kernel_regularizer" in learner_params.keys() and learner_params["kernel_regularizer"] is not None:
+                    learner_params["kernel_regularizer"] = \
+                        regularizers[learner_params["kernel_regularizer"]](**learner_params["kernel_regularizer_params"])
+                    del learner_params["kernel_regularizer_params"]
                 if "metrics" not in learner_params.keys():
                     learner_params["metrics"] = []
             if dataset_params["dataset_type"] == "tsp" and learner_name in ["feta_ranker", "fate_ranker", "listnet",

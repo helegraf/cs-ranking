@@ -180,6 +180,7 @@
             },
             "depth_rff": 1,
             "rff_config": {
+              "units": 5,
               "activation": "relu",
               "kernel_initializer": "lecun_normal",
               "use_bias": true,
@@ -259,6 +260,7 @@
             },
             "depth_rff": 1,
             "rff_config": {
+              "units": 5,
               "activation": "relu",
               "kernel_initializer": "lecun_normal",
               "use_bias": true,
@@ -338,6 +340,7 @@
             },
             "depth_rff": 1,
             "rff_config": {
+              "units": 5,
               "activation": "relu",
               "kernel_initializer": "lecun_normal",
               "use_bias": true,
@@ -408,11 +411,22 @@
         "stacking_height":1,
         "attention_layer_config": {"SAB": {"mab": {"MAB": {"multi_head":
         {"ScaledDotProductAttention": {"weighted": false, "biased": false}}}}}},
-        "num_layers_dense":3,
-        "num_units_dense":5,
+        "num_layers_dense": 2,
+        "dense_config": {
+          "units": 5,
+          "activation": "relu",
+          "kernel_initializer": "lecun_normal",
+          "use_bias": true,
+          "bias_initializer": "zeros"},
         "loss_function": "binary_crossentropy",
         "loss_function_requires_x_values": false,
-        "batch_size": 256
+        "batch_size": 256,
+        "optimizer": "SGD",
+        "optimizer_params": {
+          "lr": 1e-4,
+          "nesterov": true,
+          "momentum": 0.9
+        }
       },
       "learner_fit_params": {
         "epochs": 64,
@@ -461,6 +475,7 @@
             },
             "depth_rff": 1,
             "rff_config": {
+              "units": 5,
               "activation": "relu",
               "kernel_initializer": "lecun_normal",
               "use_bias": true,
