@@ -4,7 +4,7 @@ import pymc3 as pm
 from tensorflow.keras.callbacks import TensorBoard
 from keras.optimizers import SGD
 from keras.regularizers import l2
-from keras.losses import binary_crossentropy
+from keras.losses import binary_crossentropy, categorical_hinge
 
 from csrank.callbacks import EarlyStoppingWithWeights, LRScheduler, CyclicLR, AdvancedTensorBoard, DebugOutput
 from csrank.choicefunction import *
@@ -101,7 +101,8 @@ losses = {
     'tsp_probability_matrix_loss': tsp_probability_matrix_loss,
     'hinged_rank_loss': hinged_rank_loss,
     'plackett_luce_loss': plackett_luce_loss,
-    'binary_crossentropy': binary_crossentropy
+    'binary_crossentropy': binary_crossentropy,
+    'categorical_hinge': categorical_hinge
 }
 
 optimizers = {
@@ -258,9 +259,11 @@ def get_scores(object, batch_size, X_test, Y_test, logger):
             else:
                 s_pred = object.predict_scores(X_test, batch_size=batch_size)
         except:
+            print("error", sys.exc_info())
             logger.error("Unexpected Error {}".format(sys.exc_info()[0]))
             s_pred = None
             batch_size = int(batch_size / 10)
+
     y_pred = object.predict_for_scores(s_pred)
 
     return s_pred, y_pred

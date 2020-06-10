@@ -51,7 +51,7 @@ def gen_jobs(configuration_file_path):
     return combine_with_elements(previous_dict={}, index=0, combos=combos)
 
 
-name = "simple_ranking"
+name = "test"
 config_file_path = "database_configs/db.json"
 connector = ModifiedDBConnector(config_file_path, table_jobs="jobs_" + name)
 

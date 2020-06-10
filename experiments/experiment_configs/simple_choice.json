@@ -45,20 +45,24 @@
       "learner_name": "feta_choice",
       "learner_params": {
         "attention_pooling": null,
-        "attention_function_preselection": null,
-        "loss_function" : "binary_crossentropy",
-        "n_hidden":2,
-        "n_units":5,
+        "attention_preselection_config": null,
+        "attention_pooling_flavour": null,
+        "num_attention_preselection_layers": 1,
+        "loss_function": "binary_crossentropy",
+        "loss_function_requires_x_values": false,
+        "n_hidden": 2,
+        "n_units": 5,
         "add_zeroth_order_model":true,
-        "max_number_of_objects":5,
-        "n_hidden_joint_layers":3,
-        "n_hidden_joint_units":5,
+        "max_number_of_objects": 5,
+        "n_hidden_joint_layers": 3,
+        "n_hidden_joint_units": 5,
         "activation": "selu",
         "kernel_initializer": "lecun_normal",
         "batch_size": 256,
+        "batch_normalization": false,
         "kernel_regularizer": "l2",
         "kernel_regularizer_params": {
-          "l": 0.01
+          "l": 1e-4
         },
         "optimizer": "SGD",
         "optimizer_params": {
@@ -70,21 +74,25 @@
       "learner_fit_params": {
         "epochs": 64,
         "validation_split": 0.1,
-        "verbose": 0,
+        "tune_size": 0.1,
+        "thin_thresholds": 1,
         "callbacks": {
             "AdvancedTensorBoard": {
-            "num_visualizations_per_epoch": 1,
-            "save_space": true,
-            "log_lr": true,
-            "log_gradient_norms": "global",
-            "log_attention": false,
-            "log_dir": "./tensorboard_logs/",
-            "histogram_freq": 1,
-            "write_graph": false,
-            "write_grads": false,
-            "write_images": false,
-            "embeddings_freq": 0,
-            "update_freq": "epoch"
+              "num_visualizations_per_epoch": 1,
+              "save_space": true,
+              "log_lr": true,
+              "log_gradient_norms": "global",
+              "log_attention": false,
+              "no_detailed_histograms": true,
+              "lr_vs_accuracy_diagram": true,
+              "log_lr_each_batch": true,
+              "log_dir": "./tensorboard_logs/",
+              "histogram_freq": 1,
+              "write_graph": false,
+              "write_grads": false,
+              "write_images": false,
+              "embeddings_freq": 0,
+              "update_freq": "epoch"
           },
           "CyclicLR": {
             "base_lr": 1e-10,
@@ -99,23 +107,24 @@
       "learner_name": "feta_choice",
       "learner_params": {
         "attention_pooling": null,
-        "attention_function_preselection": {
-          "ScaledDotProductAttention":
-          {"weighted": false, "biased": false}
-        },
-        "loss_function" : "binary_crossentropy",
-        "n_hidden":2,
-        "n_units":5,
+        "attention_preselection_config": {"ScaledDotProductAttention":{"weighted": false, "biased": false}},
+        "attention_pooling_flavour": null,
+        "num_attention_preselection_layers": 1,
+        "loss_function": "binary_crossentropy",
+        "loss_function_requires_x_values": false,
+        "n_hidden": 2,
+        "n_units": 5,
         "add_zeroth_order_model":true,
-        "max_number_of_objects":5,
-        "n_hidden_joint_layers":3,
-        "n_hidden_joint_units":5,
+        "max_number_of_objects": 5,
+        "n_hidden_joint_layers": 3,
+        "n_hidden_joint_units": 5,
         "activation": "selu",
         "kernel_initializer": "lecun_normal",
         "batch_size": 256,
+        "batch_normalization": false,
         "kernel_regularizer": "l2",
         "kernel_regularizer_params": {
-          "l": 0.01
+          "l": 1e-4
         },
         "optimizer": "SGD",
         "optimizer_params": {
@@ -127,21 +136,25 @@
       "learner_fit_params": {
         "epochs": 64,
         "validation_split": 0.1,
-        "verbose": 0,
+        "tune_size": 0.1,
+        "thin_thresholds": 1,
         "callbacks": {
             "AdvancedTensorBoard": {
-            "num_visualizations_per_epoch": 1,
-            "save_space": true,
-            "log_lr": true,
-            "log_gradient_norms": "global",
-            "log_attention": true,
-            "log_dir": "./tensorboard_logs/",
-            "histogram_freq": 1,
-            "write_graph": false,
-            "write_grads": false,
-            "write_images": false,
-            "embeddings_freq": 0,
-            "update_freq": "epoch"
+              "num_visualizations_per_epoch": 1,
+              "save_space": true,
+              "log_lr": true,
+              "log_gradient_norms": "global",
+              "log_attention": true,
+              "no_detailed_histograms": true,
+              "lr_vs_accuracy_diagram": true,
+              "log_lr_each_batch": true,
+              "log_dir": "./tensorboard_logs/",
+              "histogram_freq": 1,
+              "write_graph": false,
+              "write_grads": false,
+              "write_images": false,
+              "embeddings_freq": 0,
+              "update_freq": "epoch"
           },
           "CyclicLR": {
             "base_lr": 1e-10,
@@ -152,7 +165,244 @@
         }
       }
     },
-        {
+    {
+      "learner_name": "feta_choice",
+      "learner_params": {
+        "attention_pooling": {
+          "PMA": {
+            "k": 1,
+            "mab": {
+              "MAB": {
+                "multi_head": {
+                  "ScaledDotProductAttention": {"weighted": false, "biased": false}
+                }
+              }
+            },
+            "depth_rff": 1,
+            "rff_config": {
+              "activation": "relu",
+              "kernel_initializer": "lecun_normal",
+              "use_bias": true,
+              "bias_initializer": "zeros"}
+          }
+        },
+        "attention_preselection_config": null,
+        "attention_pooling_flavour": "multi_pma",
+        "num_attention_preselection_layers": 1,
+        "loss_function": "binary_crossentropy",
+        "loss_function_requires_x_values": false,
+        "n_hidden": 2,
+        "n_units": 5,
+        "add_zeroth_order_model":true,
+        "max_number_of_objects": 5,
+        "n_hidden_joint_layers": 3,
+        "n_hidden_joint_units": 5,
+        "activation": "selu",
+        "kernel_initializer": "lecun_normal",
+        "batch_size": 256,
+        "batch_normalization": false,
+        "kernel_regularizer": "l2",
+        "kernel_regularizer_params": {
+          "l": 1e-4
+        },
+        "optimizer": "SGD",
+        "optimizer_params": {
+          "lr": 1e-4,
+          "nesterov": "true",
+          "momentum": 0.9
+        }
+      },
+      "learner_fit_params": {
+        "epochs": 64,
+        "validation_split": 0.1,
+        "tune_size": 0.1,
+        "thin_thresholds": 1,
+        "callbacks": {
+            "AdvancedTensorBoard": {
+              "num_visualizations_per_epoch": 1,
+              "save_space": true,
+              "log_lr": true,
+              "log_gradient_norms": "global",
+              "log_attention": true,
+              "no_detailed_histograms": true,
+              "lr_vs_accuracy_diagram": true,
+              "log_lr_each_batch": true,
+              "log_dir": "./tensorboard_logs/",
+              "histogram_freq": 1,
+              "write_graph": false,
+              "write_grads": false,
+              "write_images": false,
+              "embeddings_freq": 0,
+              "update_freq": "epoch"
+          },
+          "CyclicLR": {
+            "base_lr": 1e-10,
+            "max_lr": 1.0,
+            "step_size": 25600,
+            "mode": "triangular2"
+          }
+        }
+      }
+    },
+    {
+      "learner_name": "feta_choice",
+      "learner_params": {
+        "attention_pooling": {
+          "PMA": {
+            "k": 1,
+            "mab": {
+              "MAB": {
+                "multi_head": {
+                  "ScaledDotProductAttention": {"weighted": false, "biased": false}
+                }
+              }
+            },
+            "depth_rff": 1,
+            "rff_config": {
+              "activation": "relu",
+              "kernel_initializer": "lecun_normal",
+              "use_bias": true,
+              "bias_initializer": "zeros"}
+          }
+        },
+        "attention_preselection_config": null,
+        "attention_pooling_flavour": "single_pma",
+        "num_attention_preselection_layers": 1,
+        "loss_function": "binary_crossentropy",
+        "loss_function_requires_x_values": false,
+        "n_hidden": 2,
+        "n_units": 5,
+        "add_zeroth_order_model":true,
+        "max_number_of_objects": 5,
+        "n_hidden_joint_layers": 3,
+        "n_hidden_joint_units": 5,
+        "activation": "selu",
+        "kernel_initializer": "lecun_normal",
+        "batch_size": 256,
+        "batch_normalization": false,
+        "kernel_regularizer": "l2",
+        "kernel_regularizer_params": {
+          "l": 1e-4
+        },
+        "optimizer": "SGD",
+        "optimizer_params": {
+          "lr": 1e-4,
+          "nesterov": "true",
+          "momentum": 0.9
+        }
+      },
+      "learner_fit_params": {
+        "epochs": 64,
+        "validation_split": 0.1,
+        "tune_size": 0.1,
+        "thin_thresholds": 1,
+        "callbacks": {
+            "AdvancedTensorBoard": {
+              "num_visualizations_per_epoch": 1,
+              "save_space": true,
+              "log_lr": true,
+              "log_gradient_norms": "global",
+              "log_attention": true,
+              "no_detailed_histograms": true,
+              "lr_vs_accuracy_diagram": true,
+              "log_lr_each_batch": true,
+              "log_dir": "./tensorboard_logs/",
+              "histogram_freq": 1,
+              "write_graph": false,
+              "write_grads": false,
+              "write_images": false,
+              "embeddings_freq": 0,
+              "update_freq": "epoch"
+          },
+          "CyclicLR": {
+            "base_lr": 1e-10,
+            "max_lr": 1.0,
+            "step_size": 25600,
+            "mode": "triangular2"
+          }
+        }
+      }
+    },
+    {
+      "learner_name": "feta_choice",
+      "learner_params": {
+        "attention_pooling": {
+          "PMA": {
+            "k": 1,
+            "mab": {
+              "MAB": {
+                "multi_head": {
+                  "ScaledDotProductAttention": {"weighted": false, "biased": false}
+                }
+              }
+            },
+            "depth_rff": 1,
+            "rff_config": {
+              "activation": "relu",
+              "kernel_initializer": "lecun_normal",
+              "use_bias": true,
+              "bias_initializer": "zeros"}
+          }
+        },
+        "attention_preselection_config": null,
+        "attention_pooling_flavour": "mab",
+        "num_attention_preselection_layers": 1,
+        "loss_function": "binary_crossentropy",
+        "loss_function_requires_x_values": false,
+        "n_hidden": 2,
+        "n_units": 5,
+        "add_zeroth_order_model":true,
+        "max_number_of_objects": 5,
+        "n_hidden_joint_layers": 3,
+        "n_hidden_joint_units": 5,
+        "activation": "selu",
+        "kernel_initializer": "lecun_normal",
+        "batch_size": 256,
+        "batch_normalization": false,
+        "kernel_regularizer": "l2",
+        "kernel_regularizer_params": {
+          "l": 1e-4
+        },
+        "optimizer": "SGD",
+        "optimizer_params": {
+          "lr": 1e-4,
+          "nesterov": "true",
+          "momentum": 0.9
+        }
+      },
+      "learner_fit_params": {
+        "epochs": 64,
+        "validation_split": 0.1,
+        "tune_size": 0.1,
+        "thin_thresholds": 1,
+        "callbacks": {
+            "AdvancedTensorBoard": {
+              "num_visualizations_per_epoch": 1,
+              "save_space": true,
+              "log_lr": true,
+              "log_gradient_norms": "global",
+              "log_attention": true,
+              "no_detailed_histograms": true,
+              "lr_vs_accuracy_diagram": true,
+              "log_lr_each_batch": true,
+              "log_dir": "./tensorboard_logs/",
+              "histogram_freq": 1,
+              "write_graph": false,
+              "write_grads": false,
+              "write_images": false,
+              "embeddings_freq": 0,
+              "update_freq": "epoch"
+          },
+          "CyclicLR": {
+            "base_lr": 1e-10,
+            "max_lr": 1.0,
+            "step_size": 25600,
+            "mode": "triangular2"
+          }
+        }
+      }
+    },
+    {
       "learner_name": "set_transformer_choice",
       "learner_params": {
         "stacking_height":1,
@@ -160,27 +410,32 @@
         {"ScaledDotProductAttention": {"weighted": false, "biased": false}}}}}},
         "num_layers_dense":3,
         "num_units_dense":5,
-        "seed":10,
+        "loss_function": "binary_crossentropy",
+        "loss_function_requires_x_values": false,
         "batch_size": 256
       },
       "learner_fit_params": {
         "epochs": 64,
         "validation_split": 0.1,
-        "verbose": 0,
+        "tune_size": 0.1,
+        "thin_thresholds": 1,
         "callbacks": {
             "AdvancedTensorBoard": {
-            "num_visualizations_per_epoch": 1,
-            "save_space": true,
-            "log_lr": true,
-            "log_gradient_norms": "global",
-            "log_attention": true,
-            "log_dir": "./tensorboard_logs/",
-            "histogram_freq": 1,
-            "write_graph": false,
-            "write_grads": false,
-            "write_images": false,
-            "embeddings_freq": 0,
-            "update_freq": "epoch"
+              "num_visualizations_per_epoch": 1,
+              "save_space": true,
+              "log_lr": true,
+              "log_gradient_norms": "global",
+              "log_attention": true,
+              "no_detailed_histograms": true,
+              "lr_vs_accuracy_diagram": true,
+              "log_lr_each_batch": true,
+              "log_dir": "./tensorboard_logs/",
+              "histogram_freq": 1,
+              "write_graph": false,
+              "write_grads": false,
+              "write_images": false,
+              "embeddings_freq": 0,
+              "update_freq": "epoch"
           },
           "CyclicLR": {
             "base_lr": 1e-10,
@@ -194,18 +449,35 @@
     {
       "learner_name": "fate_choice",
       "learner_params": {
-        "attention_pooling": {"PMA": {"k": 1, "mab": {"MAB": {"multi_head":  {"ScaledDotProductAttention":
-                                                                 {"weighted": false, "biased": false}}}}}},
-        "attention_function_preselection": null,
-        "loss_function" :  "hinged_rank_loss",
+        "attention_pooling": {
+          "PMA": {
+            "k": 1,
+            "mab": {
+              "MAB": {
+                "multi_head": {
+                  "ScaledDotProductAttention": {"weighted": false, "biased": false}
+                }
+              }
+            },
+            "depth_rff": 1,
+            "rff_config": {
+              "activation": "relu",
+              "kernel_initializer": "lecun_normal",
+              "use_bias": true,
+              "bias_initializer": "zeros"}
+          }
+        },
+        "attention_preselection_config": null,
+        "num_attention_preselection_layers": 1,
+        "loss_function": "binary_crossentropy",
         "loss_function_requires_x_values" :  false,
         "n_hidden_set_layers": 2,
         "n_hidden_set_units": 5,
         "n_hidden_joint_layers": 2,
         "n_hidden_joint_units": 5,
         "activation": "selu",
-        "kernel_initializer": "lecun_normal",
         "batch_size": 256,
+        "kernel_initializer": "lecun_normal",
         "kernel_regularizer": "l2",
         "kernel_regularizer_params": {
           "l": 0.01
@@ -219,13 +491,9 @@
       },
       "learner_fit_params": {
         "epochs": 64,
-        "inner_epochs": 1,
         "validation_split": 0.1,
-        "verbose": 0,
-        "global_lr": 1.0,
-        "global_momentum": 0.9,
-        "min_bucket_size": 500,
-        "refit": false,
+        "tune_size": 0.1,
+        "thin_thresholds": 1,
         "callbacks": {
           "AdvancedTensorBoard": {
             "num_visualizations_per_epoch": 1,
@@ -233,6 +501,9 @@
             "log_lr": true,
             "log_gradient_norms": "global",
             "log_attention": true,
+            "no_detailed_histograms": true,
+            "lr_vs_accuracy_diagram": true,
+            "log_lr_each_batch": true,
             "log_dir": "./tensorboard_logs/",
             "histogram_freq": 1,
             "write_graph": false,
@@ -254,19 +525,16 @@
       "learner_name": "fate_choice",
       "learner_params": {
         "attention_pooling": null,
-        "attention_function_preselection": {
-          "ScaledDotProductAttention":
-          {"weighted": false, "biased": false}
-        },
-        "loss_function" :  "binary_crossentropy",
+        "attention_function_preselection": {"ScaledDotProductAttention":{"weighted": false, "biased": false}},
+        "loss_function": "binary_crossentropy",
         "loss_function_requires_x_values" :  false,
         "n_hidden_set_layers": 2,
         "n_hidden_set_units": 5,
         "n_hidden_joint_layers": 2,
         "n_hidden_joint_units": 5,
         "activation": "selu",
-        "kernel_initializer": "lecun_normal",
         "batch_size": 256,
+        "kernel_initializer": "lecun_normal",
         "kernel_regularizer": "l2",
         "kernel_regularizer_params": {
           "l": 0.01
@@ -280,13 +548,9 @@
       },
       "learner_fit_params": {
         "epochs": 64,
-        "inner_epochs": 1,
         "validation_split": 0.1,
-        "verbose": 0,
-        "global_lr": 1.0,
-        "global_momentum": 0.9,
-        "min_bucket_size": 500,
-        "refit": false,
+        "tune_size": 0.1,
+        "thin_thresholds": 1,
         "callbacks": {
           "AdvancedTensorBoard": {
             "num_visualizations_per_epoch": 1,
@@ -294,6 +558,9 @@
             "log_lr": true,
             "log_gradient_norms": "global",
             "log_attention": true,
+            "no_detailed_histograms": true,
+            "lr_vs_accuracy_diagram": true,
+            "log_lr_each_batch": true,
             "log_dir": "./tensorboard_logs/",
             "histogram_freq": 1,
             "write_graph": false,
@@ -316,15 +583,15 @@
       "learner_params": {
         "attention_pooling": null,
         "attention_function_preselection": null,
-        "loss_function" :  "binary_crossentropy",
+        "loss_function": "binary_crossentropy",
         "loss_function_requires_x_values" :  false,
         "n_hidden_set_layers": 2,
         "n_hidden_set_units": 5,
         "n_hidden_joint_layers": 2,
         "n_hidden_joint_units": 5,
         "activation": "selu",
-        "kernel_initializer": "lecun_normal",
         "batch_size": 256,
+        "kernel_initializer": "lecun_normal",
         "kernel_regularizer": "l2",
         "kernel_regularizer_params": {
           "l": 0.01
@@ -338,13 +605,9 @@
       },
       "learner_fit_params": {
         "epochs": 64,
-        "inner_epochs": 1,
         "validation_split": 0.1,
-        "verbose": 0,
-        "global_lr": 1.0,
-        "global_momentum": 0.9,
-        "min_bucket_size": 500,
-        "refit": false,
+        "tune_size": 0.1,
+        "thin_thresholds": 1,
         "callbacks": {
           "AdvancedTensorBoard": {
             "num_visualizations_per_epoch": 1,
@@ -352,6 +615,9 @@
             "log_lr": true,
             "log_gradient_norms": "global",
             "log_attention": false,
+            "no_detailed_histograms": true,
+            "lr_vs_accuracy_diagram": true,
+            "log_lr_each_batch": true,
             "log_dir": "./tensorboard_logs/",
             "histogram_freq": 1,
             "write_graph": false,
@@ -393,19 +659,52 @@
         "sampler": "variational",
         "tune": 500,
         "draws": 500,
+        "cores": 2,
         "tune_size": 0.1,
         "thin_thresholds": 1,
         "vi_params": {
           "n": 20000,
           "method": "advi",
-          "callbacks": {
-            "CheckParametersConvergence": {},
-            "AdvancedTensorBoard": {
+          "callbacks": ["CheckParametersConvergence"]
+        }
+      }
+    },
+    {
+      "learner_name": "ranknet_choice",
+      "learner_params": {
+        "n_hidden": 2,
+        "n_units": 5,
+        "loss_function": "binary_crossentropy",
+        "activation": "relu",
+        "batch_size": 256,
+        "batch_normalization": false,
+        "kernel_initializer": "lecun_normal",
+        "kernel_regularizer": "l2",
+        "kernel_regularizer_params": {
+          "l": 1e-4
+        },
+        "optimizer": "SGD",
+        "optimizer_params": {
+          "lr": 1e-4,
+          "nesterov": "true",
+          "momentum": 0.9
+        }
+      },
+      "learner_fit_params": {
+        "epochs":10,
+        "validation_split":0.1,
+        "tune_size": 0.1,
+        "thin_thresholds": 1,
+        "callbacks": {
+          "AdvancedTensorBoard": {
             "num_visualizations_per_epoch": 1,
             "save_space": true,
             "log_lr": true,
             "log_gradient_norms": "global",
             "log_attention": false,
+            "no_detailed_histograms": true,
+            "lr_vs_accuracy_diagram": true,
+            "log_lr_each_batch": true,
             "log_dir": "./tensorboard_logs/",
             "histogram_freq": 1,
             "write_graph": false,
@@ -420,7 +719,7 @@
             "step_size": 25600,
             "mode": "triangular2"
           }
-          }}
+        }
       }
     }
   ],

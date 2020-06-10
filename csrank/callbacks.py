@@ -1,15 +1,14 @@
 import logging
 import math
-import os
 import warnings
 from datetime import datetime
 
-import h5py
 import numpy as np
-from keras import backend as K
 from keras.callbacks import *
 import tensorflow as tf
 from keras.callbacks import TensorBoard
+from tensorflow.contrib.tensorboard.plugins import projector
+from tensorflow.python.keras.engine.training_utils import standardize_input_data
 
 from csrank.metrics import tsp_loss_absolute_wrapper, tsp_distance_wrapper, tsp_loss_relative_wrapper
 from csrank.metrics_np import kendalls_tau_for_scores_np, spearman_correlation_for_scores_scipy, \
@@ -20,8 +19,8 @@ from csrank.numpy_util import scores_to_rankings
 from csrank.tunable import Tunable
 from csrank.util import print_dictionary
 from csrank.visualization.predictions import tsp_figure, figure_to_bytes, create_image_plotting_graph, \
-    create_attention_plotting_graph
-from csrank.visualization.weights import visualize_attention_scores
+    create_attention_plotting_graph, create_lr_plotting_graph
+from csrank.visualization.weights import visualize_attention_scores, visualize_lr_acc
 
 
 class EarlyStoppingWithWeights(EarlyStopping, Tunable):
@@ -339,6 +338,7 @@ class AdvancedTensorBoard(TensorBoard):
     def __init__(self, inputs=None, targets=None, log_lr=False, log_gradient_norms=None,
                  prediction_visualization=None, metric_for_visualization=None,
                  metric_for_visualization_requires_x=False, log_attention=False, save_space=False,
+                 no_detailed_histograms=False, lr_vs_accuracy_diagram=False, log_lr_each_batch=False,
                  **kwargs):
         super(AdvancedTensorBoard, self).__init__(**kwargs)
 
@@ -390,8 +390,11 @@ class AdvancedTensorBoard(TensorBoard):
 
         # options
         self.log_lr = log_lr
+        self.log_lr_each_batch = log_lr_each_batch
+        self.lr_vs_accuracy_diagram = lr_vs_accuracy_diagram
         self.log_gradient_norms = log_gradient_norms
         self.save_space = save_space
+        self.no_detailed_histograms = no_detailed_histograms
         self.log_attention = log_attention
 
         # other attributes
@@ -403,6 +406,16 @@ class AdvancedTensorBoard(TensorBoard):
         self.attention_keys = {}
         self.attention_scores = {}
         self.train_end_time = None
+        self.total_batches = -1
+        self.lr_acc_img_bytes = 0
+        self.lr_acc_merged = 0
+        self.lr_acc_batch_img_bytes = 0
+        self.lr_acc_batch_merged = 0
+        self.lr_logs = []
+        self.loss_logs = []
+        self.val_loss_logs = []
+        self.lr_logs_batch = []
+        self.loss_logs_batch = []
 
     def on_train_begin(self, logs=None):
         super(AdvancedTensorBoard, self).on_train_begin(logs)
@@ -422,12 +435,28 @@ class AdvancedTensorBoard(TensorBoard):
                     np.asarray([create_attention_plotting_graph(num_visualization, layer_name)
                                 for num_visualization in range(len(self.x))])
 
+        # create learning rate accuracy graph
+        if self.lr_vs_accuracy_diagram:
+            self.lr_acc_img_bytes, self.lr_acc_merged = create_lr_plotting_graph("epoch")
+
+            if self.log_lr_each_batch:
+                self.lr_acc_batch_img_bytes, self.lr_acc_batch_merged = create_lr_plotting_graph("batch")
+
     def on_epoch_end(self, epoch, logs=None):
         if self.histogram_freq and epoch % self.histogram_freq == 0:
             # if the learning rate is logged, note the value
-            if self.log_lr:
+            lr = None
+            if self.log_lr and not self.log_lr_each_batch:
                 logs = logs or {}
-                logs.update({'learning_rate': K.eval(self.model.optimizer.lr)})
+                lr = K.eval(self.model.optimizer.lr)
+                logs.update({'learning_rate': lr})
+                self.writer.flush()
+
+            if self.log_lr and self.lr_vs_accuracy_diagram:
+                lr = K.eval(self.model.optimizer.lr) if lr is None else lr
+                self.lr_logs.append(lr)
+                self.loss_logs.append(logs["loss"])
+                self.val_loss_logs.append(logs["val_loss"])
 
             # prediction
             outputs = self.model.predict(self.x)
@@ -471,6 +500,8 @@ class AdvancedTensorBoard(TensorBoard):
                                                     feed_dict={prediction_img_bytes: prediction_figure})
                         self.writer.add_summary(run_summary, epoch)
 
+                    self.previous_prediction[num_visualization] = predictions_as_rankings[num_visualization]
+
                     # attention
                     if self.log_attention:
                         for layer_name in self.attention_keys.keys():
@@ -484,7 +515,7 @@ class AdvancedTensorBoard(TensorBoard):
                                                         feed_dict={attention_img_bytes: attention_figure})
                             self.writer.add_summary(run_summary, epoch)
 
-                    self.previous_prediction[num_visualization] = predictions_as_rankings[num_visualization]
+
 
         super(AdvancedTensorBoard, self).on_epoch_end(epoch, logs)
 
@@ -521,9 +552,162 @@ class AdvancedTensorBoard(TensorBoard):
         # save symbolic model inputs
         self.symbolic_inputs = model.inputs
 
-        super(AdvancedTensorBoard, self).set_model(model)
+        # basically the same code as in original tensorboard just allows excluding excessive summaries
+        self.model = model
+        if K.backend() == 'tensorflow':
+            self.sess = K.get_session()
+        if self.histogram_freq and self.merged is None:
+            for layer in self.model.layers:
+                for weight in layer.weights:
+                    mapped_weight_name = weight.name.replace(':', '_')
+                    if not self.no_detailed_histograms:
+                        tf.summary.histogram(mapped_weight_name, weight)
+                    if self.write_grads and weight in layer.trainable_weights:
+                        grads = model.optimizer.get_gradients(model.total_loss,
+                                                              weight)
+
+                        def is_indexed_slices(grad):
+                            return type(grad).__name__ == 'IndexedSlices'
+
+                        grads = [
+                            grad.values if is_indexed_slices(grad) else grad
+                            for grad in grads]
+                        tf.summary.histogram('{}_grad'.format(mapped_weight_name),
+                                             grads)
+                    if self.write_images:
+                        w_img = tf.squeeze(weight)
+                        shape = K.int_shape(w_img)
+                        if len(shape) == 2:  # dense layer kernel case
+                            if shape[0] > shape[1]:
+                                w_img = tf.transpose(w_img)
+                                shape = K.int_shape(w_img)
+                            w_img = tf.reshape(w_img, [1,
+                                                       shape[0],
+                                                       shape[1],
+                                                       1])
+                        elif len(shape) == 3:  # convnet case
+                            if K.image_data_format() == 'channels_last':
+                                # switch to channels_first to display
+                                # every kernel as a separate image
+                                w_img = tf.transpose(w_img, perm=[2, 0, 1])
+                                shape = K.int_shape(w_img)
+                            w_img = tf.reshape(w_img, [shape[0],
+                                                       shape[1],
+                                                       shape[2],
+                                                       1])
+                        elif len(shape) == 1:  # bias case
+                            w_img = tf.reshape(w_img, [1,
+                                                       shape[0],
+                                                       1,
+                                                       1])
+                        else:
+                            # not possible to handle 3D convnets etc.
+                            continue
+
+                        shape = K.int_shape(w_img)
+                        assert len(shape) == 4 and shape[-1] in [1, 3, 4]
+                        tf.summary.image(mapped_weight_name, w_img)
+
+                if hasattr(layer, 'output') and not self.no_detailed_histograms:
+                    if isinstance(layer.output, list):
+                        for i, output in enumerate(layer.output):
+                            tf.summary.histogram('{}_out_{}'.format(layer.name, i),
+                                                 output)
+                    else:
+                        tf.summary.histogram('{}_out'.format(layer.name),
+                                             layer.output)
+        self.merged = tf.summary.merge_all()
+
+        if self.write_graph:
+            self.writer = tf.summary.FileWriter(self.log_dir,
+                                                self.sess.graph)
+        else:
+            self.writer = tf.summary.FileWriter(self.log_dir)
+
+        if self.embeddings_freq and self.embeddings_data is not None:
+            self.embeddings_data = standardize_input_data(self.embeddings_data,
+                                                          model.input_names)
+
+            embeddings_layer_names = self.embeddings_layer_names
+
+            if not embeddings_layer_names:
+                embeddings_layer_names = [layer.name for layer in self.model.layers
+                                          if type(layer).__name__ == 'Embedding']
+            self.assign_embeddings = []
+            embeddings_vars = {}
+
+            self.batch_id = batch_id = tf.placeholder(tf.int32)
+            self.step = step = tf.placeholder(tf.int32)
+
+            for layer in self.model.layers:
+                if layer.name in embeddings_layer_names:
+                    embedding_input = self.model.get_layer(layer.name).output
+                    embedding_size = np.prod(embedding_input.shape[1:])
+                    embedding_input = tf.reshape(embedding_input,
+                                                 (step, int(embedding_size)))
+                    shape = (self.embeddings_data[0].shape[0], int(embedding_size))
+                    embedding = K.variable(K.zeros(shape),
+                                           name=layer.name + '_embedding')
+                    embeddings_vars[layer.name] = embedding
+                    batch = tf.assign(embedding[batch_id:batch_id + step],
+                                      embedding_input)
+                    self.assign_embeddings.append(batch)
+
+            self.saver = tf.train.Saver(list(embeddings_vars.values()))
+
+            if not isinstance(self.embeddings_metadata, str):
+                embeddings_metadata = self.embeddings_metadata
+            else:
+                embeddings_metadata = {layer_name: self.embeddings_metadata
+                                       for layer_name in embeddings_vars.keys()}
+
+            config = projector.ProjectorConfig()
+
+            for layer_name, tensor in embeddings_vars.items():
+                embedding = config.embeddings.add()
+                embedding.tensor_name = tensor.name
+
+                if layer_name in embeddings_metadata:
+                    embedding.metadata_path = embeddings_metadata[layer_name]
+
+            projector.visualize_embeddings(self.writer, config)
+
+    def on_batch_begin(self, batch, logs=None):
+        self.total_batches = self.total_batches + 1
+
+    def on_batch_end(self, batch, logs=None):
+        # log lr if to be logged each batch
+        if self.log_lr and self.log_lr_each_batch:
+            summary = tf.Summary()
+            summary_value = summary.value.add()
+            curr_lr = K.eval(self.model.optimizer.lr)
+            summary_value.simple_value = curr_lr
+            summary_value.tag = 'learning_rate'
+            self.writer.add_summary(summary, self.total_batches)
+            self.writer.flush()
+
+            if self.lr_vs_accuracy_diagram:
+                self.lr_logs_batch.append(curr_lr)
+                self.loss_logs_batch.append(logs["loss"])
+
+        super(AdvancedTensorBoard, self).on_batch_end(batch, logs)
 
     def on_train_end(self, logs):
         self.train_end_time = datetime.now()
+
+        if self.lr_vs_accuracy_diagram:
+            # diagrams for lr vs accuracy
+            lr_acc_vis_data = visualize_lr_acc(self.lr_logs, self.loss_logs, self.val_loss_logs)
+            lr_acc_figure = figure_to_bytes(lr_acc_vis_data)
+            run_summary = self.sess.run(fetches=self.lr_acc_merged,
+                                        feed_dict={self.lr_acc_img_bytes: lr_acc_figure})
+            self.writer.add_summary(run_summary, 0)
+
+            if self.log_lr_each_batch:
+                lr_acc_vis_data_batch = visualize_lr_acc(self.lr_logs_batch, self.loss_logs_batch)
+                lr_acc_figure_batch = figure_to_bytes(lr_acc_vis_data_batch)
+                run_summary_batch = self.sess.run(fetches=self.lr_acc_batch_merged,
+                                            feed_dict={self.lr_acc_batch_img_bytes: lr_acc_figure_batch})
+                self.writer.add_summary(run_summary_batch, 0)
 
         super(AdvancedTensorBoard, self).on_train_end(logs)

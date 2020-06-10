@@ -147,7 +147,6 @@ class FATEChoiceFunction(FATENetwork, ChoiceFunctions):
             **kwargs :
                 Keyword arguments for the fit function
         """
-        print("callbacks received by fate choice", callbacks)
         if tune_size > 0:
             X_train, X_val, Y_train, Y_val = train_test_split(X, Y, test_size=tune_size, random_state=self.random_state)
             try:
@@ -162,8 +161,6 @@ class FATEChoiceFunction(FATENetwork, ChoiceFunctions):
                             validation_split=validation_split, verbose=verbose, global_lr=global_lr,
                             global_momentum=global_momentum, min_bucket_size=min_bucket_size, refit=refit, **kwargs)
             self.threshold = 0.5
-
-        print(self.model.summary())
 
     def _predict_scores_fixed(self, X, **kwargs):
         return super()._predict_scores_fixed(X, **kwargs)

@@ -4,7 +4,7 @@ from itertools import permutations, combinations
 import numpy as np
 import tensorflow as tf
 from keras import optimizers, Input, Model, backend as K
-from keras.layers import Dense, concatenate, Lambda, add, Reshape
+from keras.layers import Dense, concatenate, Lambda, add, Reshape, Permute, Concatenate
 from keras.optimizers import SGD
 from keras.regularizers import l2
 from sklearn.utils import check_random_state
@@ -20,11 +20,12 @@ from csrank.util import print_dictionary
 
 class FETANetwork(Learner):
     def __init__(self, n_objects, n_object_features, n_hidden=2, n_units=8, add_zeroth_order_model=False,
-                 max_number_of_objects=5, num_subsample=5, loss_function=hinged_rank_loss, batch_normalization=False,
+                 max_number_of_objects=5, num_subsample=5, loss_function=hinged_rank_loss,
+                 loss_function_requires_x_values=False, batch_normalization=False,
                  kernel_regularizer=l2(l=1e-4), kernel_initializer='lecun_normal', activation='selu',
                  optimizer=SGD(lr=1e-4, nesterov=True, momentum=0.9), metrics=None, batch_size=256, random_state=None,
                  attention_pooling_config=None, attention_preselection_config=None,
-                 num_attention_preselection_layers=0, metrics_requiring_x=[], **kwargs):
+                 num_attention_preselection_layers=0, attention_pooling_flavour=None, metrics_requiring_x=[], **kwargs):
         if attention_pooling_config is not None and not isinstance(attention_pooling_config, dict):
             raise ValueError("Attention pooling layer has to be given in dictionary-form because it needs to be "
                              "instantiated multiple times. Has to be able to be processed by "
@@ -34,6 +35,15 @@ class FETANetwork(Learner):
             raise ValueError("Attention preselection layer has to be given in dictionary-form because it needs to be "
                              "instantiated multiple times. Has to be able to be processed by "
                              "csrank.attention.set_transformer.modules.instantiate_attention_layer")
+        allowed_attention_pooling_flavours = ["multi_pma", "single_pma", "mab"]
+        if attention_pooling_flavour is not None \
+                and attention_pooling_flavour not in allowed_attention_pooling_flavours:
+            raise ValueError("{} is not an allowed attention flavour. The options are {}".format(
+                attention_pooling_flavour, allowed_attention_pooling_flavours))
+        if attention_pooling_flavour == "single_pma" and add_zeroth_order_model == False:
+            raise ValueError("Using single_pma as attention pooling requires oth order model.")
+        self.attention_pooling_flavour = attention_pooling_flavour
+        self.loss_function_requires_x_values = loss_function_requires_x_values
         self.attention_preselection_config = attention_preselection_config
         self.attention_preselection_layers = None
         self.num_attention_preselection_layers = num_attention_preselection_layers
@@ -111,7 +121,6 @@ class FETANetwork(Learner):
 
     @property
     def zero_order_model(self):
-        print("OH NO USING ZERO ORDER MODEL!")
         if self._zero_order_model is None and self._use_zeroth_model:
             self.logger.info('Creating zeroth model')
             inp = Input(shape=(self.n_object_features,))
@@ -213,7 +222,10 @@ class FETANetwork(Learner):
                 for hidden in self.hidden_layers_zeroth:
                     x = hidden(x)
                 zeroth_order_outputs.append(self.output_node_zeroth(x))
-            zeroth_order_scores = concatenate(zeroth_order_outputs)
+            if self.attention_pooling_config is not None and self.attention_pooling_flavour=="single_pma":
+                zeroth_order_scores = zeroth_order_outputs
+            else:
+                zeroth_order_scores = concatenate(zeroth_order_outputs)
             self.logger.debug('0th order model finished')
         self.logger.debug('Create 1st order model')
         outputs = [list() for _ in range(self.n_objects)]
@@ -244,20 +256,67 @@ class FETANetwork(Learner):
         outputs = [concatenate(x) for x in outputs]
 
         # compute utility scores:
-        if self.attention_pooling_config is None:
-            sum_func = lambda s: K.mean(s, axis=1, keepdims=True)
-            scores = [Lambda(sum_func)(x) for x in outputs]
-        else:
+        if self.attention_pooling_flavour=="multi_pma" and self.attention_pooling_config is not None:
             add_dim = Reshape(target_shape=(self.n_objects - 1, 1))
             remove_dim = Reshape(target_shape=(1,))
             self.attention_pooling_layers = [instantiate_attention_layer(self.attention_pooling_config) for _ in outputs]
-
             scores = [remove_dim(self.attention_pooling_layers[x_obj](add_dim(outputs[x_obj]))) for x_obj in range(len(outputs))]
+            scores = concatenate(scores)
+        elif self.attention_pooling_flavour=="single_pma" and self.attention_pooling_config is not None:
+            # build (n_objects x n_objects) matrix out of zeroth-order scores and pairwise scores
+            # for each output, separate and concat right half of pairwise scores with 0th order scores
+            # (upper right triangle of matrix)
+            intermediate_outputs = []
+            for i in range(len(outputs)-1):
+                # separate right half
+                right_half = Lambda(lambda x: x[:, i:])(outputs[i])
 
-        scores = concatenate(scores)
+                # concat with zeroth order (from left)
+                intermediate_outputs.append(concatenate([zeroth_order_scores[i], right_half]))
+
+            # the last elem has no right, just add zeroth order score
+            intermediate_outputs.append(zeroth_order_scores[-1])
+
+            # for each output, separate and concat left half with zeroth order scores and right half
+            for i in range(1, len(outputs)):
+                left_half = Lambda(lambda x: x[:, :i])(outputs[i])
+
+                intermediate_outputs[i] = concatenate([left_half, intermediate_outputs[i]])
+
+            # put the new matrix entries in 1 matrix
+            for i in range(len(outputs)):
+                add_dim = Reshape(target_shape=(1, self.n_objects))
+                intermediate_outputs[i] = add_dim(intermediate_outputs[i])
+            outputs = concatenate(intermediate_outputs, axis=1)
+
+            # put the finished matrix through attention (reducing first dimension to 1)
+            self.attention_pooling_layers = [instantiate_attention_layer(self.attention_pooling_config)]
+            out = self.attention_pooling_layers[0](outputs)
+
+            # order the dimensions correctly
+            permutation_layer = Permute((2, 1))
+            scores = permutation_layer(out)
+            remove_dim = Reshape(target_shape=(self.n_objects,))
+            scores = remove_dim(scores)
+        else:
+            sum_func = lambda s: K.mean(s, axis=1, keepdims=True)
+            scores = [Lambda(sum_func)(x) for x in outputs]
+            scores = concatenate(scores)
+
         self.logger.debug('1st order model finished')
         if self._use_zeroth_model:
-            scores = add([scores, zeroth_order_scores])
+            if self.attention_pooling_flavour == "mab" and self.attention_pooling_config is not None:
+                self.attention_pooling_layers = [instantiate_attention_layer(self.attention_pooling_config)]
+                print("scores", scores)
+                print("0th scpres", zeroth_order_scores)
+                add_dim = Reshape(target_shape=(self.n_objects, 1))
+                remove_dim = Reshape(target_shape=(self.n_objects,))
+                scores = remove_dim(self.attention_pooling_layers[0]([add_dim(scores), add_dim(zeroth_order_scores)]))
+            elif self.attention_pooling_flavour == "single_pma" and self.attention_pooling_config is not None:
+                # the zeroth order scores are already accounted for
+                pass
+            else:
+                scores = add([scores, zeroth_order_scores])
         model = Model(inputs=self.input_layer, outputs=scores)
 
         self.logger.debug('Compiling complete model...')

@@ -110,6 +110,14 @@ def plot_path(x_instances, rankings, color, line_style, label):
             plt.plot(x_and_y[:, 0], x_and_y[:, 1], color=color, linestyle=line_style)
 
 
+def create_lr_plotting_graph(update_freq):
+    matplotlib_img_bytes = tf.placeholder(dtype='string')
+    tensorflow_img = bytes_to_tensor(matplotlib_img_bytes)
+    summary_img = tf.summary.image("learning_rate_accuracy_vis/" + update_freq, tensor=tensorflow_img)
+    merged = tf.summary.merge([summary_img])
+
+    return matplotlib_img_bytes, merged
+
 def create_image_plotting_graph(iteration):
     matplotlib_img_bytes = tf.placeholder(dtype='string')
     tensorflow_img = bytes_to_tensor(matplotlib_img_bytes)

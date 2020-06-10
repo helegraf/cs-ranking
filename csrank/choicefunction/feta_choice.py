@@ -80,12 +80,12 @@ class FETAChoiceFunction(FETANetwork, ChoiceFunctions):
         super().__init__(n_objects=n_objects, n_object_features=n_object_features, n_hidden=n_hidden, n_units=n_units,
                          add_zeroth_order_model=add_zeroth_order_model, max_number_of_objects=max_number_of_objects,
                          num_subsample=num_subsample, loss_function=loss_function,
+                         loss_function_requires_x_values=loss_function_requires_x_values,
                          batch_normalization=batch_normalization, kernel_regularizer=kernel_regularizer,
                          kernel_initializer=kernel_initializer, activation=activation, optimizer=optimizer,
                          metrics=metrics, batch_size=batch_size, random_state=random_state, **kwargs)
         self.threshold = 0.5
         self.logger = logging.getLogger(FETAChoiceFunction.__name__)
-        self.loss_function_requires_x_values = loss_function_requires_x_values
 
     def _construct_layers(self, **kwargs):
         # Todo: Variable sized input

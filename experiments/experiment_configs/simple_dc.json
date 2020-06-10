@@ -7,22 +7,22 @@
   },
   "dataset_configs": [
     {
-      "dataset": "synthetic_or",
+      "dataset": "synthetic_dc",
       "dataset_params": {
         "dataset_type": "simple_max",
         "n_objects": 5,
-        "n_train_instances": 102400,
-        "n_test_instances": 10240
+        "n_train_instances": 2560,
+        "n_test_instances": 2560
       }
     },
         {
-      "dataset": "synthetic_or",
+      "dataset": "synthetic_dc",
       "dataset_params": {
         "dataset_type": "min_max",
         "n_features": 4,
         "n_objects": 5,
-        "n_train_instances": 102400,
-        "n_test_instances": 10240
+        "n_train_instances": 2560,
+        "n_test_instances": 2560
       }
     }
   ],
@@ -32,7 +32,7 @@
       "n_inner_folds": 0
     }
   ],
-  "learning_problem": "object_ranking",
+  "learning_problem": "discrete_choice",
   "seeds": [
     {
       "seed": 5678
@@ -40,7 +40,7 @@
   ],
   "learners": [
     {
-      "learner_name": "feta_ranker",
+      "learner_name": "feta_dc",
       "learner_params": {
         "attention_pooling_config": null,
         "attention_preselection_config": null,
@@ -49,8 +49,8 @@
         "n_hidden": 2,
         "n_units": 5,
         "add_zeroth_order_model": true,
-        "max_number_of_objects": 5,
-        "loss_function": "hinged_rank_loss",
+        "max_number_of_objects" :5,
+        "loss_function": "categorical_hinge",
         "loss_function_requires_x_values": false,
         "batch_size": 256,
         "batch_normalization": false,
@@ -98,17 +98,17 @@
       }
     },
     {
-      "learner_name": "feta_ranker",
+      "learner_name": "feta_dc",
       "learner_params": {
         "attention_pooling_config": null,
-        "attention_preselection_config": {"ScaledDotProductAttention":{"weighted": false, "biased": false}},
+        "attention_preselection_config": {"ScaledDotProductAttention": {"weighted": false, "biased": false}},
         "attention_pooling_flavour": null,
         "num_attention_preselection_layers": 1,
         "n_hidden": 2,
         "n_units": 5,
-        "add_zeroth_order_model":true,
+        "add_zeroth_order_model": true,
         "max_number_of_objects": 5,
-        "loss_function": "hinged_rank_loss",
+        "loss_function": "categorical_hinge",
         "loss_function_requires_x_values": false,
         "batch_size": 256,
         "batch_normalization": false,
@@ -156,7 +156,7 @@
       }
     },
     {
-      "learner_name": "feta_ranker",
+      "learner_name": "feta_dc",
       "learner_params": {
         "attention_pooling_config": {
           "PMA": {
@@ -181,9 +181,9 @@
         "num_attention_preselection_layers": 1,
         "n_hidden": 2,
         "n_units": 5,
-        "add_zeroth_order_model":true,
+        "add_zeroth_order_model": true,
         "max_number_of_objects": 5,
-        "loss_function": "hinged_rank_loss",
+        "loss_function": "categorical_hinge",
         "loss_function_requires_x_values": false,
         "batch_size": 256,
         "batch_normalization": false,
@@ -231,7 +231,7 @@
       }
     },
     {
-      "learner_name": "feta_ranker",
+      "learner_name": "feta_dc",
       "learner_params": {
         "attention_pooling_config": {
           "PMA": {
@@ -256,9 +256,9 @@
         "num_attention_preselection_layers": 1,
         "n_hidden": 2,
         "n_units": 5,
-        "add_zeroth_order_model":true,
+        "add_zeroth_order_model": true,
         "max_number_of_objects": 5,
-        "loss_function": "hinged_rank_loss",
+        "loss_function": "categorical_hinge",
         "loss_function_requires_x_values": false,
         "batch_size": 256,
         "batch_normalization": false,
@@ -306,7 +306,7 @@
       }
     },
     {
-      "learner_name": "feta_ranker",
+      "learner_name": "feta_dc",
       "learner_params": {
         "attention_pooling_config": {
           "PMA": {
@@ -331,9 +331,9 @@
         "num_attention_preselection_layers": 1,
         "n_hidden": 2,
         "n_units": 5,
-        "add_zeroth_order_model":true,
+        "add_zeroth_order_model": true,
         "max_number_of_objects": 5,
-        "loss_function": "hinged_rank_loss",
+        "loss_function": "categorical_hinge",
         "loss_function_requires_x_values": false,
         "batch_size": 256,
         "batch_normalization": false,
@@ -381,15 +381,15 @@
       }
     },
     {
-      "learner_name": "set_transformer_ranker",
+      "learner_name": "set_transformer_dc",
       "learner_params": {
         "stacking_height":1,
         "attention_layer_config": {"SAB": {"mab": {"MAB": {"multi_head":
         {"ScaledDotProductAttention": {"weighted": false, "biased": false}}}}}},
-        "loss_function": "hinged_rank_loss",
-        "loss_function_requires_x_values": false,
         "num_layers_dense":3,
         "num_units_dense":5,
+        "loss_function": "categorical_hinge",
+        "loss_function_requires_x_values": false,
         "batch_size": 256
       },
       "learner_fit_params": {
@@ -423,7 +423,7 @@
       }
     },
     {
-      "learner_name": "fate_ranker",
+      "learner_name": "fate_dc",
       "learner_params": {
         "attention_pooling": {
           "PMA": {
@@ -445,15 +445,15 @@
         },
         "attention_preselection_config": null,
         "num_attention_preselection_layers": 1,
-        "loss_function": "hinged_rank_loss",
-        "loss_function_requires_x_values" :  false,
         "n_hidden_set_layers": 2,
         "n_hidden_set_units": 5,
         "n_hidden_joint_layers": 2,
         "n_hidden_joint_units": 5,
+        "loss_function" : "categorical_hinge",
+        "loss_function_requires_x_values" :  false,
+        "batch_size": 256,
         "activation": "selu",
         "kernel_initializer": "lecun_normal",
-        "batch_size": 256,
         "kernel_regularizer": "l2",
         "kernel_regularizer_params": {
           "l": 0.01
@@ -496,20 +496,20 @@
       }
     },
     {
-      "learner_name": "fate_ranker",
+      "learner_name": "fate_dc",
       "learner_params": {
         "attention_pooling": null,
         "attention_preselection_config": {"ScaledDotProductAttention": {"weighted": false, "biased": false}},
         "num_attention_preselection_layers": 1,
-        "loss_function": "hinged_rank_loss",
-        "loss_function_requires_x_values" :  false,
         "n_hidden_set_layers": 2,
         "n_hidden_set_units": 5,
         "n_hidden_joint_layers": 2,
         "n_hidden_joint_units": 5,
+        "loss_function" : "categorical_hinge",
+        "loss_function_requires_x_values" :  false,
+        "batch_size": 256,
         "activation": "selu",
         "kernel_initializer": "lecun_normal",
-        "batch_size": 256,
         "kernel_regularizer": "l2",
         "kernel_regularizer_params": {
           "l": 0.01
@@ -552,19 +552,19 @@
       }
     },
     {
-      "learner_name": "fate_ranker",
+      "learner_name": "fate_dc",
       "learner_params": {
         "attention_pooling": null,
         "attention_preselection_config": null,
         "num_attention_preselection_layers": 1,
-        "loss_function": "hinged_rank_loss",
-        "loss_function_requires_x_values" :  false,
         "n_hidden_set_layers": 2,
         "n_hidden_set_units": 5,
         "n_hidden_joint_layers": 2,
         "n_hidden_joint_units": 5,
-        "activation": "selu",
+        "loss_function" : "categorical_hinge",
+        "loss_function_requires_x_values" :  false,
         "batch_size": 256,
+        "activation": "selu",
         "kernel_initializer": "lecun_normal",
         "kernel_regularizer": "l2",
         "kernel_regularizer_params": {
@@ -608,129 +608,167 @@
       }
     },
     {
-      "learner_name": "ranknet",
-      "learner_params": {
-        "n_hidden": 2,
-        "n_units": 5,
-        "activation": "relu",
-        "loss_function": "binary_crossentropy",
-        "loss_function_requires_x_values": false,
-        "batch_size": 256,
-        "batch_normalization": false,
-        "kernel_regularizer": "l2",
-        "kernel_regularizer_params": {
-          "l": 1e-4
-        },
-        "kernel_initializer": "lecun_normal",
-        "optimizer": "SGD",
-        "optimizer_params": {
-          "lr": 1e-4,
-          "nesterov": true,
-          "momentum": 0.9
-        }
-      },
-      "learner_fit_params": {
-        "epochs": 64,
-        "validation_split": 0.1,
-        "callbacks": {
-            "AdvancedTensorBoard": {
-            "num_visualizations_per_epoch": 1,
-            "save_space": true,
-            "log_lr": true,
-            "log_gradient_norms": "global",
-            "log_attention": false,
-            "log_dir": "./tensorboard_logs/",
-            "histogram_freq": 1,
-            "write_graph": false,
-            "write_grads": false,
-            "write_images": false,
-            "embeddings_freq": 0,
-            "update_freq": "epoch"
-          },
-          "CyclicLR": {
-            "base_lr": 1e-10,
-            "max_lr": 1.0,
-            "step_size": 25600,
-            "mode": "triangular2"
-          }
-        }
-      }
-    },
-    {
-      "learner_name": "listnet",
-      "learner_params": {
-        "n_top": 3,
-        "n_hidden": 4,
-        "n_units": 5,
-        "activation": "selu",
-        "loss_function": "hinged_rank_loss",
-        "loss_function_requires_x_values" :  false,
-        "batch_size": 256,
-        "batch_normalization": false,
-        "kernel_regularizer": "l2",
-        "kernel_regularizer_params": {
-          "l": 1e-4
-        },
-        "kernel_initializer": "lecun_normal",
-        "optimizer": "SGD",
-        "optimizer_params": {
-          "lr": 1e-4,
-          "nesterov": true,
-          "momentum": 0.9
-        }
-      },
-      "learner_fit_params": {
-        "epochs": 64,
-        "validation_split": 0.1,
-        "callbacks": {
-            "AdvancedTensorBoard": {
-            "num_visualizations_per_epoch": 1,
-            "save_space": true,
-            "log_lr": true,
-            "log_gradient_norms": "global",
-            "log_attention": false,
-            "log_dir": "./tensorboard_logs/",
-            "histogram_freq": 1,
-            "write_graph": false,
-            "write_grads": false,
-            "write_images": false,
-            "embeddings_freq": 0,
-            "update_freq": "epoch"
-          },
-          "CyclicLR": {
-            "base_lr": 1e-10,
-            "max_lr": 1.0,
-            "step_size": 25600,
-            "mode": "triangular2"
-          }
-        }
-      }
-    },
-    {
-      "learner_name": "ranksvm",
+      "learner_name": "ranksvm_dc",
       "learner_params": {
         "C": 0.001,
         "tol": 1e-4,
         "normalize": true,
         "fit_intercept": true
       },
-      "learner_fit_params": {}
+      "learner_fit_params": {
+            "AdvancedTensorBoard": {
+              "num_visualizations_per_epoch": 1,
+              "save_space": true,
+              "log_lr": true,
+              "log_gradient_norms": "global",
+              "log_attention": false,
+              "no_detailed_histograms": true,
+              "lr_vs_accuracy_diagram": true,
+              "log_lr_each_batch": true,
+              "log_dir": "./tensorboard_logs/",
+              "histogram_freq": 1,
+              "write_graph": false,
+              "write_grads": false,
+              "write_images": false,
+              "embeddings_freq": 0,
+              "update_freq": "epoch"
+          },
+          "CyclicLR": {
+            "base_lr": 1e-10,
+            "max_lr": 1.0,
+            "step_size": 25600,
+            "mode": "triangular2"
+          }
+      }
     },
     {
-      "learner_name": "err",
+      "learner_name": "ranknet_dc",
       "learner_params": {
-        "alpha": 0.0,
-        "l1_ratio": 0.5,
-        "tol": 1e-4,
-        "normalize": true,
-        "fit_intercept": true
+        "n_hidden": 2,
+        "n_units": 5,
+        "loss_function": "binary_crossentropy",
+        "activation": "relu",
+        "batch_size": 256,
+        "batch_normalization": false,
+        "kernel_initializer": "lecun_normal",
+        "kernel_regularizer": "l2",
+        "kernel_regularizer_params": {
+          "l": 1e-4
+        },
+        "optimizer": "SGD",
+        "optimizer_params": {
+          "lr": 1e-4,
+          "nesterov": "true",
+          "momentum": 0.9
+        }
       },
-      "learner_fit_params": {}
+      "learner_fit_params": {
+        "epochs":10,
+        "validation_split":0.1,
+        "verbose":0,
+        "callbacks": {
+          "AdvancedTensorBoard": {
+            "num_visualizations_per_epoch": 1,
+            "save_space": true,
+            "log_lr": true,
+            "log_gradient_norms": "global",
+            "log_attention": false,
+            "no_detailed_histograms": true,
+            "lr_vs_accuracy_diagram": true,
+            "log_lr_each_batch": true,
+            "log_dir": "./tensorboard_logs/",
+            "histogram_freq": 1,
+            "write_graph": false,
+            "write_grads": false,
+            "write_images": false,
+            "embeddings_freq": 0,
+            "update_freq": "epoch"
+          },
+          "CyclicLR": {
+            "base_lr": 1e-10,
+            "max_lr": 1.0,
+            "step_size": 25600,
+            "mode": "triangular2"
+          }
+        }
+      }
     },
     {
-      "learner_name": "random_ranker",
-      "learner_params": {},
-      "learner_fit_params": {}
+      "learner_name": "multinomial_logit_model",
+      "learner_params": {
+        "loss_function":"categorical_hinge",
+        "regularization":"l2"
+      },
+      "learner_fit_params": {
+        "sampler": "variational",
+        "tune": 500,
+        "draws": 500,
+        "cores": 2,
+        "vi_params": {
+          "n": 20000,
+          "method": "advi",
+          "callbacks": ["CheckParametersConvergence"]
+        }
+      }
+    },
+    {
+      "learner_name": "nested_logit_model",
+      "learner_params": {
+        "n_nests": 2,
+        "alpha": 1e-2,
+        "loss_function":"categorical_hinge",
+        "regularization":"l1"
+      },
+      "learner_fit_params": {
+        "sampler": "variational",
+        "tune": 500,
+        "draws": 500,
+        "cores": 2,
+        "vi_params": {
+          "n": 20000,
+          "method": "advi",
+          "callbacks": ["CheckParametersConvergence"]
+        }
+      }
+    },
+    {
+      "learner_name": "generalized_extreme_value",
+      "learner_params": {
+        "n_nests":2,
+        "alpha":5e-2,
+        "loss_function":"categorical_hinge",
+        "regularization":"l2"
+      },
+      "learner_fit_params": {
+        "sampler": "variational",
+        "tune": 500,
+        "draws": 500,
+        "cores": 2,
+        "vi_params": {
+          "n": 20000,
+          "method": "advi",
+          "callbacks": ["CheckParametersConvergence"]
+        }
+      }
+    },
+    {
+      "learner_name": "mixed_logit_model",
+      "learner_params": {
+        "n_mixtures":4,
+        "loss_function":"categorical_hinge",
+        "regularization":"l2"
+      },
+      "learner_fit_params": {
+        "sampler":"variational",
+        "tune": 500,
+        "draws": 500,
+        "cores": 2,
+        "vi_params": {
+          "n": 20000,
+          "method": "advi",
+          "callbacks": ["CheckParametersConvergence"]
+        }
+      }
     }
   ],
   "optimizers": [
@@ -747,5 +785,5 @@
       "time_out_eval": "10m"
     }
   ],
-  "results_table_name": "results_simple_ranking"
+  "results_table_name": "results_simple_dc"
 }

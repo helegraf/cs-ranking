@@ -12,8 +12,10 @@ from csrank.learner import Learner
 
 class SetTransformer(Learner):
     def __init__(self, loss_function, loss_function_requires_x_values=False,
-                 optimizer=SGD(lr=1e-4, nesterov=True, momentum=0.9), metrics=[], stacking_height=3,
-                 attention_layer_config=None, batch_size=256, num_layers_dense=0, num_units_dense=8, seed=42,
+                 optimizer=SGD(lr=1e-4, nesterov=True, momentum=0.9), metrics=[], stacking_height=1,
+                 attention_layer_config=None, batch_size=256, num_layers_dense=0,
+                 dense_config={"units": 5, "use_bias": True, "activation": "relu",
+                               "kernel_initializer": "glorot_uniform", "bias_initializer": "zeros"},
                  n_objects=None, n_object_features=None, random_state=None, metrics_requiring_x=[]):
         if attention_layer_config is None:
             attention_layer_config = {"SAB": {"mab": {"MAB": {"multi_head": {
@@ -25,14 +27,14 @@ class SetTransformer(Learner):
         self.loss_function = loss_function
         self.loss_function_requires_x_values = loss_function_requires_x_values
         self.optimizer = optimizers.get(optimizer)
-        self.random_state = np.random.RandomState(seed=seed)
+        self.random_state = random_state
 
         if stacking_height < 1:
             raise ValueError("Stacking height needs to be at least 1")
 
         self.stacking_height = stacking_height
         self.num_layers_dense = num_layers_dense
-        self.num_units_dense = num_units_dense
+        self.dense_config = dense_config
 
         self.attention_layer_config = attention_layer_config
         self.batch_size = batch_size
@@ -96,7 +98,7 @@ class SetTransformer(Learner):
 
         # dense layers rff
         for i in range(self.num_layers_dense):
-            output_layer = TimeDistributed(Dense(units=self.num_units_dense, use_bias=True))(output_layer)
+            output_layer = TimeDistributed(Dense(**self.dense_config))(output_layer)
 
         # predict utility based on encoder ("decoder")
         output_layer_dec = TimeDistributed(Dense(units=1, use_bias=True))(output_layer)

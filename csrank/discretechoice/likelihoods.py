@@ -92,9 +92,11 @@ def create_weight_dictionary(model_args, shapes):
     return weights_dict
 
 
-def fit_pymc3_model(self, sampler, draws, tune, vi_params, **kwargs):
+def fit_pymc3_model(self, sampler, draws, tune, vi_params, cores=1, **kwargs):
     callbacks = vi_params.get('callbacks', [])
     for i, c in enumerate(callbacks):
+        if c == "CheckParametersConvergence":
+            c = CheckParametersConvergence()
         if isinstance(c, CheckParametersConvergence):
             params = c.__dict__
             params.pop('_diff')
@@ -105,7 +107,7 @@ def fit_pymc3_model(self, sampler, draws, tune, vi_params, **kwargs):
     if sampler == 'variational':
         with self.model:
             try:
-                self.trace = pm.sample(chains=2, cores=8, tune=5, draws=5)
+                self.trace = pm.sample(chains=2, cores=cores, tune=5, draws=5)
                 vi_params['start'] = self.trace[-1]
                 self.trace_vi = pm.fit(**vi_params)
                 self.trace = self.trace_vi.sample(draws=draws)
@@ -119,12 +121,12 @@ def fit_pymc3_model(self, sampler, draws, tune, vi_params, **kwargs):
         if self.trace_vi is None and self.trace is None:
             with self.model:
                 self.logger.info("Error in vi ADVI sampler using Metropolis sampler with draws {}".format(draws))
-                self.trace = pm.sample(chains=1, cores=4, tune=20, draws=20, step=pm.NUTS())
+                self.trace = pm.sample(chains=1, cores=cores, tune=20, draws=20, step=pm.NUTS())
     elif sampler == 'metropolis':
         with self.model:
             start = pm.find_MAP()
-            self.trace = pm.sample(chains=2, cores=8, tune=tune, draws=draws, **kwargs, step=pm.Metropolis(),
+            self.trace = pm.sample(chains=2, cores=cores, tune=tune, draws=draws, **kwargs, step=pm.Metropolis(),
                                    start=start)
     else:
         with self.model:
-            self.trace = pm.sample(chains=2, cores=8, tune=tune, draws=draws, **kwargs, step=pm.NUTS())
+            self.trace = pm.sample(chains=2, cores=cores, tune=tune, draws=draws, **kwargs, step=pm.NUTS())

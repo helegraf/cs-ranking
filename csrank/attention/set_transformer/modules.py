@@ -183,12 +183,12 @@ class ScaledDotProductAttention(BaseAttention):
         if self.biased:
             self.b = self.add_weight(name="b",
                                      shape=(n, m),
-                                     initializer=self.weights_initializer)
+                                     initializer="zeros")
 
         if self.sordoni_biased:
             self.s_b = self.add_weight(name="s_b",
                                        shape=(m, d_k),
-                                       initializer=self.weights_initializer)
+                                       initializer="zeros")
 
         super(ScaledDotProductAttention, self).build(input_shape)
 
@@ -266,7 +266,7 @@ class AdditiveAttention(BaseAttention):
         if self.biased:
             self.b = self.add_weight(name='b',
                                      shape=(m, m),
-                                     initializer=self.weights_initializer)
+                                     initializer="zeros")
 
         self.v_a = self.add_weight(name="v_a",
                                    shape=(n, n),

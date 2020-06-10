@@ -26,7 +26,8 @@ class ListNet(Learner, ObjectRanker):
                  loss_function_requires_x_values=False,
                  batch_normalization=False, kernel_regularizer=l2(l=1e-4), activation="selu",
                  kernel_initializer='lecun_normal', optimizer=SGD(lr=1e-4, nesterov=True, momentum=0.9),
-                 metrics=[zero_one_rank_loss_for_scores_ties], batch_size=256, random_state=None, **kwargs):
+                 metrics=[zero_one_rank_loss_for_scores_ties], batch_size=256, random_state=None,
+                 metrics_requiring_x=[], **kwargs):
         """ Create an instance of the ListNet architecture. ListNet trains a latent utility model based on
             top-k-subrankings of the objects. This network learns a latent utility score for each object in the given
             query set :math:`Q = \\{x_1, \\ldots ,x_n\\}` using the equation :math:`U(x) = F(x, w)` where :math:`w` is the
@@ -82,6 +83,7 @@ class ListNet(Learner, ObjectRanker):
         self.batch_normalization = batch_normalization
         self.activation = activation
         self.metrics = metrics
+        self.metrics_requiring_x = metrics_requiring_x
         self.kernel_regularizer = kernel_regularizer
         self.kernel_initializer = kernel_initializer
         self.loss_function = loss_function
@@ -193,7 +195,8 @@ class ListNet(Learner, ObjectRanker):
         outputs = [self.output_node(x) for x in hid]
         merged = concatenate(outputs)
         model = Model(inputs=self.input_layer, outputs=merged)
-        model.compile(loss=self.loss_function, optimizer=self.optimizer, metrics=self.metrics)
+        additional_metric = [metric(self.input_layer) for metric in self.metrics_requiring_x]
+        model.compile(loss=self.loss_function, optimizer=self.optimizer, metrics=self.metrics.extend(additional_metric))
         return model
 
     @property

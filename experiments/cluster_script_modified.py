@@ -36,7 +36,7 @@ from csrank.callbacks import AdvancedTensorBoard
 from csrank.experiments import *
 from csrank.experiments.dbconnection_modified import ModifiedDBConnector
 from csrank.experiments.util import learners, create_callbacks
-from csrank.metrics import make_ndcg_at_k_loss
+from csrank.metrics import make_ndcg_at_k_loss, tsp_loss_relative_wrapper
 from csrank.tensorflow_util import configure_numpy_keras, get_loss_statistics, get_mean_loss
 from csrank.tuning import ParameterOptimizer
 from csrank.util import create_dir_recursively, duration_till_now, seconds_to_time, \
@@ -49,6 +49,9 @@ PREDICTIONS_FOLDER = 'predictions'
 MODEL_FOLDER = 'models'
 ERROR_OUTPUT_STRING = 'Out of sample error %s : %0.4f'
 SAVED_DATA_FOLDER = 'saved_data'
+
+theano_learners = ["mixed_logit_model", "generalized_extreme_value", "nested_logit_model",
+                   "multinomial_logit_model"]
 
 
 def exit_orderly_in_case_of_error(error_message, db_connector, job_id):
@@ -129,13 +132,14 @@ def do_experiment():
             logger.info("Arguments {}".format(arguments))
             logger.info("Job Description {}".format(print_dictionary(job_description)))
 
-            if "callbacks" in learner_fit_params.keys():
-                # if there is callback, set file name to include hash for identification
-                if "AdvancedTensorBoard" in learner_fit_params["callbacks"].keys():
-                    # replace path
-                    log_dir = learner_fit_params["callbacks"]["AdvancedTensorBoard"]["log_dir"]
-                    learner_fit_params["callbacks"]["AdvancedTensorBoard"]["log_dir"] = \
-                        os.path.join(log_dir, table_jobs[5:], learner_name, hash_value)
+            if learner_name not in theano_learners:
+                if "callbacks" in learner_fit_params.keys():
+                    # if there is callback, set file name to include hash for identification
+                    if "AdvancedTensorBoard" in learner_fit_params["callbacks"].keys():
+                        # replace path
+                        log_dir = learner_fit_params["callbacks"]["AdvancedTensorBoard"]["log_dir"]
+                        learner_fit_params["callbacks"]["AdvancedTensorBoard"]["log_dir"] = \
+                            os.path.join(log_dir, table_jobs[5:], learner_name, hash_value)
 
             # # # DATA SETUP # # #
 
@@ -144,8 +148,6 @@ def do_experiment():
             dataset_params['fold_id'] = fold_id
             dataset_reader = get_dataset_reader(dataset_name, dataset_params)
             x_train, y_train, x_test, y_test = dataset_reader.get_single_train_test_split()
-
-            print(x_train, y_train, x_test, y_test)
 
             # log data contents, get num_objects, delete internal reader info
             n_objects = log_test_train_data(x_train, x_test, logger)
@@ -166,19 +168,23 @@ def do_experiment():
             # set learner parameters
             learner_params['n_objects'], learner_params['n_object_features'] = x_train.shape[1:]
             learner_params["random_state"] = random_state
-            if "loss_function" in learner_params.keys():
-                learner_params["loss_function"] = util.losses[learner_params["loss_function"]]
-            logger.info("learner params {}".format(print_dictionary(learner_params)))
-            if "optimizer" in learner_params.keys():
-                learner_params["optimizer"] = \
-                    optimizers[learner_params["optimizer"]](**learner_params["optimizer_params"])
-                del learner_params["optimizer_params"]
-            if "regularizer" in learner_params.keys():
-                learner_params["regularizer"] = \
-                    regularizers[learner_params["regularizer"]](**learner_params["regularizer_params"])
-                del learner_params["regularizer_params"]
-            if "metrics" not in learner_params.keys():
-                learner_params["metrics"] = []
+            if learner_name not in theano_learners:
+                if "loss_function" in learner_params.keys():
+                    learner_params["loss_function"] = util.losses[learner_params["loss_function"]]
+                logger.info("learner params {}".format(print_dictionary(learner_params)))
+                if "optimizer" in learner_params.keys():
+                    learner_params["optimizer"] = \
+                        optimizers[learner_params["optimizer"]](**learner_params["optimizer_params"])
+                    del learner_params["optimizer_params"]
+                if "regularizer" in learner_params.keys():
+                    learner_params["regularizer"] = \
+                        regularizers[learner_params["regularizer"]](**learner_params["regularizer_params"])
+                    del learner_params["regularizer_params"]
+                if "metrics" not in learner_params.keys():
+                    learner_params["metrics"] = []
+            if dataset_params["dataset_type"] == "tsp" and learner_name in ["feta_ranker", "fate_ranker", "listnet",
+                                                                            "set_transformer_ranker"]:
+                learner_params["metrics_requiring_x"] = tsp_loss_relative_wrapper
 
             time_start_train = datetime.now()
             db_connector.log_start_training(job_id, time_start_train)
@@ -221,7 +227,6 @@ def do_experiment():
                 for callback in learner_fit_params["callbacks"]:
                     if isinstance(callback, AdvancedTensorBoard):
                         time_finished_train = callback.train_end_time
-                        print("time finished train from tensorbaord is", time_finished_train)
 
             db_connector.set_end_time(job_id, time_finished_vis, time_finished_train)
 
@@ -232,10 +237,10 @@ def do_experiment():
             # # # PREDICTION # # #
 
             get_results_and_upload('test', x_test, y_test, db_connector, hash_value, job_id, learner
-                                   , learning_problem, logger, n_objects, results_table_name, dataset_params)
+                                   , learning_problem, logger, n_objects, results_table_name)
 
             get_results_and_upload('train', x_train, y_train, db_connector, hash_value, job_id, learner,
-                                   learning_problem, logger, n_objects, results_table_name, dataset_params)
+                                   learning_problem, logger, n_objects, results_table_name)
 
             db_connector.finish_job(job_id=job_id, cluster_id=cluster_id)
 
@@ -260,7 +265,7 @@ def do_experiment():
 
 
 def get_results_and_upload(case, data_x, data_y, db_connector, hash_value, job_id, learner, learning_problem, logger,
-                           n_objects, results_table_name, dataset_params):
+                           n_objects, results_table_name):
     # set batch size
     if isinstance(data_x, dict):
         batch_size = 1000
@@ -271,9 +276,6 @@ def get_results_and_upload(case, data_x, data_y, db_connector, hash_value, job_i
 
     # do the actual predictions
     predicted_scores, y_pred = get_scores(learner, batch_size, data_x, data_y, logger)
-
-    print("predicted_scores:", predicted_scores)
-    print("y_pred:", y_pred)
 
     # # # WRITING BACK RESULTS # # #
 
@@ -298,8 +300,6 @@ def get_results_and_upload(case, data_x, data_y, db_connector, hash_value, job_i
     results = {'job_id': str(job_id), 'train_test': "\'" + case + "\'"}
     for name, evaluation_metric in lp_metric_dict[learning_problem].items():
         predictions = predicted_scores
-
-        print("compute metric",name)
 
         # set predictions accordingly if metric works on labels instead of scores
         if evaluation_metric in metrics_on_predictions:

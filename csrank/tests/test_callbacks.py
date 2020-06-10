@@ -5,13 +5,32 @@ from keras import Input, Model
 from keras.layers import TimeDistributed, Dense, Reshape
 import keras.backend as K
 from keras.optimizers import SGD
+from keras.regularizers import l2
 
-from csrank import FETAObjectRanker, ObjectRankingDatasetGenerator, FATEObjectRanker
+from csrank import FETAObjectRanker, ObjectRankingDatasetGenerator, FATEObjectRanker, ChoiceDatasetGenerator
 from csrank.attention.set_transformer.modules import ScaledDotProductAttention
 from csrank.callbacks import AdvancedTensorBoard
 from csrank.objectranking.set_transformer_object_ranker import SetTransformerObjectRanker
 from csrank.visualization.weights import visualize_attention_scores
 
+
+def test_serizalize_regularizer():
+    reg = l2()
+    conf = reg.get_config()
+
+    print(conf)
+    dense = Dense(
+        units=3,
+        activation="relu",
+        kernel_regularizer=l2(l=0.5),
+    )
+    conf_dense = dense.get_config()
+    print(conf_dense)
+
+    dense_2 = Dense(
+        units=3,
+        kernel_regularizer={'class_name': 'L1L2', 'config': {'l1': 0.0, 'l2': 0.009999999776482582}})
+    print(dense_2.get_config())
 
 def metric_with_x_wrapper(x):
     def metric_with_x(y, z):

@@ -53,17 +53,25 @@ class ChoiceDatasetGenerator(SyntheticDatasetGenerator):
         random_state = check_random_state(seed)
         x = random_state.uniform(low=0, high=1, size=(n_instances, n_objects, n_features))
 
+        redraws = []
+
         # use max to determine y value
         y = np.empty((n_instances, n_objects))
         for instance in range(n_instances):
-            if np.all(x[instance] < threshold):
-                min = np.argmin(instance)
-                instance[min] = threshold
+            redraws.append(0)
+            # ensure at least 1 chosen - redraw
+            while self.nothing_chosen(x[instance], threshold):
+                x[instance] = random_state.uniform(low=0, high=1, size=(n_objects, n_features))
+                redraws[-1] += 1
             # select the lowest arg for all objects
             minima = np.min(x[instance], axis=1)
             y[instance] = [1 if minimum >= threshold else 0 for minimum in minima]
 
         return x, y
+
+    def nothing_chosen(self, instance, threshold):
+        minima  = np.min(instance, axis=1)
+        return np.all(minima < threshold)
 
     def make_simple_max_choice(self, n_instances, n_objects, threshold, seed=42, **kwargs):
         # generate objects with a weight and value
@@ -73,10 +81,9 @@ class ChoiceDatasetGenerator(SyntheticDatasetGenerator):
         # use max to determine y value
         y = np.empty((n_instances, n_objects))
         for instance in range(n_instances):
-            # ensure at least 1 chosen
-            if np.all(x[instance] < threshold):
-                min = np.argmin(x[instance])
-                x[instance][min] = threshold
+            # ensure at least 1 chosen - redraw
+            while np.all(x[instance] < threshold):
+                x[instance] = random_state.uniform(low=0, high=1, size=(n_objects, 1))
             y[instance] = [1 if value >= threshold else 0 for value in x[instance]]
 
         return x, y

@@ -21,7 +21,7 @@ class AllPositive(ChoiceFunctions, Learner):
         pass
 
     def _predict_scores_fixed(self, X, Y, **kwargs):
-        return np.zeros_like(Y) + Y.mean()
+        return np.ones_like(Y)
 
     def predict_scores(self, X, Y, **kwargs):
         """

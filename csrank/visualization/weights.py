@@ -1,6 +1,8 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
+from csrank.visualization.util import tableau_10_colorblind_color_scheme
+
 
 def hinton(matrix, max_weight=None, ax=None):
     """Draw Hinton diagram for visualizing a weight matrix."""
@@ -28,6 +30,10 @@ def hinton(matrix, max_weight=None, ax=None):
                                  facecolor=color, edgecolor=color)
             ax.add_patch(rect)
 
+    ax.spines["top"].set_visible(False)
+    ax.spines["bottom"].set_visible(False)
+    ax.spines["right"].set_visible(False)
+    ax.spines["left"].set_visible(False)
     ax.autoscale_view()
     ax.invert_yaxis()
 
@@ -75,3 +81,26 @@ def visualize_attention_scores(query, key, scores):
 # visualize_attention_scores(query, key, scores)
 #
 # plt.show()
+
+def visualize_lr_acc(lr_logs, loss_logs, val_loss_logs=None):
+    dark_grey = tableau_10_colorblind_color_scheme['dark_grey']
+
+    fig = plt.figure(figsize=(6, 6))
+    ax = plt.gca()
+    ax.set_xlabel("learning rate", color=dark_grey)
+
+    ax.spines["top"].set_visible(False)
+    ax.spines["right"].set_visible(False)
+    ax.spines['bottom'].set_color(dark_grey)
+    ax.spines['left'].set_color(dark_grey)
+
+    # ax.xaxis.label.set_color(dark_grey)
+    ax.tick_params(axis='x', colors=dark_grey)
+    ax.tick_params(axis='y', colors=dark_grey)
+
+    # plot both graphs
+    plt.plot(lr_logs, loss_logs, color=tableau_10_colorblind_color_scheme['orange'], linestyle="-", label="loss")
+    if val_loss_logs is not None:
+        plt.plot(lr_logs, val_loss_logs, color=tableau_10_colorblind_color_scheme['blue'], linestyle="--", label="validation loss")
+    ax.set_ylim(bottom=0)
+    plt.legend(frameon=False)
