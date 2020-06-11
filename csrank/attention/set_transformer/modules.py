@@ -296,7 +296,7 @@ class SimilarityAttention(BaseAttention):
     def __init__(self, **kwargs):
         super(SimilarityAttention, self).__init__(**kwargs)
 
-        if kwargs is not None and len(kwargs) > 0:
+        if kwargs is not None and len(kwargs) > 0 and "biased" not in kwargs.keys() and "activation" not in kwargs.keys():
             raise ValueError("Similarity Attention cannot have any arguments, received arguments {}"
                              .format(kwargs.keys()))
 
