@@ -2,7 +2,7 @@ import sys
 
 import pymc3 as pm
 from tensorflow.keras.callbacks import TensorBoard
-from keras.optimizers import SGD
+from keras.optimizers import SGD, Nadam
 from keras.regularizers import l2
 from keras.losses import binary_crossentropy, categorical_hinge
 
@@ -106,7 +106,8 @@ losses = {
 }
 
 optimizers = {
-    'SGD': SGD
+    'SGD': SGD,
+    'Nadam': Nadam
 }
 
 regularizers = {
@@ -198,7 +199,6 @@ def create_callbacks(fit_params, hp_ranges={}, x=None, y=None):
         callbacks = []
         for key, value in fit_params.get("callbacks", {}).items():
             callback = callbacks_dictionary[key]
-
             if key == "AdvancedTensorBoard":
                 if "num_visualizations_per_epoch" in value.keys():
                     num_vis = int(value["num_visualizations_per_epoch"])
@@ -206,6 +206,10 @@ def create_callbacks(fit_params, hp_ranges={}, x=None, y=None):
                         del value["num_visualizations_per_epoch"]
                         value["inputs"] = x[:num_vis]
                         value["targets"] = y[:num_vis]
+                    else:
+                        del value["num_visualizations_per_epoch"]
+                        value["inputs"] = None
+                        value["targets"] = None
 
             callback = callback(**value)
             callbacks.append(callback)

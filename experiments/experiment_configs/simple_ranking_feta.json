@@ -97,8 +97,8 @@
         "validation_split": 0.1,
         "callbacks": {
           "AdvancedTensorBoard": {
-            "num_visualizations_per_epoch": 1,
-            "save_space": true,
+            "num_visualizations_per_epoch": 0,
+            "save_space": false,
             "log_lr": true,
             "log_gradient_norms": "global",
             "log_attention": false,
@@ -152,8 +152,8 @@
         "validation_split": 0.1,
         "callbacks": {
           "AdvancedTensorBoard": {
-            "num_visualizations_per_epoch": 1,
-            "save_space": true,
+            "num_visualizations_per_epoch": 0,
+            "save_space": false,
             "log_lr": true,
             "log_gradient_norms": "global",
             "log_attention": false,

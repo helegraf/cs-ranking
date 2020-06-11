@@ -416,12 +416,14 @@ class AdvancedTensorBoard(TensorBoard):
         self.val_loss_logs = []
         self.lr_logs_batch = []
         self.loss_logs_batch = []
+        self.previous_scores = {}
 
     def on_train_begin(self, logs=None):
         super(AdvancedTensorBoard, self).on_train_begin(logs)
 
         # initial previous
-        self.previous_prediction = np.empty(shape=self.y.shape)
+        if self.y is not None:
+            self.previous_prediction = np.empty(shape=self.y.shape)
 
         # create prediction plotting graphs
         if self.prediction_visualization is not None:
@@ -434,6 +436,7 @@ class AdvancedTensorBoard(TensorBoard):
                 self.attention_plotting_graphs[layer_name] = \
                     np.asarray([create_attention_plotting_graph(num_visualization, layer_name)
                                 for num_visualization in range(len(self.x))])
+                self.previous_scores[layer_name] = [np.empty(shape=(1,)) for _ in range(len(self.x))]
 
         # create learning rate accuracy graph
         if self.lr_vs_accuracy_diagram:
@@ -459,15 +462,17 @@ class AdvancedTensorBoard(TensorBoard):
                 self.val_loss_logs.append(logs["val_loss"])
 
             # prediction
-            outputs = self.model.predict(self.x)
-            predictions_as_rankings = scores_to_rankings(outputs)
+            if self.prediction_visualization is not None \
+                    or self.metric_for_visualization is not None or self.log_attention:
+                outputs = self.model.predict(self.x)
+                predictions_as_rankings = scores_to_rankings(outputs)
 
             # metric set up
             if self.metric_for_visualization is not None:
                 metrics = [self.metric_for_visualization(self.x)(self.y, predictions_as_rankings)
                            if self.metric_for_visualization_requires_x else
                            self.metric_for_visualization(self.y, predictions_as_rankings)]
-            else:
+            elif self.x is not None:
                 metrics = [None for _ in self.x]
 
             # attention set up
@@ -482,40 +487,45 @@ class AdvancedTensorBoard(TensorBoard):
                     scores[layer_name] = self.eval_attention_tensor(self.attention_scores[layer_name])
 
             # visualize
-            for num_visualization in range(len(self.x)):
-                if not self.save_space or self.save_space and \
-                        not np.array_equal(predictions_as_rankings[num_visualization],
-                                           self.previous_prediction[num_visualization]):
-                    # prediction
-                    if self.prediction_visualization is not None:
-                        prediction_img_bytes = self.prediction_plotting_graphs[num_visualization][0]
-                        prediction_merged = self.prediction_plotting_graphs[num_visualization][1]
-                        vis_data = self.prediction_visualization(self.x[num_visualization],
-                                                                 self.y[num_visualization],
-                                                                 predictions_as_rankings[num_visualization],
-                                                                 metrics[num_visualization],
-                                                                 epoch)
-                        prediction_figure = figure_to_bytes(vis_data)
-                        run_summary = self.sess.run(fetches=prediction_merged,
-                                                    feed_dict={prediction_img_bytes: prediction_figure})
-                        self.writer.add_summary(run_summary, epoch)
+            if self.x is not None:
+                for num_visualization in range(len(self.x)):
+                    if not self.save_space or self.save_space and \
+                            not np.array_equal(predictions_as_rankings[num_visualization],
+                                               self.previous_prediction[num_visualization]):
+                        # prediction
+                        if self.prediction_visualization is not None:
+                            prediction_img_bytes = self.prediction_plotting_graphs[num_visualization][0]
+                            prediction_merged = self.prediction_plotting_graphs[num_visualization][1]
+                            vis_data = self.prediction_visualization(self.x[num_visualization],
+                                                                     self.y[num_visualization],
+                                                                     predictions_as_rankings[num_visualization],
+                                                                     metrics[num_visualization],
+                                                                     epoch)
+                            prediction_figure = figure_to_bytes(vis_data)
+                            run_summary = self.sess.run(fetches=prediction_merged,
+                                                        feed_dict={prediction_img_bytes: prediction_figure})
+                            self.writer.add_summary(run_summary, epoch)
 
-                    self.previous_prediction[num_visualization] = predictions_as_rankings[num_visualization]
+                            self.previous_prediction[num_visualization] = predictions_as_rankings[num_visualization]
 
                     # attention
                     if self.log_attention:
                         for layer_name in self.attention_keys.keys():
-                            attention_img_bytes = self.attention_plotting_graphs[layer_name][num_visualization][0]
-                            attention_merged = self.attention_plotting_graphs[layer_name][num_visualization][1]
-                            attention_figure = figure_to_bytes(
-                                visualize_attention_scores(queries[layer_name][num_visualization],
-                                                           keys[layer_name][num_visualization],
-                                                           scores[layer_name][num_visualization]))
-                            run_summary = self.sess.run(fetches=attention_merged,
-                                                        feed_dict={attention_img_bytes: attention_figure})
-                            self.writer.add_summary(run_summary, epoch)
+                            if not self.save_space or self.save_space and not \
+                                    np.array_equal(self.previous_scores[layer_name][num_visualization],
+                                                   scores[layer_name][num_visualization]):
 
+                                attention_img_bytes = self.attention_plotting_graphs[layer_name][num_visualization][0]
+                                attention_merged = self.attention_plotting_graphs[layer_name][num_visualization][1]
+                                attention_figure = figure_to_bytes(
+                                    visualize_attention_scores(queries[layer_name][num_visualization],
+                                                               keys[layer_name][num_visualization],
+                                                               scores[layer_name][num_visualization]))
+                                run_summary = self.sess.run(fetches=attention_merged,
+                                                            feed_dict={attention_img_bytes: attention_figure})
+                                self.writer.add_summary(run_summary, epoch)
 
+                                self.previous_scores[layer_name][num_visualization] = scores[layer_name][num_visualization]
 
         super(AdvancedTensorBoard, self).on_epoch_end(epoch, logs)
 
