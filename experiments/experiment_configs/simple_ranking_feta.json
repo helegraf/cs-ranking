@@ -438,11 +438,14 @@
             "mab": {
               "MAB": {
                 "multi_head": {
-                  "AdditiveAttention": {
+                  "ScaledDotProductAttention": {
                     "activation": null,
                     "biased": false,
-                    "flavour": "Luong",
-                    "weights_initializer": "lecun_normal"
+                    "scale": true,
+                    "weighted": false,
+                    "weights_initializer": "lecun_normal",
+                    "factor": null,
+                    "sordoni_biased": false
                   }
                 }
               }

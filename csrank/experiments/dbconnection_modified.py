@@ -163,6 +163,16 @@ class ModifiedDBConnector(metaclass=ABCMeta):
         self.logger.info("Job_id {} Hash_string {}".format(job.get('job_id', None), str(hex_dig)))
         return str(hex_dig)
 
+    def get_experiment_hash_value_for_job(self, job):
+        keys = ['dataset', 'dataset_params', 'learning_problem', 'learner_name', 'learner_params', 'learner_fit_params']
+        hash_string = ""
+        for k in keys:
+            hash_string = hash_string + str(k) + ':' + str(job[k])
+        hash_object = hashlib.sha1(hash_string.encode())
+        hex_dig = hash_object.hexdigest()
+        self.logger.info("Job_id {} Hash_string {}".format(job.get('job_id', None), str(hex_dig)))
+        return str(hex_dig)
+
     def insert_new_job(self, job):
         self.logger.info('Inserting job into db:')
         self.logger.info(print_dictionary(job))

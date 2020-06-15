@@ -71,12 +71,14 @@ def visualize_single_tsp_result():
 
 def visualize_run_results(dbconnection, results_table_name):
     # jobs
-    jobs = [8, 9, 10]
+    jobs = [114, 115, 116, 117, 118, 119, 120]
     # metrics
-    metric = "tsprelativedifference_requiresx"
-    metric_name = "TSP relative difference"
+    metric = "kendallstau"
+    metric_name = "Mean Kendall's Tau"
 
     headers, results = dbconnection.get_results_for_job(jobs, results_table_name)
+    print(headers)
+    print(results)
 
     # get indices
     index_metric = 0
@@ -85,6 +87,7 @@ def visualize_run_results(dbconnection, results_table_name):
         column_name = headers[col]
         if column_name.startswith(metric) and column_name.endswith("mean"):
             index_metric = col
+            print("index is", col)
 
         if column_name == "train_test":
             index_train_test = col
@@ -100,6 +103,9 @@ def visualize_run_results(dbconnection, results_table_name):
     train_means = [result[index_metric] for result in train_results]
     test_means = [result[index_metric] for result in test_results]
 
+    print(train_means)
+    print(test_means)
+
     # do the visualization
     labels = [str(job_id) for job_id in jobs]
 
@@ -107,8 +113,6 @@ def visualize_run_results(dbconnection, results_table_name):
     width = 0.35  # the width of the bars
 
     fig, ax = plt.subplots()
-    print(train_means)
-    print(test_means)
     rects1 = ax.bar(x - width / 2, train_means, width, label='Train')
     rects2 = ax.bar(x + width / 2, test_means, width, label='Test')
 
@@ -144,7 +148,8 @@ def visualize_run_results(dbconnection, results_table_name):
 
     fig.tight_layout()
 
-    plt.show()
+    #plt.show()
+    plt.savefig("figure.png")
 
 
 arguments = docopt(__doc__)
