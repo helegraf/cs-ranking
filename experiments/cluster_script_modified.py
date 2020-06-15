@@ -180,6 +180,13 @@ def do_experiment():
                     learner_params["kernel_regularizer"] = \
                         regularizers[learner_params["kernel_regularizer"]](**learner_params["kernel_regularizer_params"])
                     del learner_params["kernel_regularizer_params"]
+                if learner_name.starts_with("set_transformer") \
+                    and "dense_config" in learner_params \
+                    and "kernel_regularizer_params" in learner_params["dense_config"]:
+                    learner_params["dense_config"]["regularizer"] = \
+                    regularizers[learner_params["dense_config"]["kernel_regularizer"]]\
+                        (**learner_params["dense_config"]["kernel_regularizer_params"])
+                    del learner_params["dense_config"]["regularizer_params"]
                 if "metrics" not in learner_params.keys():
                     learner_params["metrics"] = []
             if dataset_params["dataset_type"] == "tsp" and learner_name in ["feta_ranker", "fate_ranker", "listnet",

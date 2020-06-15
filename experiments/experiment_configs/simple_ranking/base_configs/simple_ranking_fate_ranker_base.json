@@ -9,10 +9,20 @@
     {
       "dataset": "synthetic_or",
       "dataset_params": {
-        "dataset_type": "tsp",
-        "n_objects": 10,
-        "n_train_instances": 1024,
-        "n_test_instances": 64
+        "dataset_type": "simple_max",
+        "n_objects": 5,
+        "n_train_instances": 102400,
+        "n_test_instances": 10240
+      }
+    },
+    {
+      "dataset": "synthetic_or",
+      "dataset_params": {
+        "dataset_type": "min_max",
+        "n_features": 4,
+        "n_objects": 5,
+        "n_train_instances": 102400,
+        "n_test_instances": 10240
       }
     }
   ],
@@ -22,29 +32,31 @@
       "n_inner_folds": 0
     }
   ],
-  "learning_problem": "object_ranking_tsp",
+  "learning_problem": "object_ranking",
   "seeds": [
     {
-      "seed": 5678
+      "seed": 1234
     }
   ],
   "learners": [
     {
       "learner_name": "fate_ranker",
       "learner_params": {
-        "loss_function" :  "tsp_probability_matrix_loss",
-        "loss_function_requires_x_values" :  false,
+        "attention": "placeholder",
+        "attention_pooling": null,
+        "attention_preselection_config": null,
+        "num_attention_preselection_layers": 1,
+        "loss_function": "hinged_rank_loss",
+        "loss_function_requires_x_values": false,
         "n_hidden_set_layers": 2,
-        "n_hidden_set_units": 8,
+        "n_hidden_set_units": 5,
         "n_hidden_joint_layers": 2,
-        "n_hidden_joint_units": 8,
+        "n_hidden_joint_units": 5,
         "activation": "selu",
-        "kernel_initializer": "lecun_normal",
         "batch_size": 256,
+        "kernel_initializer": "glorot_uniform",
         "kernel_regularizer": "l2",
-        "kernel_regularizer_params": {
-          "l": 0.01
-        },
+        "kernel_regularizer_params": {"l":  1e-4},
         "optimizer": "SGD",
         "optimizer_params": {
           "lr": 1e-4,
@@ -53,30 +65,20 @@
         }
       },
       "learner_fit_params": {
-        "epochs": 512,
-        "inner_epochs": 1,
+        "epochs": 64,
         "validation_split": 0.1,
-        "verbose": 0,
-        "global_lr": 1.0,
-        "global_momentum": 0.9,
-        "min_bucket_size": 500,
-        "refit": false,
         "callbacks": {
           "AdvancedTensorBoard": {
-            "data_visualization_func": "tsp_2d",
-            "metric_for_visualization": "TSPRelativeDifference_requiresX",
-            "metric_for_visualization_requires_x": true,
-            "num_visualizations_per_epoch": 3,
-            "visualization_frequency": 1,
+            "num_visualizations_per_epoch": 0,
             "save_space": true,
-            "save_visualizations": true,
             "log_lr": true,
-            "log_gradient_norms": true,
+            "log_gradient_norms": "global",
+            "log_attention": false,
+            "no_detailed_histograms": true,
+            "lr_vs_accuracy_diagram": true,
+            "log_lr_each_batch": true,
             "log_dir": "./tensorboard_logs/",
-            "metrics": ["TSPRelativeDifference_requiresX"],
-            "metric_requires_x": [true],
-            "histogram_freq": 8,
-            "batch_size": 256,
+            "histogram_freq": 1,
             "write_graph": false,
             "write_grads": false,
             "write_images": false,
@@ -84,9 +86,9 @@
             "update_freq": "epoch"
           },
           "CyclicLR": {
-            "base_lr": 0.000002,
-            "max_lr": 0.00001,
-            "step_size": 128,
+            "base_lr": 1e-10,
+            "max_lr": 1e-1,
+            "step_size": 25600,
             "mode": "triangular2"
           }
         }
@@ -103,9 +105,9 @@
   ],
   "timings": [
     {
-      "duration": "12h",
+      "duration": "1h",
       "time_out_eval": "10m"
     }
   ],
-  "results_table_name": "results_tsp_experiment_3"
+  "results_table_name": "results_simple_ranking"
 }
