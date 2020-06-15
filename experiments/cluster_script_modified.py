@@ -183,7 +183,7 @@ def do_experiment():
                 if learner_name.startswith("set_transformer") \
                     and "dense_config" in learner_params \
                     and "kernel_regularizer_params" in learner_params["dense_config"]:
-                    learner_params["dense_config"]["regularizer"] = \
+                    learner_params["dense_config"]["kernel_regularizer"] = \
                     regularizers[learner_params["dense_config"]["kernel_regularizer"]]\
                         (**learner_params["dense_config"]["kernel_regularizer_params"])
                     del learner_params["dense_config"]["kernel_regularizer_params"]
