@@ -51,7 +51,7 @@ def gen_jobs(configuration_file_path):
     return combine_with_elements(previous_dict={}, index=0, combos=combos)
 
 
-name = "simple_ranking_ranknet"
+name = "simple_ranking_feta_ranker"
 table_name = "simple_ranking"
 
 config_file_path = "database_configs/db.json"

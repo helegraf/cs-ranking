@@ -2,6 +2,7 @@ import copy
 import logging
 import math
 
+from keras.activations import selu
 from keras.engine import Layer
 from keras import backend as K, Model, Input
 from keras.layers import Dense, TimeDistributed
@@ -97,7 +98,8 @@ class BaseAttention(AttentionContainingLayer):
             'relu': K.relu,
             'tanh': K.tanh,
             'sigmoid': K.sigmoid,
-            'hard_sigmoid': K.hard_sigmoid
+            'hard_sigmoid': K.hard_sigmoid,
+            'selu': selu
         }
         if activation is not None and activation not in activations.keys():
             raise ValueError("Given activation {} is invalid; allowed: {}".format(activation, activations.keys()))
