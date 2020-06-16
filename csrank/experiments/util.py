@@ -1,13 +1,16 @@
 import sys
 
 import pymc3 as pm
+from keras.callbacks import EarlyStopping
 from tensorflow.keras.callbacks import TensorBoard
 from keras.optimizers import SGD, Nadam
 from keras.regularizers import l2
 from keras.losses import binary_crossentropy, categorical_hinge
 
-from csrank.callbacks import EarlyStoppingWithWeights, LRScheduler, CyclicLR, AdvancedTensorBoard, DebugOutput
+from csrank.callbacks import EarlyStoppingWithWeights, LRScheduler, CyclicLR, AdvancedTensorBoard, DebugOutput, \
+    EarlyStoppingExtraRestoration
 from csrank.choicefunction import *
+from csrank.choicefunction.random_baseline import RandomChoice
 from csrank.choicefunction.set_transformer_choice import SetTransformerChoice
 from csrank.constants import *
 from csrank.dataset_reader import *
@@ -44,7 +47,7 @@ cfs = {FETA_CHOICE: FETAChoiceFunction, FATE_CHOICE: FATEChoiceFunction, GLM_CHO
        RANKNET_CHOICE: RankNetChoiceFunction, CMPNET_CHOICE: CmpNetChoiceFunction,
        FETALINEAR_CHOICE: FETALinearChoiceFunction, FATELINEAR_CHOICE: FATELinearChoiceFunction,
        RANKSVM_CHOICE: PairwiseSVMChoiceFunction, RANDOM_CHOICE: AllPositive,
-       SET_TRANSFORMER_CHOICE: SetTransformerChoice}
+       SET_TRANSFORMER_CHOICE: SetTransformerChoice, RANDOM_CHOICE_RANDOM: RandomChoice}
 ors = {FETA_RANKER: FETAObjectRanker, RANKNET: RankNet, CMPNET: CmpNet, ERR: ExpectedRankRegression,
        RANKSVM: RankSVM, FATE_RANKER: FATEObjectRanker, LISTNET: ListNet, FATELINEAR_RANKER: FATELinearObjectRanker,
        FETALINEAR_RANKER: FETALinearObjectRanker, RANDOM_RANKER: RandomBaselineRanker,
@@ -84,7 +87,8 @@ all_metrics = {**ranking_metrics, **tsp_ranking_metrics, **discrete_choice_metri
 callbacks_dictionary = {'EarlyStoppingWithWeights': EarlyStoppingWithWeights, 'LRScheduler': LRScheduler,
                         'DebugOutput': DebugOutput, "CheckConvergence": pm.callbacks.CheckParametersConvergence,
                         "Tracker": pm.callbacks.Tracker, 'TensorBoard': TensorBoard, "CyclicLR": CyclicLR,
-                        "AdvancedTensorBoard": AdvancedTensorBoard}
+                        "AdvancedTensorBoard": AdvancedTensorBoard, 'EarlyStopping': EarlyStopping,
+                        "EarlyStoppingExtraRestoration": EarlyStoppingExtraRestoration}
 lp_metric_dict = {
     OBJECT_RANKING: ranking_metrics,
     OBJECT_RANKING_TSP: tsp_ranking_metrics,

@@ -45,7 +45,7 @@
         "attention_pooling": null,
         "attention_preselection_config": {
           "AdditiveAttention": {
-            "activation": "selu",
+            "activation": null,
             "biased": false,
             "flavour": "Bahdanau",
             "weights_initializer": "lecun_normal"
@@ -108,7 +108,7 @@
         "attention_pooling": null,
         "attention_preselection_config": {
           "SimilarityAttention": {
-            "activation": "selu",
+            "activation": null,
             "biased": false
           }
         },
@@ -169,7 +169,7 @@
         "attention_pooling": null,
         "attention_preselection_config": {
           "AdditiveAttention": {
-            "activation": "selu",
+            "activation": null,
             "biased": false,
             "flavour": "Luong",
             "weights_initializer": "lecun_normal"
@@ -348,7 +348,7 @@
               "MAB": {
                 "multi_head": {
                   "ScaledDotProductAttention": {
-                    "activation": "selu",
+                    "activation": null,
                     "biased": false,
                     "scale": true,
                     "weighted": false,
@@ -543,7 +543,7 @@
               "MAB": {
                 "multi_head": {
                   "SimilarityAttention": {
-                    "activation": "selu",
+                    "activation": null,
                     "biased": false
                   }
                 }
@@ -617,7 +617,7 @@
         "attention_pooling": null,
         "attention_preselection_config": {
           "ScaledDotProductAttention": {
-            "activation": "selu",
+            "activation": null,
             "biased": false,
             "scale": true,
             "weighted": false,

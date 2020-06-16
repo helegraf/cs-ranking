@@ -86,6 +86,39 @@ class EarlyStoppingWithWeights(EarlyStopping, Tunable):
                                 ' called: {}'.format(print_dictionary(point)))
 
 
+class EarlyStoppingExtraRestoration(EarlyStopping):
+
+    def on_epoch_end(self, epoch, logs=None):
+        current = self.get_monitor_value(logs)
+        if current is None:
+            return
+
+        if self.monitor_op(current - self.min_delta, self.best):
+            self.best_epoch = epoch
+            self.best = current
+            self.wait = 0
+            if self.restore_best_weights:
+                self.best_weights = self.model.get_weights()
+        else:
+            self.wait += 1
+            if self.wait >= self.patience:
+                self.stopped_epoch = epoch
+                self.model.stop_training = True
+                if self.restore_best_weights:
+                    if self.verbose > 0:
+                        print('Restoring model weights from the end of '
+                              'the best epoch')
+                    self.model.set_weights(self.best_weights)
+
+    def on_train_end(self, logs=None):
+        if self.stopped_epoch == 0 and self.restore_best_weights:
+            if self.verbose > 0:
+                print("Early stopping didn't trigger, restoring weights from best epoch anyways, which is",
+                      str(self.best_epoch), "with performance", str(self.best))
+
+            self.model.set_weights(self.best_weights)
+
+
 class weightHistory(Callback):
     def on_train_begin(self, logs={}):
         self.zero_weights = []

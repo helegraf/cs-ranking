@@ -40,6 +40,7 @@ RANKSVM_CHOICE = "ranksvm_choice"
 GLM_CHOICE = "glm_choice"
 RANDOM_CHOICE = "random_choice"
 SET_TRANSFORMER_CHOICE = "set_transformer_choice"
+RANDOM_CHOICE_RANDOM = "random_choice_random"
 
 TAG_GENOME_OR = 'tag_genome_or'
 TAG_GENOME_DC = 'tag_genome_dc'
