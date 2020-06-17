@@ -87,9 +87,18 @@
           },
           "CyclicLR": {
             "base_lr": 1e-10,
-            "max_lr": 1e-1,
+            "max_lr": 1e-3,
             "step_size": 25600,
             "mode": "triangular2"
+          },
+          "EarlyStoppingExtraRestoration": {
+            "monitor": "val_loss",
+            "min_delta": 0,
+            "patience": 16,
+            "verbose": 2,
+            "mode": "auto",
+            "baseline": null,
+            "restore_best_weights": true
           }
         }
       }

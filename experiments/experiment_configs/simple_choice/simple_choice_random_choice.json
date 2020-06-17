@@ -1,0 +1,59 @@
+{
+  "resources": {
+    "gtx1080": "1",
+    "ncpus": "2",
+    "vmem": "42g",
+    "mem": "16g"
+  },
+  "dataset_configs": [
+    {
+      "dataset": "synthetic_choice",
+      "dataset_params": {
+        "dataset_type": "knapsack",
+        "n_objects": 10,
+        "capacity": 55,
+        "n_train_instances": 102400,
+        "n_test_instances": 10240
+      }
+    }
+  ],
+  "folds": [
+    {
+      "fold_id": 1,
+      "n_inner_folds": 0
+    }
+  ],
+  "learning_problem": "choice_function",
+  "seeds": [
+    {
+      "seed": 5678
+    }
+  ],
+  "learners": [
+    {
+      "learner_name": "random_choice",
+      "learner_params": {},
+      "learner_fit_params": {}
+    },
+    {
+      "learner_name": "random_choice_random",
+      "learner_params": {},
+      "learner_fit_params": {}
+    }
+  ],
+  "optimizers": [
+    {
+      "use_hp": "False",
+      "hp_iterations": 0,
+      "hp_ranges": {},
+      "hp_fit_params": {}
+    }
+  ],
+  "timings": [
+    {
+      "duration": "2h",
+      "time_out_eval": "10m"
+    }
+  ],
+  "results_table_name": "results_simple_choice"
+}

@@ -7,20 +7,11 @@
   },
   "dataset_configs": [
     {
-      "dataset": "synthetic_or",
+      "dataset": "synthetic_choice",
       "dataset_params": {
-        "dataset_type": "simple_max",
-        "n_objects": 5,
-        "n_train_instances": 102400,
-        "n_test_instances": 10240
-      }
-    },
-        {
-      "dataset": "synthetic_or",
-      "dataset_params": {
-        "dataset_type": "min_max",
-        "n_features": 4,
-        "n_objects": 5,
+        "dataset_type": "knapsack",
+        "n_objects": 10,
+        "capacity": 55,
         "n_train_instances": 102400,
         "n_test_instances": 10240
       }
@@ -32,15 +23,15 @@
       "n_inner_folds": 0
     }
   ],
-  "learning_problem": "object_ranking",
+  "learning_problem": "discrete_choice",
   "seeds": [
-   {
-      "seed": 1234
+    {
+      "seed": 5678
     }
   ],
   "learners": [
     {
-      "learner_name": "ranknet",
+      "learner_name": "ranknet_choice",
       "learner_params": {
         "n_hidden": 2,
         "n_units": 5,
@@ -54,7 +45,7 @@
         "kernel_initializer": "lecun_normal",
         "optimizer": "SGD",
         "optimizer_params": {
-          "lr": 1e-4,
+          "lr": 1e-3,
           "nesterov": true,
           "momentum": 0.9
         }
@@ -109,9 +100,9 @@
   ],
   "timings": [
     {
-      "duration": "12h",
+      "duration": "2h",
       "time_out_eval": "10m"
     }
   ],
-  "results_table_name": "results_simple_ranking"
+  "results_table_name": "results_simple_dc"
 }

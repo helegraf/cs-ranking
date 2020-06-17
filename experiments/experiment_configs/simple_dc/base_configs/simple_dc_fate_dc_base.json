@@ -2,25 +2,16 @@
   "resources": {
     "gtx1080": "1",
     "ncpus": "2",
-    "vmem": "54g",
-    "mem": "32g"
+    "vmem": "42g",
+    "mem": "16g"
   },
   "dataset_configs": [
     {
-      "dataset": "synthetic_or",
+      "dataset": "synthetic_dc",
       "dataset_params": {
-        "dataset_type": "simple_max",
-        "n_objects": 5,
-        "n_train_instances": 102400,
-        "n_test_instances": 10240
-      }
-    },
-    {
-      "dataset": "synthetic_or",
-      "dataset_params": {
-        "dataset_type": "min_max",
-        "n_features": 4,
-        "n_objects": 5,
+        "dataset_type": "knapsack",
+        "n_objects": 10,
+        "capacity": 55,
         "n_train_instances": 102400,
         "n_test_instances": 10240
       }
@@ -32,33 +23,51 @@
       "n_inner_folds": 0
     }
   ],
-  "learning_problem": "object_ranking",
+  "learning_problem": "discrete_choice",
   "seeds": [
     {
-      "seed": 1234
+      "seed": 5678
     }
   ],
   "learners": [
     {
-      "learner_name": "feta_ranker",
+      "learner_name": "fate_dc",
       "learner_params": {
         "attention": "placeholder",
-        "attention_pooling_config": null,
+        "attention_pooling": {
+          "PMA": {
+            "k": 1,
+            "mab": {
+              "MAB": {
+                "multi_head": {
+                  "ScaledDotProductAttention": {"weighted": false, "biased": false}
+                }
+              }
+            },
+            "depth_rff": 1,
+            "rff_config": {
+              "units": 5,
+              "activation": "relu",
+              "kernel_initializer": "lecun_normal",
+              "use_bias": true,
+              "bias_initializer": "zeros"}
+          }
+        },
         "attention_preselection_config": null,
-        "attention_pooling_flavour": null,
         "num_attention_preselection_layers": 1,
-        "n_hidden": 2,
-        "n_units": 5,
-        "add_zeroth_order_model": true,
-        "max_number_of_objects": 5,
-        "loss_function": "hinged_rank_loss",
-        "loss_function_requires_x_values": false,
+        "n_hidden_set_layers": 2,
+        "n_hidden_set_units": 5,
+        "n_hidden_joint_layers": 2,
+        "n_hidden_joint_units": 5,
+        "loss_function" : "categorical_hinge",
+        "loss_function_requires_x_values" :  false,
         "batch_size": 256,
-        "batch_normalization": true,
         "activation": "selu",
         "kernel_initializer": "lecun_normal",
         "kernel_regularizer": "l2",
-        "kernel_regularizer_params": {"l": 1e-4},
+        "kernel_regularizer_params": {
+          "l": 0.01
+        },
         "optimizer": "SGD",
         "optimizer_params": {
           "lr": 1e-4,
@@ -71,11 +80,11 @@
         "validation_split": 0.1,
         "callbacks": {
           "AdvancedTensorBoard": {
-            "num_visualizations_per_epoch": 1,
+            "num_visualizations_per_epoch": 0,
             "save_space": true,
             "log_lr": true,
             "log_gradient_norms": "global",
-            "log_attention": true,
+            "log_attention": false,
             "no_detailed_histograms": true,
             "lr_vs_accuracy_diagram": true,
             "log_lr_each_batch": true,
@@ -116,9 +125,9 @@
   ],
   "timings": [
     {
-      "duration": "12h",
+      "duration": "2h",
       "time_out_eval": "10m"
     }
   ],
-  "results_table_name": "results_simple_ranking"
+  "results_table_name": "results_simple_dc"
 }

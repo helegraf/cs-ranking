@@ -14,16 +14,6 @@
         "n_train_instances": 102400,
         "n_test_instances": 10240
       }
-    },
-    {
-      "dataset": "synthetic_or",
-      "dataset_params": {
-        "dataset_type": "min_max",
-        "n_features": 4,
-        "n_objects": 5,
-        "n_train_instances": 102400,
-        "n_test_instances": 10240
-      }
     }
   ],
   "folds": [
@@ -84,9 +74,18 @@
           },
           "CyclicLR": {
             "base_lr": 1e-10,
-            "max_lr": 0.1,
-            "step_size": 25600,
+            "max_lr": 1e-3,
+            "step_size": 230400,
             "mode": "triangular2"
+          },
+          "EarlyStoppingExtraRestoration": {
+            "monitor": "val_loss",
+            "min_delta": 0,
+            "patience": 16,
+            "verbose": 2,
+            "mode": "auto",
+            "baseline": null,
+            "restore_best_weights": true
           }
         }
       }
@@ -136,9 +135,18 @@
           },
           "CyclicLR": {
             "base_lr": 1e-10,
-            "max_lr": 0.1,
-            "step_size": 25600,
+            "max_lr": 1e-3,
+            "step_size": 230400,
             "mode": "triangular2"
+          },
+          "EarlyStoppingExtraRestoration": {
+            "monitor": "val_loss",
+            "min_delta": 0,
+            "patience": 16,
+            "verbose": 2,
+            "mode": "auto",
+            "baseline": null,
+            "restore_best_weights": true
           }
         }
       }
@@ -188,9 +196,18 @@
           },
           "CyclicLR": {
             "base_lr": 1e-10,
-            "max_lr": 0.1,
-            "step_size": 25600,
+            "max_lr": 1e-3,
+            "step_size": 230400,
             "mode": "triangular2"
+          },
+          "EarlyStoppingExtraRestoration": {
+            "monitor": "val_loss",
+            "min_delta": 0,
+            "patience": 16,
+            "verbose": 2,
+            "mode": "auto",
+            "baseline": null,
+            "restore_best_weights": true
           }
         }
       }
@@ -240,9 +257,18 @@
           },
           "CyclicLR": {
             "base_lr": 1e-10,
-            "max_lr": 0.1,
-            "step_size": 25600,
+            "max_lr": 1e-3,
+            "step_size": 230400,
             "mode": "triangular2"
+          },
+          "EarlyStoppingExtraRestoration": {
+            "monitor": "val_loss",
+            "min_delta": 0,
+            "patience": 16,
+            "verbose": 2,
+            "mode": "auto",
+            "baseline": null,
+            "restore_best_weights": true
           }
         }
       }
@@ -292,9 +318,18 @@
           },
           "CyclicLR": {
             "base_lr": 1e-10,
-            "max_lr": 0.1,
-            "step_size": 25600,
+            "max_lr": 1e-3,
+            "step_size": 230400,
             "mode": "triangular2"
+          },
+          "EarlyStoppingExtraRestoration": {
+            "monitor": "val_loss",
+            "min_delta": 0,
+            "patience": 16,
+            "verbose": 2,
+            "mode": "auto",
+            "baseline": null,
+            "restore_best_weights": true
           }
         }
       }
@@ -344,9 +379,18 @@
           },
           "CyclicLR": {
             "base_lr": 1e-10,
-            "max_lr": 0.1,
-            "step_size": 25600,
+            "max_lr": 1e-3,
+            "step_size": 230400,
             "mode": "triangular2"
+          },
+          "EarlyStoppingExtraRestoration": {
+            "monitor": "val_loss",
+            "min_delta": 0,
+            "patience": 16,
+            "verbose": 2,
+            "mode": "auto",
+            "baseline": null,
+            "restore_best_weights": true
           }
         }
       }
@@ -396,9 +440,18 @@
           },
           "CyclicLR": {
             "base_lr": 1e-10,
-            "max_lr": 0.1,
-            "step_size": 25600,
+            "max_lr": 1e-3,
+            "step_size": 230400,
             "mode": "triangular2"
+          },
+          "EarlyStoppingExtraRestoration": {
+            "monitor": "val_loss",
+            "min_delta": 0,
+            "patience": 16,
+            "verbose": 2,
+            "mode": "auto",
+            "baseline": null,
+            "restore_best_weights": true
           }
         }
       }
@@ -448,9 +501,18 @@
           },
           "CyclicLR": {
             "base_lr": 1e-10,
-            "max_lr": 0.1,
-            "step_size": 25600,
+            "max_lr": 1e-3,
+            "step_size": 230400,
             "mode": "triangular2"
+          },
+          "EarlyStoppingExtraRestoration": {
+            "monitor": "val_loss",
+            "min_delta": 0,
+            "patience": 16,
+            "verbose": 2,
+            "mode": "auto",
+            "baseline": null,
+            "restore_best_weights": true
           }
         }
       }
@@ -500,9 +562,18 @@
           },
           "CyclicLR": {
             "base_lr": 1e-10,
-            "max_lr": 0.1,
-            "step_size": 25600,
+            "max_lr": 1e-3,
+            "step_size": 230400,
             "mode": "triangular2"
+          },
+          "EarlyStoppingExtraRestoration": {
+            "monitor": "val_loss",
+            "min_delta": 0,
+            "patience": 16,
+            "verbose": 2,
+            "mode": "auto",
+            "baseline": null,
+            "restore_best_weights": true
           }
         }
       }
@@ -552,9 +623,18 @@
           },
           "CyclicLR": {
             "base_lr": 1e-10,
-            "max_lr": 0.1,
-            "step_size": 25600,
+            "max_lr": 1e-3,
+            "step_size": 230400,
             "mode": "triangular2"
+          },
+          "EarlyStoppingExtraRestoration": {
+            "monitor": "val_loss",
+            "min_delta": 0,
+            "patience": 16,
+            "verbose": 2,
+            "mode": "auto",
+            "baseline": null,
+            "restore_best_weights": true
           }
         }
       }

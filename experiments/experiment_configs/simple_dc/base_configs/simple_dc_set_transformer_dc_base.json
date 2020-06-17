@@ -7,20 +7,11 @@
   },
   "dataset_configs": [
     {
-      "dataset": "synthetic_or",
+      "dataset": "synthetic_dc",
       "dataset_params": {
-        "dataset_type": "simple_max",
-        "n_objects": 5,
-        "n_train_instances": 102400,
-        "n_test_instances": 10240
-      }
-    },
-        {
-      "dataset": "synthetic_or",
-      "dataset_params": {
-        "dataset_type": "min_max",
-        "n_features": 4,
-        "n_objects": 5,
+        "dataset_type": "knapsack",
+        "n_objects": 10,
+        "capacity": 55,
         "n_train_instances": 102400,
         "n_test_instances": 10240
       }
@@ -32,26 +23,29 @@
       "n_inner_folds": 0
     }
   ],
-  "learning_problem": "object_ranking",
+  "learning_problem": "discrete_choice",
   "seeds": [
-   {
-      "seed": 1234
+    {
+      "seed": 5678
     }
   ],
   "learners": [
     {
-      "learner_name": "ranknet",
+      "learner_name": "set_transformer_dc",
       "learner_params": {
-        "n_hidden": 2,
-        "n_units": 5,
-        "activation": "selu",
-        "loss_function": "binary_crossentropy",
+        "stacking_height":1,
+        "attention_layer_config": {"SAB": {"mab": {"MAB": {"multi_head":
+        {"ScaledDotProductAttention": {"weighted": false, "biased": false}}}}}},
+        "num_layers_dense": 1,
+        "dense_config": {
+          "units": 5,
+          "activation": "selu",
+          "kernel_initializer": "lecun_normal",
+          "use_bias": true,
+          "bias_initializer": "zeros"},
+        "loss_function": "categorical_hinge",
         "loss_function_requires_x_values": false,
         "batch_size": 256,
-        "batch_normalization": true,
-        "kernel_regularizer": "l2",
-        "kernel_regularizer_params": {"l":  1e-4},
-        "kernel_initializer": "lecun_normal",
         "optimizer": "SGD",
         "optimizer_params": {
           "lr": 1e-4,
@@ -64,11 +58,11 @@
         "validation_split": 0.1,
         "callbacks": {
             "AdvancedTensorBoard": {
-              "num_visualizations_per_epoch": 0,
-              "save_space": false,
+              "num_visualizations_per_epoch": 1,
+              "save_space": true,
               "log_lr": true,
               "log_gradient_norms": "global",
-              "log_attention": false,
+              "log_attention": true,
               "no_detailed_histograms": true,
               "lr_vs_accuracy_diagram": true,
               "log_lr_each_batch": true,
@@ -83,7 +77,7 @@
           "CyclicLR": {
             "base_lr": 1e-10,
             "max_lr": 1e-3,
-            "step_size": 230400,
+            "step_size": 25600,
             "mode": "triangular2"
           },
           "EarlyStoppingExtraRestoration": {
@@ -109,9 +103,9 @@
   ],
   "timings": [
     {
-      "duration": "12h",
+      "duration": "2h",
       "time_out_eval": "10m"
     }
   ],
-  "results_table_name": "results_simple_ranking"
+  "results_table_name": "results_simple_dc"
 }

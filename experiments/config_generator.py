@@ -2,6 +2,30 @@ import copy
 import json
 
 tables = {
+    1: {
+        10: [[1],
+             [2],
+             [3],
+             [4],
+             [5],
+             [6],
+             [7],
+             [8],
+             [9],
+             [10]]
+    },
+    2: {
+        10: [[2, 9],
+             [8, 10],
+             [10, 6],
+             [4, 7],
+             [1, 3],
+             [5, 1],
+             [9, 2],
+             [7, 4],
+             [6, 8],
+             [3, 5]]
+    },
     4: {
         10: [[1, 4, 3, 5],
              [5, 6, 7, 1],
@@ -131,8 +155,8 @@ def read_json_and_replace(dataset, learner, num_runs):
                        .format(dataset, dataset, learner), final_config)
 
 
-dataset = 'simple_ranking'
-learner = 'fate_ranker'
+dataset = 'simple_dc'
+learner = 'ranknet_dc'
 num_confs = 10
 
 read_json_and_replace(dataset=dataset,

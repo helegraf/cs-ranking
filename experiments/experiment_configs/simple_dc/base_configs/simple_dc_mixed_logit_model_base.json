@@ -1,0 +1,97 @@
+{
+  "resources": {
+    "gtx1080": "1",
+    "ncpus": "2",
+    "vmem": "42g",
+    "mem": "16g"
+  },
+  "dataset_configs": [
+    {
+      "dataset": "synthetic_dc",
+      "dataset_params": {
+        "dataset_type": "knapsack",
+        "n_objects": 10,
+        "capacity": 55,
+        "n_train_instances": 102400,
+        "n_test_instances": 10240
+      }
+    }
+  ],
+  "folds": [
+    {
+      "fold_id": 1,
+      "n_inner_folds": 0
+    }
+  ],
+  "learning_problem": "discrete_choice",
+  "seeds": [
+    {
+      "seed": 1234
+    },
+    {
+      "seed": 2345
+    },
+    {
+      "seed": 3456
+    },
+    {
+      "seed": 4567
+    },
+    {
+      "seed": 5678
+    },
+    {
+      "seed": 6789
+    },
+    {
+      "seed": 9876
+    },
+    {
+      "seed": 8765
+    },
+    {
+      "seed": 7654
+    },
+    {
+      "seed": 6543
+    }
+  ],
+  "learners": [
+    {
+      "learner_name": "mixed_logit_model",
+      "learner_params": {
+        "n_mixtures": 4,
+        "loss_function": "categorical_hinge",
+        "regularization": "l2"
+      },
+      "learner_fit_params": {
+        "sampler": "variational",
+        "tune": 500,
+        "draws": 500,
+        "cores": 2,
+        "vi_params": {
+          "n": 20000,
+          "method": "advi",
+          "callbacks": [
+            "CheckParametersConvergence"
+          ]
+        }
+      }
+    }
+  ],
+  "optimizers": [
+    {
+      "use_hp": "False",
+      "hp_iterations": 0,
+      "hp_ranges": {},
+      "hp_fit_params": {}
+    }
+  ],
+  "timings": [
+    {
+      "duration": "2h",
+      "time_out_eval": "10m"
+    }
+  ],
+  "results_table_name": "results_simple_dc"
+}
