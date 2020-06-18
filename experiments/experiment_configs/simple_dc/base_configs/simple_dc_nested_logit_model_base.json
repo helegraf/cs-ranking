@@ -1,6 +1,5 @@
 {
   "resources": {
-    "gtx1080": "1",
     "ncpus": "2",
     "vmem": "42g",
     "mem": "16g"
@@ -9,9 +8,13 @@
     {
       "dataset": "synthetic_dc",
       "dataset_params": {
-        "dataset_type": "knapsack",
+        "dataset_type": "movie_genre",
         "n_objects": 10,
-        "capacity": 55,
+        "n_features": 4,
+        "ensure_distance": true,
+        "min_distance": 0.2,
+        "similarity": 0.01,
+        "scatter": true,
         "n_train_instances": 102400,
         "n_test_instances": 10240
       }

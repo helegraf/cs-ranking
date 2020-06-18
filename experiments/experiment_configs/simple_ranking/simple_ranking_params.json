@@ -11,34 +11,38 @@
   },
   "listnet": {
     "n_top": [2, 3, 4, 5, 6],
-    "n_hidden": [2, 3, 4, 5, 6, 7, 8, 9, 10],
+    "n_hidden": [2, 3, 4, 5],
     "n_units": [5, 6, 7, 8, 9, 10],
     "l": [1e-8, 1e-7, 1e-6, 1e-5, 1e-4, 1e-3, 1e-2]
   },
   "ranknet": {
-    "n_hidden": [2, 3, 4, 5, 6, 7, 8, 9, 10],
+    "n_hidden": [2, 3, 4, 5],
     "n_units": [5, 6, 7, 8, 9, 10],
     "l": [1e-8, 1e-7, 1e-6, 1e-5, 1e-4, 1e-3, 1e-2]
   },
-  "fate_ranker": {
-    "n_hidden_set_layers": [2, 3, 4, 5, 6, 7, 8, 9, 10],
-    "n_hidden_set_units": [5, 6, 7, 8, 9, 10],
-    "n_hidden_joint_layers": [2, 3, 4, 5, 6, 7, 8, 9, 10],
-    "n_hidden_joint_units": [5, 6, 7, 8, 9, 10],
-    "l": [1e-8, 1e-7, 1e-6, 1e-5, 1e-4, 1e-3, 1e-2],
+  "fate_ranker_attention": {
     "attention": ["no+no", "no+no", "no+no", "no+no", "luong+no", "scaled+no", "bahdanau+no", "cosine+no",
       "no+scaled", "no+cosine"]
   },
-  "feta_ranker": {
-    "n_hidden": [2, 3, 4, 5, 6, 7, 8, 9, 10],
-    "n_units": [5, 6, 7, 8, 9, 10],
-    "l": [1e-8, 1e-7, 1e-6, 1e-5, 1e-4, 1e-3, 1e-2],
+  "fate_ranker_no_attention": {
+  "n_hidden_set_layers": [2, 3, 4, 5],
+  "n_hidden_set_units": [5, 6, 7, 8, 9, 10],
+  "n_hidden_joint_layers": [2, 3, 4, 5],
+  "n_hidden_joint_units": [5, 6, 7, 8, 9, 10],
+  "l": [1e-8, 1e-7, 1e-6, 1e-5, 1e-4, 1e-3, 1e-2]
+  },
+  "feta_ranker_attention": {
     "attention": ["no+no", "no+no", "no+no", "no+no", "no+no", "luong+no", "scaled+no", "bahdanau+no", "cosine+no",
       "no+scaled+pma_single", "no+scaled+pma_multi", "no+scaled+mab", "no+cosine+pma_single", "no+cosine+pma_multi",
       "no+cosine+mab"]
   },
+  "feta_ranker_no_attention": {
+  "n_hidden": [2, 3, 4, 5],
+  "n_units": [5, 6, 7, 8, 9, 10],
+  "l": [1e-8, 1e-7, 1e-6, 1e-5, 1e-4, 1e-3, 1e-2]
+  },
   "set_transformer_ranker": {
-    "num_layers_dense": [2, 3, 4, 5, 6, 7, 8, 9, 10],
+    "num_layers_dense": [2, 3, 4, 5],
     "units": [5, 6, 7, 8, 9, 10],
     "l": [1e-8, 1e-7, 1e-6, 1e-5, 1e-4, 1e-3, 1e-2],
     "multi_head": [

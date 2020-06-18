@@ -1,6 +1,5 @@
 {
   "resources": {
-    "gtx1080": "1",
     "ncpus": "2",
     "vmem": "42g",
     "mem": "16g"
@@ -26,7 +25,34 @@
   "learning_problem": "choice_function",
   "seeds": [
     {
-      "seed": 5678
+    "seed": 1234
+    },
+    {
+    "seed": 2345
+    },
+    {
+    "seed": 3456
+    },
+    {
+    "seed": 4567
+    },
+    {
+    "seed": 5678
+    },
+    {
+    "seed": 6789
+    },
+    {
+    "seed": 9876
+    },
+    {
+    "seed": 8765
+    },
+    {
+    "seed": 7654
+    },
+    {
+    "seed": 6543
     }
   ],
   "learners": [

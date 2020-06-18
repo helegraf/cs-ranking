@@ -59,7 +59,8 @@
         "optimizer_params": {
           "lr": 0.0001,
           "nesterov": "true",
-          "momentum": 0.9
+          "momentum": 0.9,
+          "clipnorm": 1.0
         }
       },
       "learner_fit_params": {
@@ -120,7 +121,8 @@
         "optimizer_params": {
           "lr": 0.0001,
           "nesterov": "true",
-          "momentum": 0.9
+          "momentum": 0.9,
+          "clipnorm": 1.0
         }
       },
       "learner_fit_params": {
@@ -192,7 +194,8 @@
         "optimizer_params": {
           "lr": 0.0001,
           "nesterov": "true",
-          "momentum": 0.9
+          "momentum": 0.9,
+          "clipnorm": 1.0
         }
       },
       "learner_fit_params": {
@@ -257,7 +260,8 @@
         "optimizer_params": {
           "lr": 0.0001,
           "nesterov": "true",
-          "momentum": 0.9
+          "momentum": 0.9,
+          "clipnorm": 1.0
         }
       },
       "learner_fit_params": {
@@ -322,7 +326,8 @@
         "optimizer_params": {
           "lr": 0.0001,
           "nesterov": "true",
-          "momentum": 0.9
+          "momentum": 0.9,
+          "clipnorm": 1.0
         }
       },
       "learner_fit_params": {
@@ -414,7 +419,8 @@
         "optimizer_params": {
           "lr": 0.0001,
           "nesterov": "true",
-          "momentum": 0.9
+          "momentum": 0.9,
+          "clipnorm": 1.0
         }
       },
       "learner_fit_params": {
@@ -479,7 +485,8 @@
         "optimizer_params": {
           "lr": 0.0001,
           "nesterov": "true",
-          "momentum": 0.9
+          "momentum": 0.9,
+          "clipnorm": 1.0
         }
       },
       "learner_fit_params": {
@@ -544,7 +551,8 @@
         "optimizer_params": {
           "lr": 0.0001,
           "nesterov": "true",
-          "momentum": 0.9
+          "momentum": 0.9,
+          "clipnorm": 1.0
         }
       },
       "learner_fit_params": {
@@ -631,7 +639,8 @@
         "optimizer_params": {
           "lr": 0.0001,
           "nesterov": "true",
-          "momentum": 0.9
+          "momentum": 0.9,
+          "clipnorm": 1.0
         }
       },
       "learner_fit_params": {
@@ -706,7 +715,8 @@
         "optimizer_params": {
           "lr": 0.0001,
           "nesterov": "true",
-          "momentum": 0.9
+          "momentum": 0.9,
+          "clipnorm": 1.0
         }
       },
       "learner_fit_params": {

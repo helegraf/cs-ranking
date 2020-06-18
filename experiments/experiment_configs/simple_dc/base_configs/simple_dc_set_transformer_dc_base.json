@@ -9,9 +9,13 @@
     {
       "dataset": "synthetic_dc",
       "dataset_params": {
-        "dataset_type": "knapsack",
+        "dataset_type": "movie_genre",
         "n_objects": 10,
-        "capacity": 55,
+        "n_features": 4,
+        "ensure_distance": true,
+        "min_distance": 0.2,
+        "similarity": 0.01,
+        "scatter": true,
         "n_train_instances": 102400,
         "n_test_instances": 10240
       }
@@ -33,16 +37,29 @@
     {
       "learner_name": "set_transformer_dc",
       "learner_params": {
-        "stacking_height":1,
-        "attention_layer_config": {"SAB": {"mab": {"MAB": {"multi_head":
-        {"ScaledDotProductAttention": {"weighted": false, "biased": false}}}}}},
+        "stacking_height": 1,
+        "attention_layer_config": {
+          "SAB": {
+            "mab": {
+              "MAB": {
+                "multi_head": {
+                  "ScaledDotProductAttention": {
+                    "weighted": false,
+                    "biased": false
+                  }
+                }
+              }
+            }
+          }
+        },
         "num_layers_dense": 1,
         "dense_config": {
           "units": 5,
           "activation": "selu",
           "kernel_initializer": "lecun_normal",
           "use_bias": true,
-          "bias_initializer": "zeros"},
+          "bias_initializer": "zeros"
+        },
         "loss_function": "categorical_hinge",
         "loss_function_requires_x_values": false,
         "batch_size": 256,
@@ -50,29 +67,30 @@
         "optimizer_params": {
           "lr": 1e-4,
           "nesterov": true,
-          "momentum": 0.9
+          "momentum": 0.9,
+          "clipnorm": 1.0
         }
       },
       "learner_fit_params": {
         "epochs": 64,
         "validation_split": 0.1,
         "callbacks": {
-            "AdvancedTensorBoard": {
-              "num_visualizations_per_epoch": 1,
-              "save_space": true,
-              "log_lr": true,
-              "log_gradient_norms": "global",
-              "log_attention": true,
-              "no_detailed_histograms": true,
-              "lr_vs_accuracy_diagram": true,
-              "log_lr_each_batch": true,
-              "log_dir": "./tensorboard_logs/",
-              "histogram_freq": 1,
-              "write_graph": false,
-              "write_grads": false,
-              "write_images": false,
-              "embeddings_freq": 0,
-              "update_freq": "epoch"
+          "AdvancedTensorBoard": {
+            "num_visualizations_per_epoch": 1,
+            "save_space": true,
+            "log_lr": true,
+            "log_gradient_norms": "global",
+            "log_attention": true,
+            "no_detailed_histograms": true,
+            "lr_vs_accuracy_diagram": true,
+            "log_lr_each_batch": true,
+            "log_dir": "./tensorboard_logs/",
+            "histogram_freq": 1,
+            "write_graph": false,
+            "write_grads": false,
+            "write_images": false,
+            "embeddings_freq": 0,
+            "update_freq": "epoch"
           },
           "CyclicLR": {
             "base_lr": 1e-10,

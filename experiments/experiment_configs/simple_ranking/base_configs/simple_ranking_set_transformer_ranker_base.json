@@ -14,16 +14,6 @@
         "n_train_instances": 102400,
         "n_test_instances": 10240
       }
-    },
-    {
-      "dataset": "synthetic_or",
-      "dataset_params": {
-        "dataset_type": "min_max",
-        "n_features": 4,
-        "n_objects": 5,
-        "n_train_instances": 102400,
-        "n_test_instances": 10240
-      }
     }
   ],
   "folds": [
@@ -80,7 +70,8 @@
         "optimizer_params": {
           "lr": 1e-4,
           "nesterov": true,
-          "momentum": 0.9
+          "momentum": 0.9,
+          "clipnorm": 1.0
         }
       },
       "learner_fit_params": {

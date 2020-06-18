@@ -70,7 +70,7 @@
         "loss_function": "hinged_rank_loss",
         "loss_function_requires_x_values": false,
         "batch_size": 256,
-        "batch_normalization": true,
+        "batch_normalization": false,
         "activation": "selu",
         "kernel_initializer": "lecun_normal",
         "kernel_regularizer": "l2",
@@ -81,7 +81,8 @@
         "optimizer_params": {
           "lr": 0.0001,
           "nesterov": "true",
-          "momentum": 0.9
+          "momentum": 0.9,
+          "clipnorm": 1.0
         }
       },
       "learner_fit_params": {
@@ -137,7 +138,7 @@
         "loss_function": "hinged_rank_loss",
         "loss_function_requires_x_values": false,
         "batch_size": 256,
-        "batch_normalization": true,
+        "batch_normalization": false,
         "activation": "selu",
         "kernel_initializer": "lecun_normal",
         "kernel_regularizer": "l2",
@@ -148,7 +149,8 @@
         "optimizer_params": {
           "lr": 0.0001,
           "nesterov": "true",
-          "momentum": 0.9
+          "momentum": 0.9,
+          "clipnorm": 1.0
         }
       },
       "learner_fit_params": {
@@ -204,7 +206,7 @@
         "loss_function": "hinged_rank_loss",
         "loss_function_requires_x_values": false,
         "batch_size": 256,
-        "batch_normalization": true,
+        "batch_normalization": false,
         "activation": "selu",
         "kernel_initializer": "lecun_normal",
         "kernel_regularizer": "l2",
@@ -215,7 +217,8 @@
         "optimizer_params": {
           "lr": 0.0001,
           "nesterov": "true",
-          "momentum": 0.9
+          "momentum": 0.9,
+          "clipnorm": 1.0
         }
       },
       "learner_fit_params": {
@@ -271,7 +274,7 @@
         "loss_function": "hinged_rank_loss",
         "loss_function_requires_x_values": false,
         "batch_size": 256,
-        "batch_normalization": true,
+        "batch_normalization": false,
         "activation": "selu",
         "kernel_initializer": "lecun_normal",
         "kernel_regularizer": "l2",
@@ -282,7 +285,8 @@
         "optimizer_params": {
           "lr": 0.0001,
           "nesterov": "true",
-          "momentum": 0.9
+          "momentum": 0.9,
+          "clipnorm": 1.0
         }
       },
       "learner_fit_params": {
@@ -360,7 +364,7 @@
         "loss_function": "hinged_rank_loss",
         "loss_function_requires_x_values": false,
         "batch_size": 256,
-        "batch_normalization": true,
+        "batch_normalization": false,
         "activation": "selu",
         "kernel_initializer": "lecun_normal",
         "kernel_regularizer": "l2",
@@ -371,7 +375,8 @@
         "optimizer_params": {
           "lr": 0.0001,
           "nesterov": "true",
-          "momentum": 0.9
+          "momentum": 0.9,
+          "clipnorm": 1.0
         }
       },
       "learner_fit_params": {
@@ -449,7 +454,7 @@
         "loss_function": "hinged_rank_loss",
         "loss_function_requires_x_values": false,
         "batch_size": 256,
-        "batch_normalization": true,
+        "batch_normalization": false,
         "activation": "selu",
         "kernel_initializer": "lecun_normal",
         "kernel_regularizer": "l2",
@@ -460,7 +465,8 @@
         "optimizer_params": {
           "lr": 0.0001,
           "nesterov": "true",
-          "momentum": 0.9
+          "momentum": 0.9,
+          "clipnorm": 1.0
         }
       },
       "learner_fit_params": {
@@ -523,7 +529,7 @@
         "loss_function": "hinged_rank_loss",
         "loss_function_requires_x_values": false,
         "batch_size": 256,
-        "batch_normalization": true,
+        "batch_normalization": false,
         "activation": "selu",
         "kernel_initializer": "lecun_normal",
         "kernel_regularizer": "l2",
@@ -534,7 +540,8 @@
         "optimizer_params": {
           "lr": 0.0001,
           "nesterov": "true",
-          "momentum": 0.9
+          "momentum": 0.9,
+          "clipnorm": 1.0
         }
       },
       "learner_fit_params": {
@@ -617,7 +624,7 @@
         "loss_function": "hinged_rank_loss",
         "loss_function_requires_x_values": false,
         "batch_size": 256,
-        "batch_normalization": true,
+        "batch_normalization": false,
         "activation": "selu",
         "kernel_initializer": "lecun_normal",
         "kernel_regularizer": "l2",
@@ -628,7 +635,8 @@
         "optimizer_params": {
           "lr": 0.0001,
           "nesterov": "true",
-          "momentum": 0.9
+          "momentum": 0.9,
+          "clipnorm": 1.0
         }
       },
       "learner_fit_params": {
@@ -711,7 +719,7 @@
         "loss_function": "hinged_rank_loss",
         "loss_function_requires_x_values": false,
         "batch_size": 256,
-        "batch_normalization": true,
+        "batch_normalization": false,
         "activation": "selu",
         "kernel_initializer": "lecun_normal",
         "kernel_regularizer": "l2",
@@ -722,7 +730,8 @@
         "optimizer_params": {
           "lr": 0.0001,
           "nesterov": "true",
-          "momentum": 0.9
+          "momentum": 0.9,
+          "clipnorm": 1.0
         }
       },
       "learner_fit_params": {
@@ -788,7 +797,7 @@
         "loss_function": "hinged_rank_loss",
         "loss_function_requires_x_values": false,
         "batch_size": 256,
-        "batch_normalization": true,
+        "batch_normalization": false,
         "activation": "selu",
         "kernel_initializer": "lecun_normal",
         "kernel_regularizer": "l2",
@@ -799,7 +808,8 @@
         "optimizer_params": {
           "lr": 0.0001,
           "nesterov": "true",
-          "momentum": 0.9
+          "momentum": 0.9,
+          "clipnorm": 1.0
         }
       },
       "learner_fit_params": {
@@ -860,7 +870,7 @@
         "loss_function": "hinged_rank_loss",
         "loss_function_requires_x_values": false,
         "batch_size": 256,
-        "batch_normalization": true,
+        "batch_normalization": false,
         "activation": "selu",
         "kernel_initializer": "lecun_normal",
         "kernel_regularizer": "l2",
@@ -871,7 +881,8 @@
         "optimizer_params": {
           "lr": 0.0001,
           "nesterov": "true",
-          "momentum": 0.9
+          "momentum": 0.9,
+          "clipnorm": 1.0
         }
       },
       "learner_fit_params": {
@@ -927,7 +938,7 @@
         "loss_function": "hinged_rank_loss",
         "loss_function_requires_x_values": false,
         "batch_size": 256,
-        "batch_normalization": true,
+        "batch_normalization": false,
         "activation": "selu",
         "kernel_initializer": "lecun_normal",
         "kernel_regularizer": "l2",
@@ -938,7 +949,8 @@
         "optimizer_params": {
           "lr": 0.0001,
           "nesterov": "true",
-          "momentum": 0.9
+          "momentum": 0.9,
+          "clipnorm": 1.0
         }
       },
       "learner_fit_params": {
@@ -994,7 +1006,7 @@
         "loss_function": "hinged_rank_loss",
         "loss_function_requires_x_values": false,
         "batch_size": 256,
-        "batch_normalization": true,
+        "batch_normalization": false,
         "activation": "selu",
         "kernel_initializer": "lecun_normal",
         "kernel_regularizer": "l2",
@@ -1005,7 +1017,8 @@
         "optimizer_params": {
           "lr": 0.0001,
           "nesterov": "true",
-          "momentum": 0.9
+          "momentum": 0.9,
+          "clipnorm": 1.0
         }
       },
       "learner_fit_params": {
@@ -1068,7 +1081,7 @@
         "loss_function": "hinged_rank_loss",
         "loss_function_requires_x_values": false,
         "batch_size": 256,
-        "batch_normalization": true,
+        "batch_normalization": false,
         "activation": "selu",
         "kernel_initializer": "lecun_normal",
         "kernel_regularizer": "l2",
@@ -1079,7 +1092,8 @@
         "optimizer_params": {
           "lr": 0.0001,
           "nesterov": "true",
-          "momentum": 0.9
+          "momentum": 0.9,
+          "clipnorm": 1.0
         }
       },
       "learner_fit_params": {
@@ -1157,7 +1171,7 @@
         "loss_function": "hinged_rank_loss",
         "loss_function_requires_x_values": false,
         "batch_size": 256,
-        "batch_normalization": true,
+        "batch_normalization": false,
         "activation": "selu",
         "kernel_initializer": "lecun_normal",
         "kernel_regularizer": "l2",
@@ -1168,7 +1182,8 @@
         "optimizer_params": {
           "lr": 0.0001,
           "nesterov": "true",
-          "momentum": 0.9
+          "momentum": 0.9,
+          "clipnorm": 1.0
         }
       },
       "learner_fit_params": {

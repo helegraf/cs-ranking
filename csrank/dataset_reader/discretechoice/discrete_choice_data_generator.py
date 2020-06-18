@@ -30,8 +30,7 @@ class DiscreteChoiceDatasetGenerator(SyntheticDatasetGenerator):
 
     def make_min_max_choice(self, n_instances, n_objects, n_features, seed=42, **kwargs):
         # generate objects with a weight and value
-        random_state = check_random_state(seed)
-        x = random_state.uniform(low=0, high=1, size=(n_instances, n_objects, n_features))
+        x = self.random_state.uniform(low=0, high=1, size=(n_instances, n_objects, n_features))
 
         # use max to determine y value
         y = np.zeros((n_instances, n_objects))
@@ -44,8 +43,7 @@ class DiscreteChoiceDatasetGenerator(SyntheticDatasetGenerator):
 
     def make_simple_max_choice(self, n_instances, n_objects, seed=42, **kwargs):
         # generate objects with a weight and value
-        random_state = check_random_state(seed)
-        x = random_state.uniform(low=0, high=1, size=(n_instances, n_objects, 1))
+        x = self.random_state.uniform(low=0, high=1, size=(n_instances, n_objects, 1))
 
         # use max to determine y value
         y = np.zeros((n_instances, n_objects))
@@ -57,8 +55,7 @@ class DiscreteChoiceDatasetGenerator(SyntheticDatasetGenerator):
     def make_movie_genre_choices(self, n_instances, n_features, n_objects, scatter=False, similarity=0.01,
                                  ensure_distance=True, min_distance=0.2, seed=42, **kwargs):
         # generic x and y data
-        random_state = check_random_state(seed)
-        x = random_state.uniform(low=0, high=1, size=(n_instances, n_objects, n_features))
+        x = self.random_state.uniform(low=0, high=1, size=(n_instances, n_objects, n_features))
         y = np.zeros((n_instances, n_objects))
 
         # make some choices

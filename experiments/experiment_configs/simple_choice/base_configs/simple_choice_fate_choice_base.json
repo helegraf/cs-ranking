@@ -39,7 +39,10 @@
             "mab": {
               "MAB": {
                 "multi_head": {
-                  "ScaledDotProductAttention": {"weighted": false, "biased": false}
+                  "ScaledDotProductAttention": {
+                    "weighted": false,
+                    "biased": false
+                  }
                 }
               }
             },
@@ -49,13 +52,14 @@
               "activation": "relu",
               "kernel_initializer": "lecun_normal",
               "use_bias": true,
-              "bias_initializer": "zeros"}
+              "bias_initializer": "zeros"
+            }
           }
         },
         "attention_preselection_config": null,
         "num_attention_preselection_layers": 1,
         "loss_function": "binary_crossentropy",
-        "loss_function_requires_x_values" :  false,
+        "loss_function_requires_x_values": false,
         "n_hidden_set_layers": 2,
         "n_hidden_set_units": 5,
         "n_hidden_joint_layers": 2,
@@ -71,7 +75,8 @@
         "optimizer_params": {
           "lr": 1e-4,
           "nesterov": "true",
-          "momentum": 0.9
+          "momentum": 0.9,
+          "clipnorm": 1.0
         }
       },
       "learner_fit_params": {

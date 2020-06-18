@@ -67,8 +67,7 @@ class ObjectRankingDatasetGenerator(SyntheticDatasetGenerator):
 
     def make_min_max_choice(self, n_instances, n_objects, n_features, seed=42, **kwargs):
         # generate objects with a weight and value
-        random_state = check_random_state(seed)
-        x = random_state.uniform(low=0, high=1, size=(n_instances, n_objects, n_features))
+        x = self.random_state.uniform(low=0, high=1, size=(n_instances, n_objects, n_features))
 
         # use max to determine y value
         y = np.empty((n_instances, n_objects), dtype=int)
@@ -80,10 +79,8 @@ class ObjectRankingDatasetGenerator(SyntheticDatasetGenerator):
         return x, y
 
     def make_simple_max_choice(self, n_instances, n_objects, seed=42, **kwargs):
-        print("instances, objects", n_instances, n_objects)
         # generate objects with a weight and value
-        random_state = check_random_state(seed)
-        x = random_state.uniform(low=0, high=1, size=(n_instances, n_objects))
+        x = self.random_state.uniform(low=0, high=1, size=(n_instances, n_objects))
 
         # use max to determine y value
         y = np.empty((n_instances, n_objects), dtype=int)
@@ -96,8 +93,7 @@ class ObjectRankingDatasetGenerator(SyntheticDatasetGenerator):
 
     def make_tsp_dataset(self, n_instances, n_objects, seed=42, **kwargs):
         # 1. Generate x data
-        random_state = check_random_state(seed)
-        x = random_state.random_integers(low=0, high=10000, size=(n_instances, n_objects, 2))
+        x = self.random_state.random_integers(low=0, high=10000, size=(n_instances, n_objects, 2))
 
         # 2. Label the data
         y = np.empty((n_instances, n_objects), dtype=int)

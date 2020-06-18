@@ -14,16 +14,6 @@
         "n_train_instances": 102400,
         "n_test_instances": 10240
       }
-    },
-        {
-      "dataset": "synthetic_or",
-      "dataset_params": {
-        "dataset_type": "min_max",
-        "n_features": 4,
-        "n_objects": 5,
-        "n_train_instances": 102400,
-        "n_test_instances": 10240
-      }
     }
   ],
   "folds": [
@@ -48,7 +38,7 @@
         "loss_function": "binary_crossentropy",
         "loss_function_requires_x_values": false,
         "batch_size": 256,
-        "batch_normalization": true,
+        "batch_normalization": false,
         "kernel_regularizer": "l2",
         "kernel_regularizer_params": {"l":  1e-4},
         "kernel_initializer": "lecun_normal",
@@ -56,11 +46,12 @@
         "optimizer_params": {
           "lr": 1e-4,
           "nesterov": true,
-          "momentum": 0.9
+          "momentum": 0.9,
+          "clipnorm": 1.0
         }
       },
       "learner_fit_params": {
-        "epochs": 64,
+        "epochs": 512,
         "validation_split": 0.1,
         "callbacks": {
             "AdvancedTensorBoard": {
@@ -82,14 +73,14 @@
           },
           "CyclicLR": {
             "base_lr": 1e-10,
-            "max_lr": 1e-3,
-            "step_size": 230400,
+            "max_lr": 1e-1,
+            "step_size": 57600,
             "mode": "triangular2"
           },
           "EarlyStoppingExtraRestoration": {
             "monitor": "val_loss",
             "min_delta": 0,
-            "patience": 16,
+            "patience": 64,
             "verbose": 2,
             "mode": "auto",
             "baseline": null,
@@ -109,7 +100,7 @@
   ],
   "timings": [
     {
-      "duration": "12h",
+      "duration": "1d",
       "time_out_eval": "10m"
     }
   ],

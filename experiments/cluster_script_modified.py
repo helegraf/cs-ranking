@@ -27,6 +27,9 @@ from datetime import datetime
 
 import h5py
 import numpy as np
+
+from csrank.dataset_reader.objectranking.object_ranking_data_generator import load_tsp_dataset
+
 np.random.seed(0)
 from docopt import docopt
 from sklearn.model_selection import ShuffleSplit
@@ -144,10 +147,18 @@ def do_experiment():
             # # # DATA SETUP # # #
 
             # get data
-            dataset_params['random_state'] = random_state
-            dataset_params['fold_id'] = fold_id
-            dataset_reader = get_dataset_reader(dataset_name, dataset_params)
-            x_train, y_train, x_test, y_test = dataset_reader.get_single_train_test_split()
+            if dataset_params['dataset_type'] == 'tsp':
+                data_foldr = os.path.join(DIR_PATH, '..', SAVED_DATA_FOLDER)
+                x_train, y_train, x_test, y_test = load_tsp_dataset(n_train_instances=dataset_params['n_train_instances'],
+                                                                    n_test_instances=dataset_params['n_test_instances'],
+                                                                    n_objects=dataset_params['n_objects'],
+                                                                    seed=seed + fold_id,
+                                                                    path=data_foldr)
+            else:
+                dataset_params['random_state'] = random_state
+                dataset_params['fold_id'] = fold_id
+                dataset_reader = get_dataset_reader(dataset_name, dataset_params)
+                x_train, y_train, x_test, y_test = dataset_reader.get_single_train_test_split()
 
             # log data contents, get num_objects, delete internal reader info
             n_objects = log_test_train_data(x_train, x_test, logger)

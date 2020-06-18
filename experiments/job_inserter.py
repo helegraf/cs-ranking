@@ -51,9 +51,9 @@ def gen_jobs(configuration_file_path):
     return combine_with_elements(previous_dict={}, index=0, combos=combos)
 
 
-name = "simple_ranking_listnet"
-table_name = "simple_ranking"
-folder = "simple_ranking/generated_configs/"
+name = "tsp_ranksvm"
+table_name = "tsp"
+folder = "tsp/generated_configs/"
 
 config_file_path = "database_configs/db.json"
 connector = ModifiedDBConnector(config_file_path, table_jobs="jobs_" + table_name)

@@ -50,8 +50,7 @@ class ChoiceDatasetGenerator(SyntheticDatasetGenerator):
 
     def make_min_max_choice(self, n_instances, n_objects, n_features, threshold=.5, seed=42, **kwargs):
         # generate objects with a weight and value
-        random_state = check_random_state(seed)
-        x = random_state.uniform(low=0, high=1, size=(n_instances, n_objects, n_features))
+        x = self.random_state.uniform(low=0, high=1, size=(n_instances, n_objects, n_features))
 
         redraws = []
 
@@ -61,7 +60,7 @@ class ChoiceDatasetGenerator(SyntheticDatasetGenerator):
             redraws.append(0)
             # ensure at least 1 chosen - redraw
             while self.nothing_chosen(x[instance], threshold):
-                x[instance] = random_state.uniform(low=0, high=1, size=(n_objects, n_features))
+                x[instance] = self.random_state.uniform(low=0, high=1, size=(n_objects, n_features))
                 redraws[-1] += 1
             # select the lowest arg for all objects
             minima = np.min(x[instance], axis=1)
@@ -75,23 +74,21 @@ class ChoiceDatasetGenerator(SyntheticDatasetGenerator):
 
     def make_simple_max_choice(self, n_instances, n_objects, threshold, seed=42, **kwargs):
         # generate objects with a weight and value
-        random_state = check_random_state(seed)
-        x = random_state.uniform(low=0, high=1, size=(n_instances, n_objects, 1))
+        x = self.random_state.uniform(low=0, high=1, size=(n_instances, n_objects, 1))
 
         # use max to determine y value
         y = np.empty((n_instances, n_objects))
         for instance in range(n_instances):
             # ensure at least 1 chosen - redraw
             while np.all(x[instance] < threshold):
-                x[instance] = random_state.uniform(low=0, high=1, size=(n_objects, 1))
+                x[instance] = self.random_state.uniform(low=0, high=1, size=(n_objects, 1))
             y[instance] = [1 if value >= threshold else 0 for value in x[instance]]
 
         return x, y
 
     def make_knapsack_choice(self, n_instances, n_objects, capacity, seed, **kwargs):
         # generate objects with a weight and value
-        random_state = check_random_state(seed)
-        x = random_state.randint(low=1, high=11, size=(n_instances, n_objects, 2))
+        x = self.random_state.randint(low=1, high=11, size=(n_instances, n_objects, 2))
 
         # use algorithm to determine y value
         y = np.empty((n_instances, n_objects))

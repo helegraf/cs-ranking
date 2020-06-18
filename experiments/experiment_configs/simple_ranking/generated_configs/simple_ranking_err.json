@@ -1,6 +1,5 @@
 {
   "resources": {
-    "gtx1080": "1",
     "ncpus": "2",
     "vmem": "42g",
     "mem": "16g"
@@ -10,16 +9,6 @@
       "dataset": "synthetic_or",
       "dataset_params": {
         "dataset_type": "simple_max",
-        "n_objects": 5,
-        "n_train_instances": 102400,
-        "n_test_instances": 10240
-      }
-    },
-        {
-      "dataset": "synthetic_or",
-      "dataset_params": {
-        "dataset_type": "min_max",
-        "n_features": 4,
         "n_objects": 5,
         "n_train_instances": 102400,
         "n_test_instances": 10240
