@@ -152,7 +152,7 @@ def do_experiment():
                 x_train, y_train, x_test, y_test = load_tsp_dataset(n_train_instances=dataset_params['n_train_instances'],
                                                                     n_test_instances=dataset_params['n_test_instances'],
                                                                     n_objects=dataset_params['n_objects'],
-                                                                    seed=seed + fold_id,
+                                                                    seed=seed,
                                                                     path=data_foldr)
             else:
                 dataset_params['random_state'] = random_state
