@@ -12,7 +12,7 @@ psycopg2-binary>=2.7
 docopt>=0.6.0
 joblib>=0.9.4
 tqdm>=4.11.2
-keras>=2.3
+keras==2.3
 pymc3>=3.5
 theano>=1.0
 keras-layer-normalization>=0.14.0
