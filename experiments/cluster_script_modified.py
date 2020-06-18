@@ -159,10 +159,10 @@ def do_experiment():
                 dataset_params['fold_id'] = fold_id
                 dataset_reader = get_dataset_reader(dataset_name, dataset_params)
                 x_train, y_train, x_test, y_test = dataset_reader.get_single_train_test_split()
+                del dataset_reader
 
             # log data contents, get num_objects, delete internal reader info
             n_objects = log_test_train_data(x_train, x_test, logger)
-            del dataset_reader
             inner_cv = ShuffleSplit(n_splits=n_inner_folds, test_size=0.1, random_state=random_state)
             if learner_name in [MNL, PCL, NLM, GEV]:
                 learner_fit_params['random_seed'] = seed + fold_id
