@@ -1,13 +1,11 @@
 import logging
 
-import numpy as np
 from keras import Model, Input, optimizers
 from keras.layers import TimeDistributed, Dense, Reshape
 from keras.optimizers import SGD
 
 from csrank.attention.set_transformer.modules import instantiate_attention_layer
 from csrank.callbacks import configure_callbacks
-from csrank.layers import NormalizedDense
 from csrank.learner import Learner
 
 
@@ -17,8 +15,7 @@ class SetTransformer(Learner):
                  attention_layer_config=None, batch_size=256, num_layers_dense=0,
                  dense_config={"units": 5, "use_bias": True, "activation": "relu",
                                "kernel_initializer": "glorot_uniform", "bias_initializer": "zeros"},
-                 n_objects=None, n_object_features=None, random_state=None, metrics_requiring_x=[],
-                 batch_normalization=True):
+                 n_objects=None, n_object_features=None, random_state=None, metrics_requiring_x=[]):
         if attention_layer_config is None:
             attention_layer_config = {"SAB": {"mab": {"MAB": {"multi_head": {
                 "MultiHeadAttention": {"num_heads": 1, "attention": {"ScaledDotProductAttention": {}}}}}}}}
@@ -30,7 +27,6 @@ class SetTransformer(Learner):
         self.loss_function_requires_x_values = loss_function_requires_x_values
         self.optimizer = optimizers.get(optimizer)
         self.random_state = random_state
-        self.batch_normalization = batch_normalization
 
         if stacking_height < 1:
             raise ValueError("Stacking height needs to be at least 1")
@@ -99,20 +95,17 @@ class SetTransformer(Learner):
             self.attention_layers.append(att_layer)
             output_layer = att_layer(output_layer)
 
-        if self.batch_normalization:
-            dense_layer = NormalizedDense
-        else:
-            dense_layer = Dense
-
         # dense layers rff
         for i in range(self.num_layers_dense):
-            output_layer = TimeDistributed(dense_layer(**self.dense_config))(output_layer)
+            output_layer = TimeDistributed(Dense(**self.dense_config))(output_layer)
 
         # predict utility based on encoder ("decoder")
-        output_layer_dec = TimeDistributed(dense_layer(units=1, use_bias=True))(output_layer)
+        output_layer_dec = TimeDistributed(Dense(units=1, use_bias=True))(output_layer)
         output_layer_dec_reshaped = Reshape(target_shape=(n_objects,))(output_layer_dec)
 
         model = Model(inputs=input_layer, outputs=output_layer_dec_reshaped)
+
+        model.summary()
 
         if self.loss_function_requires_x_values:
             self.loss_function = self.loss_function(input_layer)

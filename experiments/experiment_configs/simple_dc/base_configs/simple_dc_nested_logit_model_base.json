@@ -1,6 +1,6 @@
 {
   "resources": {
-    "ncpus": "2",
+    "ncpus": "8",
     "vmem": "42g",
     "mem": "16g"
   },
@@ -30,33 +30,6 @@
   "seeds": [
     {
       "seed": 1234
-    },
-    {
-      "seed": 2345
-    },
-    {
-      "seed": 3456
-    },
-    {
-      "seed": 4567
-    },
-    {
-      "seed": 5678
-    },
-    {
-      "seed": 6789
-    },
-    {
-      "seed": 9876
-    },
-    {
-      "seed": 8765
-    },
-    {
-      "seed": 7654
-    },
-    {
-      "seed": 6543
     }
   ],
   "learners": [
@@ -72,7 +45,7 @@
         "sampler": "variational",
         "tune": 500,
         "draws": 500,
-        "cores": 2,
+        "cores": 4,
         "vi_params": {
           "n": 20000,
           "method": "advi",
@@ -91,7 +64,7 @@
   ],
   "timings": [
     {
-      "duration": "2h",
+      "duration": "6h",
       "time_out_eval": "10m"
     }
   ],

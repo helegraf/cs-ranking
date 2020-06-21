@@ -51,12 +51,14 @@ def gen_jobs(configuration_file_path):
     return combine_with_elements(previous_dict={}, index=0, combos=combos)
 
 
-name = "tsp_ranksvm"
-table_name = "tsp"
-folder = "tsp/generated_configs/"
+table = "test"
+#name = "{}_set_transformer_ranker".format(table)
+#folder = "{}/generated_configs/".format(table)
+name = "test"
+folder = "old/"
 
 config_file_path = "database_configs/db.json"
-connector = ModifiedDBConnector(config_file_path, table_jobs="jobs_" + table_name)
+connector = ModifiedDBConnector(config_file_path, table_jobs="jobs_" + table)
 
 folder_name = "experiment_configs/{}{}.json".format(folder, name)
 print(folder_name)

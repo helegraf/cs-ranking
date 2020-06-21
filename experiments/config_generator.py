@@ -65,6 +65,18 @@ tables = {
              [8, 9, 3],
              [3, 2, 2]]
     },
+    5: {
+        10: [[4, 6, 6, 10, 1],
+             [6, 2, 8, 1, 4],
+             [1, 1, 4, 7, 6],
+             [3, 5, 2, 3, 9],
+             [5, 10, 7, 6, 10],
+             [10, 7, 5, 2, 7],
+             [2, 8, 9, 4, 3],
+             [7, 9, 1, 8, 5],
+             [8, 4, 10, 9, 8],
+             [9, 3, 3, 5, 2]]
+    },
     6: {
         10: [[6, 7, 1, 7, 1, 7],
              [4, 1, 4, 5, 10, 8],
@@ -155,8 +167,8 @@ def read_json_and_replace(dataset, learner, num_runs):
                        .format(dataset, dataset, learner), final_config)
 
 
-dataset = 'simple_choice'
-learner = 'glm_choice'
+dataset = 'simple_ranking'
+learner = 'set_transformer_ranker'
 num_confs = 10
 
 read_json_and_replace(dataset=dataset,

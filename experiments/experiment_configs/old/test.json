@@ -38,74 +38,7 @@
       "seed": 5678
     }
   ],
-  "learners": [ {
-      "learner_name": "feta_ranker",
-      "learner_params": {
-        "attention_pooling_config_config": null,
-        "attention_preselection_config": null,
-        "attention_pooling_config_flavour": null,
-        "num_attention_preselection_layers": 1,
-        "n_hidden": 2,
-        "n_units": 5,
-        "add_zeroth_order_model": true,
-        "max_number_of_objects": 5,
-        "loss_function": "hinged_rank_loss",
-        "loss_function_requires_x_values": false,
-        "batch_size": 256,
-        "batch_normalization": true,
-        "activation": "selu",
-        "kernel_initializer": "lecun_normal",
-        "kernel_regularizer": "l2",
-        "kernel_regularizer_params": {
-          "l": 1e-06
-        },
-        "optimizer": "SGD",
-        "optimizer_params": {
-          "lr": 0.0001,
-          "nesterov": "true",
-          "momentum": 0.9
-        }
-      },
-      "learner_fit_params": {
-        "epochs": 64,
-        "validation_split": 0.1,
-        "callbacks": {
-          "AdvancedTensorBoard": {
-            "num_visualizations_per_epoch": 0,
-            "save_space": true,
-            "log_lr": true,
-            "log_gradient_norms": "global",
-            "log_attention": false,
-            "no_detailed_histograms": true,
-            "lr_vs_accuracy_diagram": true,
-            "log_lr_each_batch": true,
-            "log_dir": "./tensorboard_logs/",
-            "histogram_freq": 1,
-            "write_graph": false,
-            "write_grads": false,
-            "write_images": false,
-            "embeddings_freq": 0,
-            "update_freq": "epoch"
-          },
-          "CyclicLR": {
-            "base_lr": 1e-10,
-            "max_lr": 0.1,
-            "step_size": 25600,
-            "mode": "triangular2"
-          },
-          "EarlyStoppingExtraRestoration": {
-            "monitor": "val_loss",
-            "min_delta": 0,
-            "patience": 16,
-            "verbose": 2,
-            "mode": "auto",
-            "baseline": null,
-            "restore_best_weights": true
-          }
-        }
-      }
-    },
-    {
+  "learners": [    {
       "learner_name": "set_transformer_ranker",
       "learner_params": {
         "stacking_height": 1,
@@ -128,13 +61,13 @@
             }
           }
         },
-        "num_layers_dense": 2,
+        "num_layers_dense": 3,
         "dense_config": {
           "units": 5,
           "activation": "selu",
           "kernel_regularizer": "l2",
           "kernel_regularizer_params": {
-            "l": 1e-4
+            "l": 1e-08
           },
           "kernel_initializer": "lecun_normal",
           "use_bias": true,
@@ -143,16 +76,16 @@
         "loss_function": "hinged_rank_loss",
         "loss_function_requires_x_values": false,
         "batch_size": 256,
-        "batch_normalization": false,
         "optimizer": "SGD",
         "optimizer_params": {
-          "lr": 1e-4,
+          "lr": 0.0001,
           "nesterov": true,
-          "momentum": 0.9
+          "momentum": 0.9,
+          "clipnorm": 1.0
         }
       },
       "learner_fit_params": {
-        "epochs": 64,
+        "epochs": 512,
         "validation_split": 0.1,
         "callbacks": {
           "AdvancedTensorBoard": {
@@ -162,7 +95,7 @@
             "log_gradient_norms": "global",
             "log_attention": true,
             "no_detailed_histograms": true,
-            "lr_vs_accuracy_diagram": true,
+            "lr_vs_accuracy_diagram": false,
             "log_lr_each_batch": true,
             "log_dir": "./tensorboard_logs/",
             "histogram_freq": 1,
@@ -173,19 +106,19 @@
             "update_freq": "epoch"
           },
           "CyclicLR": {
-            "base_lr": 1e-1,
-            "max_lr": 1e3,
-            "step_size": 25600,
+            "base_lr": 1e-10,
+            "max_lr": 0.1,
+            "step_size": 5760,
             "mode": "triangular2"
           },
-          "EarlyStopping": {
+          "EarlyStoppingExtraRestoration": {
             "monitor": "val_loss",
             "min_delta": 0,
-            "patience": 10,
+            "patience": 64,
             "verbose": 2,
-            "mode": " auto",
+            "mode": "auto",
             "baseline": null,
-            "restore_best_weights": false
+            "restore_best_weights": true
           }
         }
       }

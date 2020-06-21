@@ -52,7 +52,7 @@
             }
           }
         },
-        "num_layers_dense": 2,
+        "num_layers_dense": 3,
         "dense_config": {
           "units": 5,
           "activation": "selu",
@@ -75,7 +75,7 @@
         }
       },
       "learner_fit_params": {
-        "epochs": 64,
+        "epochs": 512,
         "validation_split": 0.1,
         "callbacks": {
           "AdvancedTensorBoard": {
@@ -85,7 +85,7 @@
             "log_gradient_norms": "global",
             "log_attention": true,
             "no_detailed_histograms": true,
-            "lr_vs_accuracy_diagram": true,
+            "lr_vs_accuracy_diagram": false,
             "log_lr_each_batch": true,
             "log_dir": "./tensorboard_logs/",
             "histogram_freq": 1,
@@ -98,13 +98,13 @@
           "CyclicLR": {
             "base_lr": 1e-10,
             "max_lr": 1e-3,
-            "step_size": 25600,
+            "step_size": 5760,
             "mode": "triangular2"
           },
           "EarlyStoppingExtraRestoration": {
             "monitor": "val_loss",
             "min_delta": 0,
-            "patience": 16,
+            "patience": 64,
             "verbose": 2,
             "mode": "auto",
             "baseline": null,
@@ -124,7 +124,7 @@
   ],
   "timings": [
     {
-      "duration": "12h",
+      "duration": "8hh",
       "time_out_eval": "10m"
     }
   ],

@@ -5,15 +5,29 @@
     "l1_ratio": [0.0, 0.2, 0.4, 0.6, 0.8, 1.0]
   },
   "mixed_logit_model": {
-    "n_mixtures": [2, 3, 4, 5, 6, 7, 8, 9, 10]
+    "n_mixtures": [2, 3, 4, 5, 6, 7, 8, 9, 10],
+    "sampler": ["variational", "NUTS"],
+    "tune": [500, 1000, 2000, 4000, 8000],
+    "draws": [500, 1000, 2000, 4000, 8000]
   },
   "generalized_extreme_value": {
     "n_nests": [2, 3, 4, 5, 6, 7, 8, 9, 10],
-    "alpha": [1e-10, 1e-9, 1e-8, 1e-7, 1e-6, 1e-5, 1e-4, 1e-3, 1e-2, 1e-1]
+    "alpha": [1e-10, 1e-9, 1e-8, 1e-7, 1e-6, 1e-5, 1e-4, 1e-3, 1e-2, 1e-1],
+    "sampler": ["variational", "NUTS"],
+    "tune": [500, 1000, 2000, 4000, 8000],
+    "draws": [500, 1000, 2000, 4000, 8000]
   },
   "nested_logit_model": {
     "n_nests": [2, 3, 4, 5, 6, 7, 8, 9, 10],
-    "alpha": [1e-10, 1e-9, 1e-8, 1e-7, 1e-6, 1e-5, 1e-4, 1e-3, 1e-2, 1e-1]
+    "alpha": [1e-10, 1e-9, 1e-8, 1e-7, 1e-6, 1e-5, 1e-4, 1e-3, 1e-2, 1e-1],
+    "sampler": ["variational", "NUTS"],
+    "tune": [500, 1000, 2000, 4000, 8000],
+    "draws": [500, 1000, 2000, 4000, 8000]
+  },
+  "multinomial_logit_model": {
+    "sampler": ["variational", "NUTS"],
+    "tune": [500, 1000, 2000, 4000, 8000],
+    "draws": [500, 1000, 2000, 4000, 8000]
   },
   "ranknet_dc": {
     "n_hidden": [2, 3, 4, 5, 6, 7, 8, 9, 10],

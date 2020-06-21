@@ -1,6 +1,6 @@
 {
   "resources": {
-    "ncpus": "2",
+    "ncpus": "8",
     "vmem": "42g",
     "mem": "16g"
   },
@@ -71,7 +71,7 @@
         "sampler": "variational",
         "tune": 500,
         "draws": 500,
-        "cores": 2,
+        "cores": 4,
         "vi_params": {
           "n": 20000,
           "method": "advi",
@@ -92,7 +92,7 @@
   ],
   "timings": [
     {
-      "duration": "2h",
+      "duration": "6h",
       "time_out_eval": "10m"
     }
   ],
