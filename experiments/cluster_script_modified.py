@@ -63,6 +63,20 @@ def exit_orderly_in_case_of_error(error_message, db_connector, job_id):
     db_connector.append_error_string_in_running_job(job_id=job_id, error_message=error_message)
 
 
+def replace_kernel_regularizer_params(learner_params):
+    print("call replace function on ", learner_params)
+    for key in list(learner_params.keys()):
+        print(key)
+        if key == 'kernel_regularizer_params':
+            print("replace regularizer")
+            learner_params['kernel_regularizer'] = regularizers[learner_params['kernel_regularizer']](**learner_params[key])
+            del learner_params['kernel_regularizer_params']
+        elif isinstance(learner_params[key], dict):
+            replace_kernel_regularizer_params(learner_params[key])
+
+    return learner_params
+
+
 def do_experiment():
     start = datetime.now()
 
@@ -147,18 +161,18 @@ def do_experiment():
             # # # DATA SETUP # # #
 
             # get data
-            #if dataset_params['dataset_type'] == 'tsp':
-            #    data_foldr = os.path.join(DIR_PATH, '..', SAVED_DATA_FOLDER)
-            #    x_train, y_train, x_test, y_test = load_tsp_dataset(n_train_instances=dataset_params['n_train_instances'],
-            #                                                        n_test_instances=dataset_params['n_test_instances'],
-            #                                                        n_objects=dataset_params['n_objects'],
-            #                                                        seed=seed,
-            #                                                        path=data_foldr)
-            #else:
-            dataset_params['random_state'] = random_state
-            dataset_params['fold_id'] = fold_id
-            dataset_reader = get_dataset_reader(dataset_name, dataset_params)
-            x_train, y_train, x_test, y_test = dataset_reader.get_single_train_test_split()
+            if dataset_params['dataset_type'] == 'tsp':
+                data_foldr = os.path.join(DIR_PATH, '..', SAVED_DATA_FOLDER)
+                x_train, y_train, x_test, y_test = load_tsp_dataset(n_train_instances=dataset_params['n_train_instances'],
+                                                                    n_test_instances=dataset_params['n_test_instances'],
+                                                                    n_objects=dataset_params['n_objects'],
+                                                                    seed=seed,
+                                                                    path=data_foldr)
+            else:
+                dataset_params['random_state'] = random_state
+                dataset_params['fold_id'] = fold_id
+                dataset_reader = get_dataset_reader(dataset_name, dataset_params)
+                x_train, y_train, x_test, y_test = dataset_reader.get_single_train_test_split()
 
             for i in range(len(x_test)):
                 print(x_test[i], y_test[i])
@@ -191,19 +205,9 @@ def do_experiment():
                     learner_params["optimizer"] = \
                         optimizers[learner_params["optimizer"]](**learner_params["optimizer_params"])
                     del learner_params["optimizer_params"]
-                if "kernel_regularizer" in learner_params.keys() and learner_params["kernel_regularizer"] is not None:
-                    learner_params["kernel_regularizer"] = \
-                        regularizers[learner_params["kernel_regularizer"]](**learner_params["kernel_regularizer_params"])
-                    del learner_params["kernel_regularizer_params"]
-                if learner_name.startswith("set_transformer") \
-                    and "dense_config" in learner_params \
-                    and "kernel_regularizer_params" in learner_params["dense_config"]:
-                    learner_params["dense_config"]["kernel_regularizer"] = \
-                    regularizers[learner_params["dense_config"]["kernel_regularizer"]]\
-                        (**learner_params["dense_config"]["kernel_regularizer_params"])
-                    del learner_params["dense_config"]["kernel_regularizer_params"]
                 if "metrics" not in learner_params.keys():
                     learner_params["metrics"] = []
+                replace_kernel_regularizer_params(learner_params)
             if dataset_params["dataset_type"] == "tsp" and learner_name in ["feta_ranker", "fate_ranker", "listnet",
                                                                             "set_transformer_ranker"]:
                 learner_params["metrics_requiring_x"] = [tsp_loss_relative_wrapper]

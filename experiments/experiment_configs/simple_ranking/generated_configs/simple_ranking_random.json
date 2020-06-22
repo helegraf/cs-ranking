@@ -10,8 +10,8 @@
       "dataset_params": {
         "dataset_type": "simple_max",
         "n_objects": 5,
-        "n_train_instances": 102400,
-        "n_test_instances": 10240
+        "n_train_instances": 10240,
+        "n_test_instances": 1024
       }
     }
   ],

@@ -1,3 +1,4 @@
+import copy
 import logging
 
 from keras import Model, Input, optimizers
@@ -99,15 +100,14 @@ class SetTransformer(Learner):
         for i in range(self.num_layers_dense):
             output_layer = TimeDistributed(Dense(**self.dense_config))(output_layer)
 
-        # perhaps not good? no nonlinearity
+        rff_config_final = copy.deepcopy(self.dense_config)
+        rff_config_final["units"] = 1
 
         # predict utility based on encoder ("decoder")
-        output_layer_dec = TimeDistributed(Dense(units=1, use_bias=True))(output_layer)
+        output_layer_dec = TimeDistributed(Dense(**rff_config_final))(output_layer)
         output_layer_dec_reshaped = Reshape(target_shape=(n_objects,))(output_layer_dec)
 
         model = Model(inputs=input_layer, outputs=output_layer_dec_reshaped)
-
-        model.summary()
 
         if self.loss_function_requires_x_values:
             self.loss_function = self.loss_function(input_layer)

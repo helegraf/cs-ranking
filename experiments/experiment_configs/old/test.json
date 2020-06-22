@@ -67,7 +67,15 @@
                     "sordoni_biased": false
                   }
                 },
-                "layer_normalization": true
+                "layer_normalization": false,
+                "rff_config": {
+                  "activation": "selu",
+                  "kernel_regularizer":  "l2",
+                  "kernel_regularizer_params":  {
+                    "l": 1e-08
+                  },
+                  "use_bias":  true,
+                  "bias_initializer":  "zeros"}
               }
             }
           }
