@@ -65,7 +65,6 @@
         "loss_function": "hinged_rank_loss",
         "loss_function_requires_x_values": false,
         "batch_size": 256,
-        "batch_normalization": true,
         "optimizer": "SGD",
         "optimizer_params": {
           "lr": 1e-4,

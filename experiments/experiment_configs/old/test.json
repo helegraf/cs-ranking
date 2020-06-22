@@ -24,6 +24,16 @@
         "n_train_instances": 10000,
         "n_test_instances": 100
       }
+    },
+    {
+      "dataset": "synthetic_or",
+      "dataset_params": {
+        "dataset_type": "tsp",
+        "n_features": 4,
+        "n_objects": 5,
+        "n_train_instances": 10000,
+        "n_test_instances": 100
+      }
     }
   ],
   "folds": [
@@ -56,12 +66,13 @@
                     "factor": null,
                     "sordoni_biased": false
                   }
-                }
+                },
+                "layer_normalization": true
               }
             }
           }
         },
-        "num_layers_dense": 3,
+        "num_layers_dense": 0,
         "dense_config": {
           "units": 5,
           "activation": "selu",
@@ -92,22 +103,22 @@
             "num_visualizations_per_epoch": 1,
             "save_space": true,
             "log_lr": true,
-            "log_gradient_norms": "global",
+            "log_gradient_norms": "all",
             "log_attention": true,
-            "no_detailed_histograms": true,
+            "no_detailed_histograms": false,
             "lr_vs_accuracy_diagram": false,
             "log_lr_each_batch": true,
             "log_dir": "./tensorboard_logs/",
             "histogram_freq": 1,
-            "write_graph": false,
-            "write_grads": false,
-            "write_images": false,
+            "write_graph": true,
+            "write_grads": true,
+            "write_images": true,
             "embeddings_freq": 0,
             "update_freq": "epoch"
           },
           "CyclicLR": {
-            "base_lr": 1e-10,
-            "max_lr": 0.1,
+            "base_lr": 1e-2,
+            "max_lr": 1e-1,
             "step_size": 5760,
             "mode": "triangular2"
           },

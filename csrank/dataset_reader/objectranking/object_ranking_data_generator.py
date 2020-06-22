@@ -74,7 +74,7 @@ class ObjectRankingDatasetGenerator(SyntheticDatasetGenerator):
         for instance in range(n_instances):
             # select the lowest arg for all objects
             minima = np.min(x[instance], axis=1)
-            y[instance] = np.asarray(np.flip(np.argsort(minima)), dtype=int)
+            y[instance] = np.asarray(np.argsort(np.flip(np.argsort(minima))), dtype=int)
 
         return x, y
 
@@ -85,7 +85,7 @@ class ObjectRankingDatasetGenerator(SyntheticDatasetGenerator):
         # use max to determine y value
         y = np.empty((n_instances, n_objects), dtype=int)
         for instance in range(n_instances):
-            y[instance] = np.asarray(np.flip(np.argsort(x[instance])), dtype=int)
+            y[instance] = np.asarray(np.argsort(np.flip(np.argsort(x[instance]))), dtype=int)
 
         x = x.reshape(n_instances, n_objects, 1)
 

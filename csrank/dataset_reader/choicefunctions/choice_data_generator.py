@@ -48,20 +48,20 @@ class ChoiceDatasetGenerator(SyntheticDatasetGenerator):
     def get_train_test_datasets(self, n_datasets=5):
         return super(ChoiceDatasetGenerator, self).get_train_test_datasets(n_datasets=n_datasets)
 
-    def make_min_max_choice(self, n_instances, n_objects, n_features, threshold=.5, seed=42, **kwargs):
-        # generate objects with a weight and value
-        x = self.random_state.uniform(low=0, high=1, size=(n_instances, n_objects, n_features))
+    def make_min_max_choice(self, n_instances, n_objects, n_features, low=0, high=1,  threshold=.5, seed=42, **kwargs):
+        if min > threshold or max < threshold:
+            raise ValueError("Invalid parameters for min max choice generation: low={}, high={}, threshold={}"
+                             .format(low, high, threshold))
 
-        redraws = []
+        # generate objects with a weight and value
+        x = self.random_state.uniform(low=low, high=high, size=(n_instances, n_objects, n_features))
 
         # use max to determine y value
         y = np.empty((n_instances, n_objects))
         for instance in range(n_instances):
-            redraws.append(0)
             # ensure at least 1 chosen - redraw
             while self.nothing_chosen(x[instance], threshold):
                 x[instance] = self.random_state.uniform(low=0, high=1, size=(n_objects, n_features))
-                redraws[-1] += 1
             # select the lowest arg for all objects
             minima = np.min(x[instance], axis=1)
             y[instance] = [1 if minimum >= threshold else 0 for minimum in minima]
@@ -72,9 +72,13 @@ class ChoiceDatasetGenerator(SyntheticDatasetGenerator):
         minima  = np.min(instance, axis=1)
         return np.all(minima < threshold)
 
-    def make_simple_max_choice(self, n_instances, n_objects, threshold, seed=42, **kwargs):
+    def make_simple_max_choice(self, n_instances, n_objects, threshold=.5, low=0, high=1, seed=42, **kwargs):
+        if min > threshold or max < threshold:
+            raise ValueError("Invalid parameters for simple choice generation: low={}, high={}, threshold={}"
+                             .format(low, high, threshold))
+
         # generate objects with a weight and value
-        x = self.random_state.uniform(low=0, high=1, size=(n_instances, n_objects, 1))
+        x = self.random_state.uniform(low=low, high=high, size=(n_instances, n_objects, 1))
 
         # use max to determine y value
         y = np.empty((n_instances, n_objects))

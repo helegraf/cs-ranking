@@ -409,7 +409,7 @@ class MultiHeadAttention(AttentionContainingLayer):
 
 
 class MAB(AttentionContainingLayer):
-    def __init__(self, multi_head, depth_rff=0, rff_config={"activation": "relu"}, **kwargs):
+    def __init__(self, multi_head, depth_rff=0, rff_config={"activation": "selu"}, layer_normalization=False, **kwargs):
         """
 
         Parameters
@@ -422,8 +422,10 @@ class MAB(AttentionContainingLayer):
         super(MAB, self).__init__(**kwargs)
 
         # layers
-        self.layer_norm_outer = LayerNormalization()
-        self.layer_norm_inner = LayerNormalization()
+        if layer_normalization:
+            self.layer_norm_outer = TimeDistributed(LayerNormalization())
+            self.layer_norm_inner = TimeDistributed(LayerNormalization())
+        self.layer_normalization = layer_normalization
         self.multi_head = instantiate_attention_layer(multi_head)
 
         # rff configuration
@@ -452,12 +454,19 @@ class MAB(AttentionContainingLayer):
     def call(self, inputs_, **kwargs):
         x, y = inputs_
 
-        h = self.layer_norm_inner(x + self.multi_head([x, y, y]))
+        if self.layer_normalization:
+            h = self.layer_norm_inner(x + self.multi_head([x, y, y]))
+        else:
+            h = x + self.multi_head([x, y, y])
+
         rff_h = h
         for layer in self.rff:
             rff_h = layer(rff_h)
 
-        return self.layer_norm_outer(h + rff_h)
+        if self.layer_normalization:
+            return self.layer_norm_outer(h + rff_h)
+        else:
+            return h + rff_h
 
     def compute_output_shape(self, input_shape):
         return self.multi_head.compute_output_shape([input_shape[0], input_shape[1], input_shape[1]])
@@ -466,7 +475,7 @@ class MAB(AttentionContainingLayer):
         outputs = self.multi_head.get_attention_layer_inputs_outputs()
 
         for output in outputs:
-            output["name"] = "mab_ " + output["name"]
+            output["name"] = "mab_" + output["name"]
 
         return outputs
 
@@ -489,7 +498,7 @@ class SAB(AttentionContainingLayer):
         outputs = self.mab.get_attention_layer_inputs_outputs()
 
         for output in outputs:
-            output["name"] = "sab_ " + output["name"]
+            output["name"] = "sab_" + output["name"]
 
         return outputs
 

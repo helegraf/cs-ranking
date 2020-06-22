@@ -147,19 +147,23 @@ def do_experiment():
             # # # DATA SETUP # # #
 
             # get data
-            if dataset_params['dataset_type'] == 'tsp':
-                data_foldr = os.path.join(DIR_PATH, '..', SAVED_DATA_FOLDER)
-                x_train, y_train, x_test, y_test = load_tsp_dataset(n_train_instances=dataset_params['n_train_instances'],
-                                                                    n_test_instances=dataset_params['n_test_instances'],
-                                                                    n_objects=dataset_params['n_objects'],
-                                                                    seed=seed,
-                                                                    path=data_foldr)
-            else:
-                dataset_params['random_state'] = random_state
-                dataset_params['fold_id'] = fold_id
-                dataset_reader = get_dataset_reader(dataset_name, dataset_params)
-                x_train, y_train, x_test, y_test = dataset_reader.get_single_train_test_split()
-                del dataset_reader
+            #if dataset_params['dataset_type'] == 'tsp':
+            #    data_foldr = os.path.join(DIR_PATH, '..', SAVED_DATA_FOLDER)
+            #    x_train, y_train, x_test, y_test = load_tsp_dataset(n_train_instances=dataset_params['n_train_instances'],
+            #                                                        n_test_instances=dataset_params['n_test_instances'],
+            #                                                        n_objects=dataset_params['n_objects'],
+            #                                                        seed=seed,
+            #                                                        path=data_foldr)
+            #else:
+            dataset_params['random_state'] = random_state
+            dataset_params['fold_id'] = fold_id
+            dataset_reader = get_dataset_reader(dataset_name, dataset_params)
+            x_train, y_train, x_test, y_test = dataset_reader.get_single_train_test_split()
+
+            for i in range(len(x_test)):
+                print(x_test[i], y_test[i])
+
+            del dataset_reader
 
             # log data contents, get num_objects, delete internal reader info
             n_objects = log_test_train_data(x_train, x_test, logger)
@@ -202,7 +206,7 @@ def do_experiment():
                     learner_params["metrics"] = []
             if dataset_params["dataset_type"] == "tsp" and learner_name in ["feta_ranker", "fate_ranker", "listnet",
                                                                             "set_transformer_ranker"]:
-                learner_params["metrics_requiring_x"] = tsp_loss_relative_wrapper
+                learner_params["metrics_requiring_x"] = [tsp_loss_relative_wrapper]
 
             time_start_train = datetime.now()
             db_connector.log_start_training(job_id, time_start_train)
