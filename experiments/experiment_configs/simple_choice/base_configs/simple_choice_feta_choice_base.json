@@ -33,32 +33,10 @@
     {
       "learner_name": "feta_choice",
       "learner_params": {
-        "attention_pooling": {
-          "PMA": {
-            "k": 1,
-            "mab": {
-              "MAB": {
-                "multi_head": {
-                  "ScaledDotProductAttention": {
-                    "weighted": false,
-                    "biased": false
-                  }
-                }
-              }
-            },
-            "depth_rff": 1,
-            "rff_config": {
-              "units": 5,
-              "activation": "relu",
-              "kernel_initializer": "lecun_normal",
-              "use_bias": true,
-              "bias_initializer": "zeros"
-            }
-          }
-        },
+        "attention_pooling": null,
         "attention_preselection_config": null,
-        "attention_pooling_flavour": "mab",
-        "num_attention_preselection_layers": 1,
+        "attention_pooling_flavour": null,
+        "num_attention_preselection_layers": 0,
         "loss_function": "binary_crossentropy",
         "loss_function_requires_x_values": false,
         "n_hidden": 2,
@@ -90,11 +68,11 @@
         "thin_thresholds": 1,
         "callbacks": {
           "AdvancedTensorBoard": {
-            "num_visualizations_per_epoch": 1,
+            "num_visualizations_per_epoch": 0,
             "save_space": true,
             "log_lr": true,
             "log_gradient_norms": "global",
-            "log_attention": true,
+            "log_attention": false,
             "no_detailed_histograms": true,
             "lr_vs_accuracy_diagram": true,
             "log_lr_each_batch": true,

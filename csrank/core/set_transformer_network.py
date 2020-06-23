@@ -2,7 +2,7 @@ import copy
 import logging
 
 from keras import Model, Input, optimizers
-from keras.layers import TimeDistributed, Dense, Reshape
+from keras.layers import TimeDistributed, Dense, Reshape, Permute
 from keras.optimizers import SGD
 
 from csrank.attention.set_transformer.modules import instantiate_attention_layer
@@ -16,6 +16,7 @@ class SetTransformer(Learner):
                  attention_layer_config=None, batch_size=256, num_layers_dense=0,
                  dense_config={"units": 5, "use_bias": True, "activation": "relu",
                                "kernel_initializer": "glorot_uniform", "bias_initializer": "zeros"},
+                 pooling_config=None,
                  n_objects=None, n_object_features=None, random_state=None, metrics_requiring_x=[]):
         if attention_layer_config is None:
             attention_layer_config = {"SAB": {"mab": {"MAB": {"multi_head": {
@@ -37,6 +38,7 @@ class SetTransformer(Learner):
         self.dense_config = dense_config
 
         self.attention_layer_config = attention_layer_config
+        self.pooling_config = pooling_config
         self.batch_size = batch_size
         self.model = None
         self.metrics = metrics
@@ -100,12 +102,22 @@ class SetTransformer(Learner):
         for i in range(self.num_layers_dense):
             output_layer = TimeDistributed(Dense(**self.dense_config))(output_layer)
 
-        rff_config_final = copy.deepcopy(self.dense_config)
-        rff_config_final["units"] = 1
-
         # predict utility based on encoder ("decoder")
-        output_layer_dec = TimeDistributed(Dense(**rff_config_final))(output_layer)
-        output_layer_dec_reshaped = Reshape(target_shape=(n_objects,))(output_layer_dec)
+        if self.pooling_config is None:
+            rff_config_final = copy.deepcopy(self.dense_config)
+            rff_config_final["units"] = 1
+
+            output_layer_dec = TimeDistributed(Dense(**rff_config_final))(output_layer)
+            output_layer_dec_reshaped = Reshape(target_shape=(n_objects,))(output_layer_dec)
+        else:
+            # swap object and feature dimension
+            reshaped_rff_output = Permute(dims=(2, 1))(output_layer)
+            pooling_layer = instantiate_attention_layer(self.pooling_config)
+            self.attention_layers.append(pooling_layer)
+            pooling_layer_out = pooling_layer(reshaped_rff_output)
+            output_layer_dec_reshaped = Permute(dims=(2, 1))(pooling_layer_out)
+            output_layer_dec_reshaped = Reshape(target_shape=(n_objects,))(output_layer_dec_reshaped)
+            print(output_layer_dec_reshaped)
 
         model = Model(inputs=input_layer, outputs=output_layer_dec_reshaped)
 

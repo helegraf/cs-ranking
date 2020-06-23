@@ -38,29 +38,7 @@
       "learner_name": "fate_dc",
       "learner_params": {
         "attention": "placeholder",
-        "attention_pooling": {
-          "PMA": {
-            "k": 1,
-            "mab": {
-              "MAB": {
-                "multi_head": {
-                  "ScaledDotProductAttention": {
-                    "weighted": false,
-                    "biased": false
-                  }
-                }
-              }
-            },
-            "depth_rff": 1,
-            "rff_config": {
-              "units": 5,
-              "activation": "relu",
-              "kernel_initializer": "lecun_normal",
-              "use_bias": true,
-              "bias_initializer": "zeros"
-            }
-          }
-        },
+        "attention_pooling": null,
         "attention_preselection_config": null,
         "num_attention_preselection_layers": 1,
         "n_hidden_set_layers": 2,

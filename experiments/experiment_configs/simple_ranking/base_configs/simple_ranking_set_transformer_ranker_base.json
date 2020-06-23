@@ -60,6 +60,33 @@
               }
             }
           }
+        },"pooling_config": {
+          "PMA": {
+            "k": 1,
+            "mab": {
+              "MAB": {
+                "multi_head": {
+                  "ScaledDotProductAttention": {
+                    "activation": null,
+                    "biased": false,
+                    "scale": true,
+                    "weighted": false,
+                    "weights_initializer": "lecun_normal",
+                    "factor": null,
+                    "sordoni_biased": false
+                  }
+                }
+              }
+            },
+            "depth_rff": 1,
+            "rff_config": {
+              "units": 5,
+              "activation": "selu",
+              "kernel_initializer": "lecun_normal",
+              "use_bias": true,
+              "bias_initializer": "zeros"
+            }
+          }
         },
         "num_layers_dense": 3,
         "dense_config": {
