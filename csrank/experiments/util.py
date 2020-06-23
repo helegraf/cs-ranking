@@ -10,6 +10,7 @@ from keras.losses import binary_crossentropy, categorical_hinge
 from csrank.callbacks import EarlyStoppingWithWeights, LRScheduler, CyclicLR, AdvancedTensorBoard, DebugOutput, \
     EarlyStoppingExtraRestoration
 from csrank.choicefunction import *
+from csrank.choicefunction.greedy_choice import GreedyKnapsack
 from csrank.choicefunction.random_baseline import RandomChoice
 from csrank.choicefunction.set_transformer_choice import SetTransformerChoice
 from csrank.constants import *
@@ -19,9 +20,10 @@ from csrank.discretechoice import *
 from csrank.discretechoice.set_transformer_discrete_choice import SetTransformerDiscreteChoice
 from csrank.experiments.constants import *
 from csrank.losses import tsp_probability_matrix_loss, tsp_dist_matrix_loss_wrapper, hinged_rank_loss, \
-    plackett_luce_loss
+    plackett_luce_loss, knapsack_loss_wrapper_wrapper
 from csrank.metrics import zero_one_rank_loss, zero_one_accuracy, make_ndcg_at_k_loss, tsp_loss_absolute_wrapper, \
-    tsp_loss_relative_wrapper, tsp_distance_wrapper
+    tsp_loss_relative_wrapper, tsp_distance_wrapper, knapsack_wrapper_wrapper, knapsack_weight_wrapper_wrapper, \
+    knapsack_value_wrapper_wrapper
 from csrank.metrics_np import *
 from csrank.objectranking import *
 
@@ -47,7 +49,7 @@ cfs = {FETA_CHOICE: FETAChoiceFunction, FATE_CHOICE: FATEChoiceFunction, GLM_CHO
        RANKNET_CHOICE: RankNetChoiceFunction, CMPNET_CHOICE: CmpNetChoiceFunction,
        FETALINEAR_CHOICE: FETALinearChoiceFunction, FATELINEAR_CHOICE: FATELinearChoiceFunction,
        RANKSVM_CHOICE: PairwiseSVMChoiceFunction, RANDOM_CHOICE: AllPositive,
-       SET_TRANSFORMER_CHOICE: SetTransformerChoice, RANDOM_CHOICE_RANDOM: RandomChoice}
+       SET_TRANSFORMER_CHOICE: SetTransformerChoice, RANDOM_CHOICE_RANDOM: RandomChoice, GREEDY_KNAPSACK: GreedyKnapsack}
 ors = {FETA_RANKER: FETAObjectRanker, RANKNET: RankNet, CMPNET: CmpNet, ERR: ExpectedRankRegression,
        RANKSVM: RankSVM, FATE_RANKER: FATEObjectRanker, LISTNET: ListNet, FATELINEAR_RANKER: FATELinearObjectRanker,
        FETALINEAR_RANKER: FETALinearObjectRanker, RANDOM_RANKER: RandomBaselineRanker,
@@ -99,14 +101,16 @@ lp_metric_dict = {
 }
 metrics_on_predictions = [f1_measure, precision, recall, subset_01_loss, hamming, instance_informedness,
                           zero_one_rank_loss, zero_one_accuracy, make_ndcg_at_k_loss, zero_one_accuracy_np,
-                          tsp_loss_absolute_wrapper, tsp_loss_relative_wrapper]
+                          tsp_loss_absolute_wrapper, tsp_loss_relative_wrapper, knapsack_wrapper_wrapper,
+                          knapsack_weight_wrapper_wrapper, knapsack_value_wrapper_wrapper]
 losses = {
     'tsp_dist_matrix_loss_wrapper': tsp_dist_matrix_loss_wrapper,
     'tsp_probability_matrix_loss': tsp_probability_matrix_loss,
     'hinged_rank_loss': hinged_rank_loss,
     'plackett_luce_loss': plackett_luce_loss,
     'binary_crossentropy': binary_crossentropy,
-    'categorical_hinge': categorical_hinge
+    'categorical_hinge': categorical_hinge,
+    'knapsack_loss_wrapper_wrapper': knapsack_loss_wrapper_wrapper
 }
 
 optimizers = {

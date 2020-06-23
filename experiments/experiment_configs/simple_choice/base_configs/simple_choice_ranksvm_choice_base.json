@@ -10,7 +10,7 @@
       "dataset_params": {
         "dataset_type": "knapsack",
         "n_objects": 10,
-        "capacity": 55,
+        "capacity": 23,
         "n_train_instances": 102400,
         "n_test_instances": 10240
       }

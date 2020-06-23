@@ -52,7 +52,7 @@ def gen_jobs(configuration_file_path):
 
 
 #table = "simple_ranking"
-#name = "{}_ranksvm".format(table)
+#name = "{}_set_transformer_ranker_attention".format(table)
 #folder = "{}/generated_configs/".format(table)
 table = "test"
 name = "test"

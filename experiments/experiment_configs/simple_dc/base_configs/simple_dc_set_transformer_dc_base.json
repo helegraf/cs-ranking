@@ -49,6 +49,7 @@
                   }
                 },
                 "layer_normalization": false,
+                "depth_rff": 1,
                 "rff_config": {
                   "activation": "selu",
                   "kernel_regularizer":  "l2",

@@ -371,6 +371,45 @@ def tsp_loss_absolute_wrapper(x):
     return tsp_loss_absolute
 
 
+def knapsack_value_wrapper_wrapper(input_capacity):
+
+    def knapsack_value_wrapper(x):
+
+        def knapsack_value(y_true, y_pred):
+            values = x[:, :, 1]
+            return np.tensordot(y_pred, values, 1)
+
+        return knapsack_value
+
+    return knapsack_value_wrapper
+
+
+def knapsack_weight_wrapper_wrapper(input_capacity):
+    def knapsack_weight_wrapper(x):
+        def knapsack_weight(y_true, y_pred):
+            weights = x[:, :, 0]
+            return np.maximum(np.tensordot(y_pred, weights, 1) - input_capacity, 0)
+
+        return knapsack_weight
+
+    return knapsack_weight_wrapper
+
+
+def knapsack_wrapper_wrapper(input_capacity):
+
+    def knapsack_wrapper(x):
+        x = tensorify()
+
+        def knapsack_loss(y_true, y_pred):
+
+            return (-1 * knapsack_value_wrapper_wrapper(input_capacity)(x)(y_true, y_pred)) \
+                   + knapsack_weight_wrapper_wrapper(input_capacity)(x)(y_true, y_pred)
+
+        return knapsack_loss
+
+    return knapsack_wrapper
+
+
 def tsp_loss_relative_wrapper(x):
 
     def tsp_loss_relative(y_true, y_pred):

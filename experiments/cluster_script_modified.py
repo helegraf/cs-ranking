@@ -39,7 +39,8 @@ from csrank.callbacks import AdvancedTensorBoard
 from csrank.experiments import *
 from csrank.experiments.dbconnection_modified import ModifiedDBConnector
 from csrank.experiments.util import learners, create_callbacks
-from csrank.metrics import make_ndcg_at_k_loss, tsp_loss_relative_wrapper
+from csrank.metrics import make_ndcg_at_k_loss, tsp_loss_relative_wrapper, knapsack_wrapper_wrapper, \
+    knapsack_weight_wrapper_wrapper, knapsack_value_wrapper_wrapper
 from csrank.tensorflow_util import configure_numpy_keras, get_loss_statistics, get_mean_loss
 from csrank.tuning import ParameterOptimizer
 from csrank.util import create_dir_recursively, duration_till_now, seconds_to_time, \
@@ -64,11 +65,8 @@ def exit_orderly_in_case_of_error(error_message, db_connector, job_id):
 
 
 def replace_kernel_regularizer_params(learner_params):
-    print("call replace function on ", learner_params)
     for key in list(learner_params.keys()):
-        print(key)
         if key == 'kernel_regularizer_params':
-            print("replace regularizer")
             learner_params['kernel_regularizer'] = regularizers[learner_params['kernel_regularizer']](**learner_params[key])
             del learner_params['kernel_regularizer_params']
         elif isinstance(learner_params[key], dict):
@@ -174,9 +172,6 @@ def do_experiment():
                 dataset_reader = get_dataset_reader(dataset_name, dataset_params)
                 x_train, y_train, x_test, y_test = dataset_reader.get_single_train_test_split()
 
-            for i in range(len(x_test)):
-                print(x_test[i], y_test[i])
-
             del dataset_reader
 
             # log data contents, get num_objects, delete internal reader info
@@ -199,7 +194,10 @@ def do_experiment():
             learner_params["random_state"] = random_state
             if learner_name not in theano_learners:
                 if "loss_function" in learner_params.keys():
-                    learner_params["loss_function"] = util.losses[learner_params["loss_function"]]
+                    loss_func_name = learner_params["loss_function"]
+                    learner_params["loss_function"] = util.losses[loss_func_name]
+                    if loss_func_name == 'knapsack_loss_wrapper_wrapper':
+                        learner_params['loss_function'] = learner_params['loss_function'](dataset_params['capacity'])
                 logger.info("learner params {}".format(print_dictionary(learner_params)))
                 if "optimizer" in learner_params.keys():
                     learner_params["optimizer"] = \
@@ -263,10 +261,10 @@ def do_experiment():
             # # # PREDICTION # # #
 
             get_results_and_upload('test', x_test, y_test, db_connector, hash_value, job_id, learner
-                                   , learning_problem, logger, n_objects, results_table_name)
+                                   , learning_problem, logger, n_objects, results_table_name, dataset_params['dataset_type'])
 
             get_results_and_upload('train', x_train, y_train, db_connector, hash_value, job_id, learner,
-                                   learning_problem, logger, n_objects, results_table_name)
+                                   learning_problem, logger, n_objects, results_table_name, dataset_params['dataset_type'])
 
             db_connector.finish_job(job_id=job_id, cluster_id=cluster_id)
 
@@ -291,7 +289,7 @@ def do_experiment():
 
 
 def get_results_and_upload(case, data_x, data_y, db_connector, hash_value, job_id, learner, learning_problem, logger,
-                           n_objects, results_table_name):
+                           n_objects, results_table_name, dataset_type):
     # set batch size
     if isinstance(data_x, dict):
         batch_size = 1000
@@ -324,7 +322,10 @@ def get_results_and_upload(case, data_x, data_y, db_connector, hash_value, job_i
 
     # insert results into database
     results = {'job_id': str(job_id), 'train_test': "\'" + case + "\'"}
-    for name, evaluation_metric in lp_metric_dict[learning_problem].items():
+    metric_dict = lp_metric_dict[learning_problem].items()
+    if dataset_type == 'knapsack':
+        metric_dict.extend([knapsack_wrapper_wrapper, knapsack_weight_wrapper_wrapper, knapsack_value_wrapper_wrapper])
+    for name, evaluation_metric in metric_dict:
         predictions = predicted_scores
 
         # set predictions accordingly if metric works on labels instead of scores

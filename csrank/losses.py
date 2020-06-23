@@ -99,6 +99,22 @@ def pairwise_comparison_quadratic_loss_wrapper(x):
     return pairwise_comparison_loss
 
 
+def knapsack_loss_wrapper_wrapper(input_capacity):
+
+    def knapsack_loss_wrapper(x):
+        x = tensorify()
+
+        def knapsack_loss(y_true, y_pred):
+            weights = x[:, :, 0]
+            values = x[:, :, 1]
+            return (-1 * K.batch_dot(y_pred, values, 1)) + K.maximum(
+                K.batch_dot(y_pred, weights, 1) - input_capacity, 0)
+
+        return knapsack_loss
+
+    return knapsack_loss_wrapper
+
+
 def tsp_dist_matrix_loss_wrapper(x):
     """
     A wrapper for the function tsp_dist_matrix_loss.
