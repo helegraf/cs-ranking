@@ -102,7 +102,7 @@ def pairwise_comparison_quadratic_loss_wrapper(x):
 def knapsack_loss_wrapper_wrapper(input_capacity):
 
     def knapsack_loss_wrapper(x):
-        x = tensorify()
+        x = tensorify(x)
 
         def knapsack_loss(y_true, y_pred):
             weights = x[:, :, 0]
