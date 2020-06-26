@@ -216,9 +216,6 @@ def do_experiment():
                 if "metrics" not in learner_params.keys():
                     learner_params["metrics"] = []
                 replace_kernel_regularizer_params(learner_params)
-            if dataset_params["dataset_type"] == "tsp" and learner_name in ["feta_ranker", "fate_ranker", "listnet",
-                                                                            "set_transformer_ranker"]:
-                learner_params["metrics_requiring_x"] = [tsp_loss_relative_wrapper]
             if dataset_params["dataset_type"] == "knapsack" and learner_name in ["feta_choice", "fate_choice",
                                                                                  "set_transformer_choice"]:
                 learner_params["metrics_requiring_x"] = [knapsack_loss_value_wrapper_wrapper(standardizer.mean_,
