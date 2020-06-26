@@ -180,7 +180,7 @@ def do_experiment():
                 print("mean", standardizer.mean_)
                 print("var", standardizer.var_)
 
-            del dataset_reader
+                del dataset_reader
 
             # log data contents, get num_objects, delete internal reader info
             n_objects = log_test_train_data(x_train, x_test, logger)

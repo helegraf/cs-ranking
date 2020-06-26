@@ -168,7 +168,7 @@ def read_json_and_replace(dataset, learner, num_runs):
 
 
 dataset = 'tsp'
-learner = 'feta_ranker_no_attention'
+learner = 'ranknet'
 num_confs = 10
 
 read_json_and_replace(dataset=dataset,
