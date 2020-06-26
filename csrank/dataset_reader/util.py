@@ -116,6 +116,13 @@ def standardize_features(x_train, x_test):
     return x_train, x_test
 
 
+def standardize_features_return_standardizer(x_train, x_test):
+    standardize = Standardize()
+    x_train = standardize.fit_transform(x_train)
+    x_test = standardize.transform(x_test)
+    return x_train, x_test, standardize.scalar
+
+
 class Standardize(object):
     def __init__(self, scalar=StandardScaler):
         self.scalar = scalar()

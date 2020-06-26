@@ -3,7 +3,7 @@ import logging
 from sklearn.model_selection import train_test_split
 from sklearn.utils import check_random_state
 
-from csrank.dataset_reader.util import standardize_features
+from csrank.dataset_reader.util import standardize_features, standardize_features_return_standardizer
 from .dataset_reader import DatasetReader
 
 
@@ -33,7 +33,7 @@ class SyntheticDatasetGenerator(DatasetReader):
             x_train, x_test, y_train, y_test = train_test_split(X, Y, random_state=self.random_state,
                                                                 test_size=self.n_test_instances)
             if self.standardize:
-                x_train, x_test = standardize_features(x_train, x_test)
+                x_train, x_test, self.standardizer = standardize_features_return_standardizer(x_train, x_test)
             yield x_train, y_train, x_test, y_test
 
     def get_dataset_dictionaries(self, lengths=[5, 6]):
@@ -64,7 +64,7 @@ class SyntheticDatasetGenerator(DatasetReader):
         x_train, x_test, y_train, y_test = train_test_split(self.X, self.Y, random_state=self.random_state,
                                                             test_size=self.n_test_instances)
         if self.standardize:
-            x_train, x_test = standardize_features(x_train, x_test)
+            x_train, x_test, self.standardizer = standardize_features_return_standardizer(x_train, x_test)
         self.logger.info('Done')
 
         return x_train, y_train, x_test, y_test

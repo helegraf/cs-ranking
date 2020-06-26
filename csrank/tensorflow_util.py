@@ -151,12 +151,15 @@ def get_mean_loss(metric, y_true, y_pred):
     return mean_loss
 
 
-def get_loss_statistics(name, metric, y_true, y_pred, x):
+def get_loss_statistics(name, metric, y_true, y_pred, x, standardizer):
 
     losses = []
     for i in range(len(y_true)):
         if "requiresX" in name:
-            metric_wrapped = metric(np.asarray([x[i]]))
+            if "Knapsack" in name:
+                metric_wrapped = metric(standardizer.inverse_transform(np.asarray([x[i]])))
+            else:
+                metric_wrapped = metric(np.asarray([x[i]]))
         else:
             metric_wrapped = metric
 

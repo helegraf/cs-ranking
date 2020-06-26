@@ -3,12 +3,101 @@ from keras import backend as K
 from numpy.testing import assert_almost_equal
 from scipy.spatial.distance import cdist
 import tensorflow as tf
+from sklearn.preprocessing import StandardScaler
 
+from csrank.dataset_reader.choicefunctions.choice_data_generator import knapsack_dynamic_programming
 from csrank.losses import hinged_rank_loss, smooth_rank_loss, plackett_luce_loss, l1_matrix, l2_matrix, \
     pairwise_hinge_matrix, tsp_dist_matrix_loss_wrapper, tsp_probability_matrix_loss, \
-    pairwise_comparison_quadratic_loss_wrapper
+    pairwise_comparison_quadratic_loss_wrapper, knapsack_loss_weight_wrapper_wrapper, \
+    knapsack_loss_value_wrapper_wrapper, knapsack_loss_wrapper_wrapper
+from csrank.metrics import knapsack_value_wrapper, knapsack_weight_wrapper_wrapper, knapsack_wrapper_wrapper
 
 decimal = 3
+
+
+def test_knapsack_metric_loss_standardized():
+    x = np.asarray([[[2, 3], [1, 4], [4, 1], [3, 2], [5, 5]], [[1, 3], [2, 1], [3, 2], [5, 4], [4, 5]]])
+    y_true_input = np.asarray([knapsack_dynamic_programming(x[0], 8), knapsack_dynamic_programming(x[1], 8)])
+    y_pred_input = np.asarray([[0, 0, 0, 0, 0], [1, 1, 1, 1, 1]])
+    standardizer = StandardScaler()
+    x_standardized = x.reshape(-1, 2)
+    x_standardized = standardizer.fit_transform(x_standardized)
+    x_standardized = x_standardized.reshape(2, 5, 2)
+
+    y_true = K.placeholder(shape=y_true_input.shape)
+    y_pred = K.placeholder(shape=y_true_input.shape)
+
+    mean = standardizer.mean_
+    var = standardizer.var_
+    loss_weights = knapsack_loss_weight_wrapper_wrapper(input_capacity=8, mean=mean, variance=var)(x_standardized)(y_true, y_pred)
+    loss_values = knapsack_loss_value_wrapper_wrapper(mean=mean, variance=var)(x_standardized)(y_true, y_pred)
+    loss = knapsack_loss_wrapper_wrapper(input_capacity=8, mean=mean, variance=var)(x_standardized)(y_true, y_pred)
+
+    with tf.Session() as sess:
+        results1 = sess.run(fetches=[loss_weights, loss_values, loss],
+                                   feed_dict={y_true: y_true_input, y_pred: y_true_input})
+        results2 = sess.run(fetches=[loss_weights, loss_values, loss],
+                                   feed_dict={y_true: y_true_input, y_pred: y_pred_input})
+
+        weight_metric_1 = np.asarray(knapsack_weight_wrapper_wrapper(8)(x)(y_true_input, y_true_input))
+        value_metric_1 = np.asarray(knapsack_value_wrapper(x)(y_true_input, y_true_input))
+        loss_metric_1 = np.asarray(knapsack_wrapper_wrapper(8)(x)(y_true_input, y_true_input))
+        desired_1 = np.asarray([weight_metric_1, value_metric_1, loss_metric_1])
+
+        weight_metric_2 = knapsack_weight_wrapper_wrapper(8)(x)(y_true_input, y_pred_input)
+        value_metric_2 = knapsack_value_wrapper(x)(y_true_input, y_pred_input)
+        loss_metric_2 = knapsack_wrapper_wrapper(8)(x)(y_true_input, y_pred_input)
+        desired_2 = np.asarray([weight_metric_2, value_metric_2, loss_metric_2])
+
+        assert_almost_equal(actual=results1, desired=desired_1, decimal=decimal)
+        assert_almost_equal(actual=results2, desired=desired_2, decimal=decimal)
+
+
+def test_knapsack_metric():
+    x = np.asarray([[[2, 3], [1, 4], [4, 1], [3, 2], [5, 5]], [[1, 3], [2, 1], [3, 2], [5, 4], [4, 5]]])
+    y_true_input = np.asarray([knapsack_dynamic_programming(x[0], 8), knapsack_dynamic_programming(x[1], 8)])
+    y_pred_input = np.asarray([[0, 0, 0, 0, 0], [1, 1, 1, 1, 1]])
+
+    y_true = K.placeholder(shape=y_true_input.shape)
+    y_pred = K.placeholder(shape=y_true_input.shape)
+
+    loss_weights = knapsack_loss_weight_wrapper_wrapper(input_capacity=8, mean=0, variance=1)(x)(y_true, y_pred)
+    loss_values = knapsack_loss_value_wrapper_wrapper(mean=0, variance=1)(x)(y_true, y_pred)
+    loss = knapsack_loss_wrapper_wrapper(input_capacity=8, mean=0, variance=1)(x)(y_true, y_pred)
+
+    with tf.Session() as sess:
+        results1 = sess.run(fetches=[loss_weights, loss_values, loss],
+                                   feed_dict={y_true: y_true_input, y_pred: y_true_input})
+        results2 = sess.run(fetches=[loss_weights, loss_values, loss],
+                                   feed_dict={y_true: y_true_input, y_pred: y_pred_input})
+
+        desired_1 = [[0, 0], [0, 0], [0, 0]]
+        desired_2 = [[0, 1], [1, 0], [1, 1]]
+
+        assert_almost_equal(actual=results1, desired=desired_1, decimal=decimal)
+        assert_almost_equal(actual=results2, desired=desired_2, decimal=decimal)
+
+
+def test_knapsack_loss():
+    x = np.asarray([[[2, 3], [1, 4], [4, 1], [3, 2], [5, 5]], [[1, 3], [2, 1], [3, 2], [5, 4], [4, 5]]])
+    y_true_input = np.asarray([knapsack_dynamic_programming(x[0], 8), knapsack_dynamic_programming(x[1], 8)])
+    y_pred_input = np.asarray([[0, 0, 0, 0, 0], [1, 1, 1, 1, 1]])
+
+    weight_metric_1 = np.asarray(knapsack_weight_wrapper_wrapper(8)(x)(y_true_input, y_true_input))
+    value_metric_1 = np.asarray(knapsack_value_wrapper(x)(y_true_input, y_true_input))
+    loss_metric_1 = np.asarray(knapsack_wrapper_wrapper(8)(x)(y_true_input, y_true_input))
+    results1 = np.asarray([weight_metric_1, value_metric_1, loss_metric_1])
+
+    weight_metric_2 = knapsack_weight_wrapper_wrapper(8)(x)(y_true_input, y_pred_input)
+    value_metric_2 = knapsack_value_wrapper(x)(y_true_input, y_pred_input)
+    loss_metric_2 = knapsack_wrapper_wrapper(8)(x)(y_true_input, y_pred_input)
+    results2 = np.asarray([weight_metric_2, value_metric_2, loss_metric_2])
+
+    desired_1 = [[0, 0], [0, 0], [0, 0]]
+    desired_2 = [[0, 1], [1, 0], [1, 1]]
+
+    assert_almost_equal(actual=results1, desired=desired_1, decimal=decimal)
+    assert_almost_equal(actual=results2, desired=desired_2, decimal=decimal)
 
 
 def test_pairwise_comparison_quadratic_loss():

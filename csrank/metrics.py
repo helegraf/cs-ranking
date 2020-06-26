@@ -45,6 +45,7 @@ expected reciprocal rank instead:
 """
 from functools import partial
 import numpy as np
+import scipy
 import tensorflow as tf
 from keras import backend as K
 from scipy.spatial.distance import cdist
@@ -371,42 +372,40 @@ def tsp_loss_absolute_wrapper(x):
     return tsp_loss_absolute
 
 
-def knapsack_value_wrapper_wrapper(input_capacity):
+def knapsack_value_wrapper(x):
 
-    def knapsack_value_wrapper(x):
+    def knapsack_value(y_true, y_pred):
+        values = x[:, :, 1]
 
-        def knapsack_value(y_true, y_pred):
-            values = x[:, :, 1]
-            return np.tensordot(y_pred, values, 1)
+        chosen_values = np.sum(y_pred * values, axis=1)
+        optimal_values = np.sum(y_true * values, axis=1)
 
-        return knapsack_value
+        return np.maximum(optimal_values - chosen_values, 0) / optimal_values
 
-    return knapsack_value_wrapper
+    return knapsack_value
 
 
 def knapsack_weight_wrapper_wrapper(input_capacity):
     def knapsack_weight_wrapper(x):
         def knapsack_weight(y_true, y_pred):
             weights = x[:, :, 0]
-            return np.maximum(np.tensordot(y_pred, weights, 1) - input_capacity, 0)
+            #chosen_weights = np.tensordot(y_true, weights, axes=([0], [0]))
+            chosen_weights = np.sum(y_pred * weights, axis=1)
+            overflow = np.maximum(chosen_weights - input_capacity, 0)
+            max_overflow = np.sum(weights, axis=1) - input_capacity
 
+            return overflow / max_overflow
         return knapsack_weight
-
     return knapsack_weight_wrapper
 
 
 def knapsack_wrapper_wrapper(input_capacity):
 
     def knapsack_wrapper(x):
-        x = tensorify()
-
         def knapsack_loss(y_true, y_pred):
-
-            return (-1 * knapsack_value_wrapper_wrapper(input_capacity)(x)(y_true, y_pred)) \
+            return knapsack_value_wrapper(x)(y_true, y_pred) \
                    + knapsack_weight_wrapper_wrapper(input_capacity)(x)(y_true, y_pred)
-
         return knapsack_loss
-
     return knapsack_wrapper
 
 

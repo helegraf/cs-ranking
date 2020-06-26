@@ -195,8 +195,12 @@ class ListNet(Learner, ObjectRanker):
         outputs = [self.output_node(x) for x in hid]
         merged = concatenate(outputs)
         model = Model(inputs=self.input_layer, outputs=merged)
+
         additional_metric = [metric(self.input_layer) for metric in self.metrics_requiring_x]
-        model.compile(loss=self.loss_function, optimizer=self.optimizer, metrics=self.metrics.extend(additional_metric))
+        metrics = self.metrics.copy() if self.metrics is not None else []
+        metrics.extend(additional_metric)
+
+        model.compile(loss=self.loss_function, optimizer=self.optimizer, metrics=metrics)
         return model
 
     @property

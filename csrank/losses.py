@@ -99,19 +99,45 @@ def pairwise_comparison_quadratic_loss_wrapper(x):
     return pairwise_comparison_loss
 
 
-def knapsack_loss_wrapper_wrapper(input_capacity):
+def knapsack_loss_weight_wrapper_wrapper(input_capacity, mean, variance):
+    def knapsack_loss_weight_wrapper(x):
+        x = tensorify(x)
+        # undo standardization of data
+        x = x * variance + mean
 
+        def knapsack_loss_weight(y_true, y_pred):
+            weights = x[:, :, 0]
+            overflow = K.maximum(K.sum(y_pred * weights, axis=1) - input_capacity, 0)
+            max_overflow = K.sum(weights, axis=1) - input_capacity
+
+            return overflow / max_overflow
+        return knapsack_loss_weight
+    return knapsack_loss_weight_wrapper
+
+
+def knapsack_loss_value_wrapper_wrapper(mean, variance):
+    def knapsack_loss_value_wrapper(x):
+        x = tensorify(x)
+        x = x * variance + mean
+
+        def knapsack_loss_value(y_true, y_pred):
+            values = x[:, :, 1]
+            chosen_value = K.sum(y_pred * values, axis=1)
+            optimal_value = K.sum(y_true * values, axis=1)
+            return K.maximum(optimal_value - chosen_value, 0) / optimal_value
+        return knapsack_loss_value
+    return knapsack_loss_value_wrapper
+
+
+def knapsack_loss_wrapper_wrapper(input_capacity, mean, variance):
     def knapsack_loss_wrapper(x):
         x = tensorify(x)
 
+        @identifiable
         def knapsack_loss(y_true, y_pred):
-            weights = x[:, :, 0]
-            values = x[:, :, 1]
-            return (-1 * K.batch_dot(y_pred, values, 1)) + K.maximum(
-                K.batch_dot(y_pred, weights, 1) - input_capacity, 0)
-
+            return (knapsack_loss_value_wrapper_wrapper(mean, variance)(x)(y_true, y_pred)) \
+                   + knapsack_loss_weight_wrapper_wrapper(input_capacity, mean, variance)(x)(y_true, y_pred)
         return knapsack_loss
-
     return knapsack_loss_wrapper
 
 

@@ -322,8 +322,12 @@ class FETANetwork(Learner):
         self.logger.debug('Compiling complete model...')
         if self.loss_function_requires_x_values:
             self.loss_function = self.loss_function(self.input_layer)
+
         additional_metric = [metric(self.input_layer) for metric in self.metrics_requiring_x]
-        model.compile(loss=self.loss_function, optimizer=self.optimizer, metrics=self.metrics.extend(additional_metric))
+        metrics = self.metrics.copy() if self.metrics is not None else []
+        metrics.extend(additional_metric)
+
+        model.compile(loss=self.loss_function, optimizer=self.optimizer, metrics=metrics)
         return model
 
     def fit(self, X, Y, epochs=10, callbacks=None, validation_split=0.1, verbose=0, **kwd):

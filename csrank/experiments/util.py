@@ -23,7 +23,7 @@ from csrank.losses import tsp_probability_matrix_loss, tsp_dist_matrix_loss_wrap
     plackett_luce_loss, knapsack_loss_wrapper_wrapper
 from csrank.metrics import zero_one_rank_loss, zero_one_accuracy, make_ndcg_at_k_loss, tsp_loss_absolute_wrapper, \
     tsp_loss_relative_wrapper, tsp_distance_wrapper, knapsack_wrapper_wrapper, knapsack_weight_wrapper_wrapper, \
-    knapsack_value_wrapper_wrapper
+    knapsack_value_wrapper
 from csrank.metrics_np import *
 from csrank.objectranking import *
 
@@ -102,7 +102,7 @@ lp_metric_dict = {
 metrics_on_predictions = [f1_measure, precision, recall, subset_01_loss, hamming, instance_informedness,
                           zero_one_rank_loss, zero_one_accuracy, make_ndcg_at_k_loss, zero_one_accuracy_np,
                           tsp_loss_absolute_wrapper, tsp_loss_relative_wrapper, knapsack_wrapper_wrapper,
-                          knapsack_weight_wrapper_wrapper, knapsack_value_wrapper_wrapper]
+                          knapsack_weight_wrapper_wrapper, knapsack_value_wrapper]
 losses = {
     'tsp_dist_matrix_loss_wrapper': tsp_dist_matrix_loss_wrapper,
     'tsp_probability_matrix_loss': tsp_probability_matrix_loss,
@@ -259,7 +259,7 @@ def create_optimizer_parameters2(fit_params, hp_ranges, learner, learner_name, h
     return hp_params
 
 
-def get_scores(object, batch_size, X_test, Y_test, logger):
+def get_scores(object, batch_size, X_test, Y_test, logger, standardizer):
     s_pred = None
     while s_pred is None:
         try:
@@ -268,6 +268,8 @@ def get_scores(object, batch_size, X_test, Y_test, logger):
             logger.info("Batch_size {}".format(batch_size))
             if isinstance(object, AllPositive):
                 s_pred = object.predict_scores(X_test, Y_test)
+            elif isinstance(object, GreedyKnapsack):
+                s_pred = object.predict_scores(X_test, standardizer)
             else:
                 s_pred = object.predict_scores(X_test, batch_size=batch_size)
         except:

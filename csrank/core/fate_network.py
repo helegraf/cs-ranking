@@ -400,8 +400,10 @@ class FATENetwork(FATENetworkCore):
             self.loss_function = self.loss_function(input_layer)
 
         additional_metric =[metric(input_layer) for metric in self.metrics_requiring_x]
+        metrics = self.metrics.copy() if self.metrics is not None else []
+        metrics.extend(additional_metric)
 
-        model.compile(loss=self.loss_function, optimizer=self.optimizer, metrics=self.metrics.extend(additional_metric))
+        model.compile(loss=self.loss_function, optimizer=self.optimizer, metrics=metrics)
 
         return model
 

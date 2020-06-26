@@ -117,7 +117,6 @@ class SetTransformer(Learner):
             pooling_layer_out = pooling_layer(reshaped_rff_output)
             output_layer_dec_reshaped = Permute(dims=(2, 1))(pooling_layer_out)
             output_layer_dec_reshaped = Reshape(target_shape=(n_objects,))(output_layer_dec_reshaped)
-            print(output_layer_dec_reshaped)
 
         model = Model(inputs=input_layer, outputs=output_layer_dec_reshaped)
 
@@ -125,8 +124,10 @@ class SetTransformer(Learner):
             self.loss_function = self.loss_function(input_layer)
 
         additional_metric = [metric(input_layer) for metric in self.metrics_requiring_x]
+        metrics = self.metrics.copy() if self.metrics is not None else []
+        metrics.extend(additional_metric)
 
-        model.compile(loss=self.loss_function, optimizer=self.optimizer, metrics=self.metrics.extend(additional_metric))
+        model.compile(loss=self.loss_function, optimizer=self.optimizer, metrics=metrics)
 
         return model
 

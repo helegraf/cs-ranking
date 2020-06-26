@@ -29,6 +29,7 @@ import h5py
 import numpy as np
 
 from csrank.dataset_reader.objectranking.object_ranking_data_generator import load_tsp_dataset
+from csrank.losses import knapsack_loss_value_wrapper_wrapper, knapsack_loss_weight_wrapper_wrapper
 
 np.random.seed(0)
 from docopt import docopt
@@ -39,8 +40,8 @@ from csrank.callbacks import AdvancedTensorBoard
 from csrank.experiments import *
 from csrank.experiments.dbconnection_modified import ModifiedDBConnector
 from csrank.experiments.util import learners, create_callbacks
-from csrank.metrics import make_ndcg_at_k_loss, tsp_loss_relative_wrapper, knapsack_wrapper_wrapper, \
-    knapsack_weight_wrapper_wrapper, knapsack_value_wrapper_wrapper
+from csrank.metrics import make_ndcg_at_k_loss, tsp_loss_relative_wrapper, knapsack_weight_wrapper_wrapper, \
+    knapsack_wrapper_wrapper, knapsack_value_wrapper
 from csrank.tensorflow_util import configure_numpy_keras, get_loss_statistics, get_mean_loss
 from csrank.tuning import ParameterOptimizer
 from csrank.util import create_dir_recursively, duration_till_now, seconds_to_time, \
@@ -67,7 +68,8 @@ def exit_orderly_in_case_of_error(error_message, db_connector, job_id):
 def replace_kernel_regularizer_params(learner_params):
     for key in list(learner_params.keys()):
         if key == 'kernel_regularizer_params':
-            learner_params['kernel_regularizer'] = regularizers[learner_params['kernel_regularizer']](**learner_params[key])
+            learner_params['kernel_regularizer'] = regularizers[learner_params['kernel_regularizer']](
+                **learner_params[key])
             del learner_params['kernel_regularizer_params']
         elif isinstance(learner_params[key], dict):
             replace_kernel_regularizer_params(learner_params[key])
@@ -154,23 +156,29 @@ def do_experiment():
                         # replace path
                         log_dir = learner_fit_params["callbacks"]["AdvancedTensorBoard"]["log_dir"]
                         learner_fit_params["callbacks"]["AdvancedTensorBoard"]["log_dir"] = \
-                            os.path.join(log_dir, table_jobs[5:], dataset_params["dataset_type"], learner_name, hash_value)
+                            os.path.join(log_dir, table_jobs[5:], dataset_params["dataset_type"], learner_name,
+                                         hash_value)
 
             # # # DATA SETUP # # #
 
             # get data
             if dataset_params['dataset_type'] == 'tsp':
                 data_foldr = os.path.join(DIR_PATH, '..', SAVED_DATA_FOLDER)
-                x_train, y_train, x_test, y_test = load_tsp_dataset(n_train_instances=dataset_params['n_train_instances'],
-                                                                    n_test_instances=dataset_params['n_test_instances'],
-                                                                    n_objects=dataset_params['n_objects'],
-                                                                    seed=seed,
-                                                                    path=data_foldr)
+                x_train, y_train, x_test, y_test = load_tsp_dataset(
+                    n_train_instances=dataset_params['n_train_instances'],
+                    n_test_instances=dataset_params['n_test_instances'],
+                    n_objects=dataset_params['n_objects'],
+                    seed=seed,
+                    path=data_foldr)
+                standardizer = None
             else:
                 dataset_params['random_state'] = random_state
                 dataset_params['fold_id'] = fold_id
                 dataset_reader = get_dataset_reader(dataset_name, dataset_params)
                 x_train, y_train, x_test, y_test = dataset_reader.get_single_train_test_split()
+                standardizer = dataset_reader.standardizer
+                print("mean", standardizer.mean_)
+                print("var", standardizer.var_)
 
             del dataset_reader
 
@@ -197,7 +205,9 @@ def do_experiment():
                     loss_func_name = learner_params["loss_function"]
                     learner_params["loss_function"] = util.losses[loss_func_name]
                     if loss_func_name == 'knapsack_loss_wrapper_wrapper':
-                        learner_params['loss_function'] = learner_params['loss_function'](dataset_params['capacity'])
+                        learner_params['loss_function'] = learner_params['loss_function'](dataset_params['capacity'],
+                                                                                          standardizer.mean_,
+                                                                                          standardizer.var_)
                 logger.info("learner params {}".format(print_dictionary(learner_params)))
                 if "optimizer" in learner_params.keys():
                     learner_params["optimizer"] = \
@@ -209,6 +219,13 @@ def do_experiment():
             if dataset_params["dataset_type"] == "tsp" and learner_name in ["feta_ranker", "fate_ranker", "listnet",
                                                                             "set_transformer_ranker"]:
                 learner_params["metrics_requiring_x"] = [tsp_loss_relative_wrapper]
+            if dataset_params["dataset_type"] == "knapsack" and learner_name in ["feta_choice", "fate_choice",
+                                                                                 "set_transformer_choice"]:
+                learner_params["metrics_requiring_x"] = [knapsack_loss_value_wrapper_wrapper(standardizer.mean_,
+                                                                                             standardizer.var_),
+                                                         knapsack_loss_weight_wrapper_wrapper
+                                                         (dataset_params['capacity'],
+                                                          standardizer.mean_, standardizer.var_)]
 
             time_start_train = datetime.now()
             db_connector.log_start_training(job_id, time_start_train)
@@ -261,10 +278,12 @@ def do_experiment():
             # # # PREDICTION # # #
 
             get_results_and_upload('test', x_test, y_test, db_connector, hash_value, job_id, learner
-                                   , learning_problem, logger, n_objects, results_table_name, dataset_params['dataset_type'])
+                                   , learning_problem, logger, n_objects, results_table_name, dataset_params,
+                                   standardizer)
 
             get_results_and_upload('train', x_train, y_train, db_connector, hash_value, job_id, learner,
-                                   learning_problem, logger, n_objects, results_table_name, dataset_params['dataset_type'])
+                                   learning_problem, logger, n_objects, results_table_name, dataset_params,
+                                   standardizer)
 
             db_connector.finish_job(job_id=job_id, cluster_id=cluster_id)
 
@@ -289,7 +308,8 @@ def do_experiment():
 
 
 def get_results_and_upload(case, data_x, data_y, db_connector, hash_value, job_id, learner, learning_problem, logger,
-                           n_objects, results_table_name, dataset_type):
+                           n_objects, results_table_name, dataset_params, standardizer):
+    print("computing results")
     # set batch size
     if isinstance(data_x, dict):
         batch_size = 1000
@@ -299,7 +319,9 @@ def get_results_and_upload(case, data_x, data_y, db_connector, hash_value, job_i
         logger.info("Test dataset size {}".format(size))
 
     # do the actual predictions
-    predicted_scores, y_pred = get_scores(learner, batch_size, data_x, data_y, logger)
+    print("now starting to query learner")
+    predicted_scores, y_pred = get_scores(learner, batch_size, data_x, data_y, logger, standardizer)
+    print("predicted scores, scores", predicted_scores, y_pred)
 
     # # # WRITING BACK RESULTS # # #
 
@@ -322,16 +344,22 @@ def get_results_and_upload(case, data_x, data_y, db_connector, hash_value, job_i
 
     # insert results into database
     results = {'job_id': str(job_id), 'train_test': "\'" + case + "\'"}
-    metric_dict = lp_metric_dict[learning_problem].items()
-    if dataset_type == 'knapsack':
-        metric_dict.extend([knapsack_wrapper_wrapper, knapsack_weight_wrapper_wrapper, knapsack_value_wrapper_wrapper])
-    for name, evaluation_metric in metric_dict:
+    metric_dict = lp_metric_dict[learning_problem]
+    if dataset_params['dataset_type'] == 'knapsack':
+        metric_dict = {"Knapsack_requiresX": knapsack_wrapper_wrapper,
+                       "Knapsack_Weight_requiresX": knapsack_weight_wrapper_wrapper,
+                       "Knapsack_Value_requiresX": knapsack_value_wrapper, **metric_dict}
+    for name, evaluation_metric in metric_dict.items():
         predictions = predicted_scores
 
         # set predictions accordingly if metric works on labels instead of scores
         if evaluation_metric in metrics_on_predictions:
             logger.info("Metric on predictions")
             predictions = y_pred
+
+        # prepare knapsack
+        if "Knapsack" in name and name != "Knapsack_Value_requiresX":
+            evaluation_metric = evaluation_metric(dataset_params["capacity"])
 
         # prepare ndcg
         if "NDCG" in name:
@@ -341,7 +369,7 @@ def get_results_and_upload(case, data_x, data_y, db_connector, hash_value, job_i
         # compute loss
         if name not in ["Informedness"]:
             metric_loss_min, metric_loss_max, metric_loss_mean, metric_loss_std = \
-                get_loss_statistics(name, evaluation_metric, data_y, predictions, data_x)
+                get_loss_statistics(name, evaluation_metric, data_y, predictions, data_x, standardizer)
         else:
             metric_loss_mean = get_mean_loss(evaluation_metric, data_y, y_pred)
             metric_loss_min = metric_loss_max = metric_loss_mean
