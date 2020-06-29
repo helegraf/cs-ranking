@@ -108,6 +108,10 @@ def do_experiment():
             n_inner_folds = int(job_description["n_inner_folds"])
             learning_problem = job_description["learning_problem"]
 
+            theano_environ = "~/.theano/" + dataset_params["dataset_type"] + "_" + str(job_id)
+            print("Setting theano environ to", theano_environ)
+            os.environ["THEANO_FLAGS"] = theano_environ
+
             seed = int(job_description["seed"])
 
             learner_name = job_description["learner_name"]
