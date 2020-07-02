@@ -151,7 +151,7 @@ class FATENetworkCore(Learner):
 class FATENetwork(FATENetworkCore):
     def __init__(self, n_object_features, n_hidden_set_layers=1, n_hidden_set_units=1,
                  attention_preselection_config=None, num_attention_preselection_layers=1,
-                 attention_pooling=None, metrics_requiring_x=[], **kwargs):
+                 attention_pooling=None, metrics_requiring_x=[], loss_function_requires_x_values=False, **kwargs):
         """
             Create a FATE-network architecture.
             Training and prediction complexity is linear in the number of objects.
@@ -185,7 +185,7 @@ class FATENetwork(FATENetworkCore):
                                 kernel_regularizer=self.kernel_regularizer)
         self.is_variadic = True
         self.hash_file = None
-        self.loss_function_requires_x_values = False
+        self.loss_function_requires_x_values = loss_function_requires_x_values
         self.metrics_requiring_x = metrics_requiring_x
 
     def _create_set_layers(self, **kwargs):

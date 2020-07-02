@@ -444,6 +444,7 @@ class MAB(AttentionContainingLayer):
             self.rff_config = {"units": d_v, **self.rff_config}
         rff_config_final = copy.deepcopy(self.rff_config)
         rff_config_final["units"] = d_v
+        del rff_config_final["activation"]
 
         self.rff = [TimeDistributed(Dense(**self.rff_config)) for _ in range(self.depth_rff)]
         self.rff.append(TimeDistributed(Dense(**rff_config_final)))
@@ -577,6 +578,7 @@ class PMA(AttentionContainingLayer):
             self.rff_config = {"units": input_shape[2], **self.rff_config}
         rff_config_final = copy.deepcopy(self.rff_config)
         rff_config_final["units"] = input_shape[2]
+        del rff_config_final["activation"]
 
         self.rff = [TimeDistributed(Dense(**self.rff_config)) for _ in range(self.depth_rff)]
         self.rff.append(TimeDistributed(Dense(**rff_config_final)))
