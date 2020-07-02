@@ -177,8 +177,6 @@ def do_experiment():
                 dataset_reader = get_dataset_reader(dataset_name, dataset_params)
                 x_train, y_train, x_test, y_test = dataset_reader.get_single_train_test_split()
                 standardizer = dataset_reader.standardizer
-                print("mean", standardizer.mean_)
-                print("var", standardizer.var_)
 
                 del dataset_reader
 
@@ -306,7 +304,6 @@ def do_experiment():
 
 def get_results_and_upload(case, data_x, data_y, db_connector, hash_value, job_id, learner, learning_problem, logger,
                            n_objects, results_table_name, dataset_params, standardizer):
-    print("computing results")
     # set batch size
     if isinstance(data_x, dict):
         batch_size = 1000
@@ -316,9 +313,7 @@ def get_results_and_upload(case, data_x, data_y, db_connector, hash_value, job_i
         logger.info("Test dataset size {}".format(size))
 
     # do the actual predictions
-    print("now starting to query learner")
     predicted_scores, y_pred = get_scores(learner, batch_size, data_x, data_y, logger, standardizer)
-    print("predicted scores, scores", predicted_scores, y_pred)
 
     # # # WRITING BACK RESULTS # # #
 
