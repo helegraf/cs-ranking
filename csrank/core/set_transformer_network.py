@@ -91,16 +91,15 @@ class SetTransformer(Learner):
         # input
         input_layer = Input(shape=(n_objects, n_features), name="input_node")
 
+        # dense layers rff
+        for i in range(self.num_layers_dense):
+            output_layer = TimeDistributed(Dense(**self.dense_config))(input_layer)
+
         # attention layers ("encoder")
-        output_layer = input_layer
         for i in range(self.stacking_height):
             att_layer = instantiate_attention_layer(self.attention_layer_config)
             self.attention_layers.append(att_layer)
             output_layer = att_layer(output_layer)
-
-        # dense layers rff
-        for i in range(self.num_layers_dense):
-            output_layer = TimeDistributed(Dense(**self.dense_config))(output_layer)
 
         # predict utility based on encoder ("decoder")
         if self.pooling_config is None:
