@@ -7,11 +7,10 @@
   },
   "dataset_configs": [
     {
-      "dataset": "synthetic_choice",
+      "dataset": "synthetic_or",
       "dataset_params": {
-        "dataset_type": "knapsack",
+        "dataset_type": "tsp",
         "n_objects": 10,
-        "capacity": 23,
         "n_train_instances": 102400,
         "n_test_instances": 10240
       }
@@ -23,49 +22,43 @@
       "n_inner_folds": 0
     }
   ],
-  "learning_problem": "choice_function",
+  "learning_problem": "object_ranking_tsp",
   "seeds": [
     {
-      "seed": 5678
+      "seed": 1234
     }
   ],
   "learners": [
     {
-      "learner_name": "fate_choice",
+      "learner_name": "ranknet",
       "learner_params": {
-        "attention_pooling": null,
-        "attention_preselection_config": null,
-        "num_attention_preselection_layers": 0,
+        "n_hidden": 2,
+        "n_units": 5,
+        "activation": "selu",
         "loss_function": "binary_crossentropy",
         "loss_function_requires_x_values": false,
-        "n_hidden_set_layers": 2,
-        "n_hidden_set_units": 5,
-        "n_hidden_joint_layers": 2,
-        "n_hidden_joint_units": 5,
-        "activation": "selu",
         "batch_size": 256,
-        "kernel_initializer": "lecun_normal",
+        "batch_normalization": false,
         "kernel_regularizer": "l2",
         "kernel_regularizer_params": {
-          "l": 0.01
+          "l": 1e-4
         },
+        "kernel_initializer": "lecun_normal",
         "optimizer": "SGD",
         "optimizer_params": {
           "lr": 1e-4,
-          "nesterov": "true",
+          "nesterov": true,
           "momentum": 0.9,
           "clipnorm": 1.0
         }
       },
       "learner_fit_params": {
-        "epochs": 64,
+        "epochs": 512,
         "validation_split": 0.1,
-        "tune_size": 0.1,
-        "thin_thresholds": 1,
         "callbacks": {
           "AdvancedTensorBoard": {
             "num_visualizations_per_epoch": 0,
-            "save_space": true,
+            "save_space": false,
             "log_lr": true,
             "log_gradient_norms": "global",
             "log_attention": false,
@@ -81,10 +74,19 @@
             "update_freq": "epoch"
           },
           "CyclicLR": {
-            "base_lr": 1e-10,
-            "max_lr": 1e-3,
-            "step_size": 25600,
+            "base_lr": 1e-5,
+            "max_lr": 1e-1,
+            "step_size": 57600,
             "mode": "triangular2"
+          },
+          "EarlyStoppingExtraRestoration": {
+            "monitor": "val_loss",
+            "min_delta": 0,
+            "patience": 64,
+            "verbose": 2,
+            "mode": "auto",
+            "baseline": null,
+            "restore_best_weights": true
           }
         }
       }
@@ -100,9 +102,9 @@
   ],
   "timings": [
     {
-      "duration": "2h",
+      "duration": "1d",
       "time_out_eval": "10m"
     }
   ],
-  "results_table_name": "results_simple_choice"
+  "results_table_name": "results_tsp"
 }

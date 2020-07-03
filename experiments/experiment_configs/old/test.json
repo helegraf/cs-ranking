@@ -30,10 +30,68 @@
     }
   ],
   "learners": [
-    {
-      "learner_name": "greedy_knapsack",
-      "learner_params": {"capacity": 23},
-      "learner_fit_params": {}
+     {
+      "learner_name": "ranknet_choice",
+      "learner_params": {
+        "n_hidden": 4,
+        "n_units": 9,
+        "loss_function": "binary_crossentropy",
+        "activation": "relu",
+        "batch_size": 256,
+        "batch_normalization": false,
+        "kernel_initializer": "lecun_normal",
+        "kernel_regularizer": "l2",
+        "kernel_regularizer_params": {
+          "l": 1e-08
+        },
+        "optimizer": "SGD",
+        "optimizer_params": {
+          "lr": 0.0001,
+          "nesterov": "true",
+          "momentum": 0.9,
+          "clipnorm": 1.0
+        }
+      },
+      "learner_fit_params": {
+        "epochs": 512,
+        "validation_split": 0.1,
+        "tune_size": 0.1,
+        "thin_thresholds": 1,
+        "callbacks": {
+          "AdvancedTensorBoard": {
+            "num_visualizations_per_epoch": 0,
+            "save_space": true,
+            "log_lr": true,
+            "log_gradient_norms": "global",
+            "log_attention": false,
+            "no_detailed_histograms": true,
+            "lr_vs_accuracy_diagram": true,
+            "log_lr_each_batch": true,
+            "log_dir": "./tensorboard_logs/",
+            "histogram_freq": 1,
+            "write_graph": false,
+            "write_grads": false,
+            "write_images": false,
+            "embeddings_freq": 0,
+            "update_freq": "epoch"
+          },
+          "CyclicLR": {
+            "base_lr": 1e-05,
+            "max_lr": 0.1,
+            "step_size": 57600,
+            "mode": "triangular2"
+          },
+          "EarlyStoppingExtraRestoration": {
+            "monitor": "val_loss",
+            "min_delta": 0,
+            "patience": 64,
+            "verbose": 2,
+            "mode": "auto",
+            "baseline": null,
+            "restore_best_weights": true
+          }
+        }
+      }
     }
   ],
   "optimizers": [

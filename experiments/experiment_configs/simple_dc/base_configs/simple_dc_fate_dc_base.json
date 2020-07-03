@@ -37,7 +37,6 @@
     {
       "learner_name": "fate_dc",
       "learner_params": {
-        "attention": "placeholder",
         "attention_pooling": null,
         "attention_preselection_config": null,
         "num_attention_preselection_layers": 1,
@@ -63,7 +62,7 @@
         }
       },
       "learner_fit_params": {
-        "epochs": 64,
+        "epochs": 512,
         "validation_split": 0.1,
         "callbacks": {
           "AdvancedTensorBoard": {
@@ -84,15 +83,15 @@
             "update_freq": "epoch"
           },
           "CyclicLR": {
-            "base_lr": 1e-10,
-            "max_lr": 1e-3,
-            "step_size": 25600,
+            "base_lr": 1e-5,
+            "max_lr": 1e-1,
+            "step_size": 5760,
             "mode": "triangular2"
           },
           "EarlyStoppingExtraRestoration": {
             "monitor": "val_loss",
             "min_delta": 0,
-            "patience": 16,
+            "patience": 64,
             "verbose": 2,
             "mode": "auto",
             "baseline": null,
@@ -112,7 +111,7 @@
   ],
   "timings": [
     {
-      "duration": "2h",
+      "duration": "12h",
       "time_out_eval": "10m"
     }
   ],

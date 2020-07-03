@@ -53,19 +53,19 @@
         }
       },
       "learner_fit_params": {
-        "epochs": 10,
+        "epochs": 512,
         "validation_split": 0.1,
         "tune_size": 0.1,
         "thin_thresholds": 1,
         "callbacks": {
           "AdvancedTensorBoard": {
-            "num_visualizations_per_epoch": 1,
+            "num_visualizations_per_epoch": 0,
             "save_space": true,
             "log_lr": true,
             "log_gradient_norms": "global",
             "log_attention": false,
             "no_detailed_histograms": true,
-            "lr_vs_accuracy_diagram": true,
+            "lr_vs_accuracy_diagram": false,
             "log_lr_each_batch": true,
             "log_dir": "./tensorboard_logs/",
             "histogram_freq": 1,
@@ -76,10 +76,19 @@
             "update_freq": "epoch"
           },
           "CyclicLR": {
-            "base_lr": 1e-10,
-            "max_lr": 1.0,
-            "step_size": 25600,
+            "base_lr": 1e-5,
+            "max_lr": 1e-1,
+            "step_size": 57600,
             "mode": "triangular2"
+          },
+          "EarlyStoppingExtraRestoration": {
+            "monitor": "val_loss",
+            "min_delta": 0,
+            "patience": 64,
+            "verbose": 2,
+            "mode": "auto",
+            "baseline": null,
+            "restore_best_weights": true
           }
         }
       }
@@ -95,7 +104,7 @@
   ],
   "timings": [
     {
-      "duration": "2h",
+      "duration": "1d",
       "time_out_eval": "10m"
     }
   ],

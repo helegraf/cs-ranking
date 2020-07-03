@@ -54,7 +54,7 @@
         }
       },
       "learner_fit_params": {
-        "epochs": 512,
+        "epochs": 128,
         "validation_split": 0.1,
         "callbacks": {
           "AdvancedTensorBoard": {
@@ -75,7 +75,7 @@
             "update_freq": "epoch"
           },
           "CyclicLR": {
-            "base_lr": 1e-10,
+            "base_lr": 1e-5,
             "max_lr": 1e-1,
             "step_size": 5760,
             "mode": "triangular2"
@@ -103,7 +103,7 @@
   ],
   "timings": [
     {
-      "duration": "1dh",
+      "duration": "6h",
       "time_out_eval": "10m"
     }
   ],

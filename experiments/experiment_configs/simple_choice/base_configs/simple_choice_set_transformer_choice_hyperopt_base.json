@@ -7,15 +7,11 @@
   },
   "dataset_configs": [
     {
-      "dataset": "synthetic_dc",
+      "dataset": "synthetic_choice",
       "dataset_params": {
-        "dataset_type": "movie_genre",
+        "dataset_type": "knapsack",
         "n_objects": 10,
-        "n_features": 4,
-        "ensure_distance": true,
-        "min_distance": 0.2,
-        "similarity": 0.01,
-        "scatter": true,
+        "capacity": 23,
         "n_train_instances": 102400,
         "n_test_instances": 10240
       }
@@ -27,15 +23,15 @@
       "n_inner_folds": 0
     }
   ],
-  "learning_problem": "discrete_choice",
+  "learning_problem": "choice_function",
   "seeds": [
     {
-      "seed": 5678
+      "seed": 1234
     }
   ],
   "learners": [
     {
-      "learner_name": "set_transformer_dc",
+      "learner_name": "set_transformer_choice",
       "learner_params": {
         "stacking_height": 1,
         "attention_layer_config": {
@@ -44,8 +40,13 @@
               "MAB": {
                 "multi_head": {
                   "ScaledDotProductAttention": {
+                    "activation": null,
+                    "biased": false,
+                    "scale": true,
                     "weighted": false,
-                    "biased": false
+                    "weights_initializer": "lecun_normal",
+                    "factor": null,
+                    "sordoni_biased": false
                   }
                 },
                 "layer_normalization": false,
@@ -96,7 +97,7 @@
             }
           }
         },
-        "num_layers_dense": 1,
+        "num_layers_dense": 2,
         "dense_config": {
           "units": 5,
           "activation": "selu",
@@ -108,8 +109,8 @@
             "l": 1e-08
           }
         },
-        "loss_function": "categorical_hinge",
-        "loss_function_requires_x_values": false,
+        "loss_function": "knapsack_loss_wrapper_wrapper",
+        "loss_function_requires_x_values": true,
         "batch_size": 256,
         "optimizer": "SGD",
         "optimizer_params": {
@@ -122,6 +123,8 @@
       "learner_fit_params": {
         "epochs": 512,
         "validation_split": 0.1,
+        "tune_size": 0.1,
+        "thin_thresholds": 1,
         "callbacks": {
           "AdvancedTensorBoard": {
             "num_visualizations_per_epoch": 1,
@@ -169,9 +172,9 @@
   ],
   "timings": [
     {
-      "duration": "2h",
+      "duration": "6h",
       "time_out_eval": "10m"
     }
   ],
-  "results_table_name": "results_simple_dc"
+  "results_table_name": "results_simple_choice"
 }

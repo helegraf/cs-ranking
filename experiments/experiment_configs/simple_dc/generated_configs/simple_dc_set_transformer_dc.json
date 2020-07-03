@@ -7,10 +7,15 @@
   },
   "dataset_configs": [
     {
-      "dataset": "synthetic_or",
+      "dataset": "synthetic_dc",
       "dataset_params": {
-        "dataset_type": "simple_max",
-        "n_objects": 5,
+        "dataset_type": "movie_genre",
+        "n_objects": 10,
+        "n_features": 4,
+        "ensure_distance": true,
+        "min_distance": 0.2,
+        "similarity": 0.01,
+        "scatter": true,
         "n_train_instances": 102400,
         "n_test_instances": 10240
       }
@@ -22,15 +27,15 @@
       "n_inner_folds": 0
     }
   ],
-  "learning_problem": "object_ranking",
+  "learning_problem": "discrete_choice",
   "seeds": [
     {
-      "seed": 1234
+      "seed": 5678
     }
   ],
   "learners": [
     {
-      "learner_name": "set_transformer_ranker",
+      "learner_name": "set_transformer_dc",
       "learner_params": {
         "stacking_height": 1,
         "attention_layer_config": {
@@ -39,13 +44,8 @@
               "MAB": {
                 "multi_head": {
                   "ScaledDotProductAttention": {
-                    "activation": null,
-                    "biased": false,
-                    "scale": true,
                     "weighted": false,
-                    "weights_initializer": "lecun_normal",
-                    "factor": null,
-                    "sordoni_biased": false
+                    "biased": false
                   }
                 },
                 "layer_normalization": false,
@@ -101,15 +101,15 @@
         "dense_config": {
           "units": 9,
           "activation": "selu",
+          "kernel_initializer": "lecun_normal",
+          "use_bias": true,
+          "bias_initializer": "zeros",
           "kernel_regularizer": "l2",
           "kernel_regularizer_params": {
             "l": 1e-10
-          },
-          "kernel_initializer": "lecun_normal",
-          "use_bias": true,
-          "bias_initializer": "zeros"
+          }
         },
-        "loss_function": "hinged_rank_loss",
+        "loss_function": "categorical_hinge",
         "loss_function_requires_x_values": false,
         "batch_size": 256,
         "optimizer": "SGD",
@@ -121,7 +121,7 @@
         }
       },
       "learner_fit_params": {
-        "epochs": 128,
+        "epochs": 512,
         "validation_split": 0.1,
         "callbacks": {
           "AdvancedTensorBoard": {
@@ -160,7 +160,7 @@
       }
     },
     {
-      "learner_name": "set_transformer_ranker",
+      "learner_name": "set_transformer_dc",
       "learner_params": {
         "stacking_height": 1,
         "attention_layer_config": {
@@ -169,13 +169,8 @@
               "MAB": {
                 "multi_head": {
                   "ScaledDotProductAttention": {
-                    "activation": null,
-                    "biased": false,
-                    "scale": true,
                     "weighted": false,
-                    "weights_initializer": "lecun_normal",
-                    "factor": null,
-                    "sordoni_biased": false
+                    "biased": false
                   }
                 },
                 "layer_normalization": false,
@@ -231,15 +226,15 @@
         "dense_config": {
           "units": 9,
           "activation": "selu",
+          "kernel_initializer": "lecun_normal",
+          "use_bias": true,
+          "bias_initializer": "zeros",
           "kernel_regularizer": "l2",
           "kernel_regularizer_params": {
             "l": 1e-07
-          },
-          "kernel_initializer": "lecun_normal",
-          "use_bias": true,
-          "bias_initializer": "zeros"
+          }
         },
-        "loss_function": "hinged_rank_loss",
+        "loss_function": "categorical_hinge",
         "loss_function_requires_x_values": false,
         "batch_size": 256,
         "optimizer": "SGD",
@@ -251,7 +246,7 @@
         }
       },
       "learner_fit_params": {
-        "epochs": 128,
+        "epochs": 512,
         "validation_split": 0.1,
         "callbacks": {
           "AdvancedTensorBoard": {
@@ -290,7 +285,7 @@
       }
     },
     {
-      "learner_name": "set_transformer_ranker",
+      "learner_name": "set_transformer_dc",
       "learner_params": {
         "stacking_height": 1,
         "attention_layer_config": {
@@ -299,13 +294,8 @@
               "MAB": {
                 "multi_head": {
                   "ScaledDotProductAttention": {
-                    "activation": null,
-                    "biased": false,
-                    "scale": true,
                     "weighted": false,
-                    "weights_initializer": "lecun_normal",
-                    "factor": null,
-                    "sordoni_biased": false
+                    "biased": false
                   }
                 },
                 "layer_normalization": false,
@@ -361,15 +351,15 @@
         "dense_config": {
           "units": 6,
           "activation": "selu",
+          "kernel_initializer": "lecun_normal",
+          "use_bias": true,
+          "bias_initializer": "zeros",
           "kernel_regularizer": "l2",
           "kernel_regularizer_params": {
             "l": 1e-06
-          },
-          "kernel_initializer": "lecun_normal",
-          "use_bias": true,
-          "bias_initializer": "zeros"
+          }
         },
-        "loss_function": "hinged_rank_loss",
+        "loss_function": "categorical_hinge",
         "loss_function_requires_x_values": false,
         "batch_size": 256,
         "optimizer": "SGD",
@@ -381,7 +371,7 @@
         }
       },
       "learner_fit_params": {
-        "epochs": 128,
+        "epochs": 512,
         "validation_split": 0.1,
         "callbacks": {
           "AdvancedTensorBoard": {
@@ -420,7 +410,7 @@
       }
     },
     {
-      "learner_name": "set_transformer_ranker",
+      "learner_name": "set_transformer_dc",
       "learner_params": {
         "stacking_height": 1,
         "attention_layer_config": {
@@ -429,13 +419,8 @@
               "MAB": {
                 "multi_head": {
                   "ScaledDotProductAttention": {
-                    "activation": null,
-                    "biased": false,
-                    "scale": true,
                     "weighted": false,
-                    "weights_initializer": "lecun_normal",
-                    "factor": null,
-                    "sordoni_biased": false
+                    "biased": false
                   }
                 },
                 "layer_normalization": false,
@@ -491,15 +476,15 @@
         "dense_config": {
           "units": 7,
           "activation": "selu",
+          "kernel_initializer": "lecun_normal",
+          "use_bias": true,
+          "bias_initializer": "zeros",
           "kernel_regularizer": "l2",
           "kernel_regularizer_params": {
             "l": 1e-09
-          },
-          "kernel_initializer": "lecun_normal",
-          "use_bias": true,
-          "bias_initializer": "zeros"
+          }
         },
-        "loss_function": "hinged_rank_loss",
+        "loss_function": "categorical_hinge",
         "loss_function_requires_x_values": false,
         "batch_size": 256,
         "optimizer": "SGD",
@@ -511,7 +496,7 @@
         }
       },
       "learner_fit_params": {
-        "epochs": 128,
+        "epochs": 512,
         "validation_split": 0.1,
         "callbacks": {
           "AdvancedTensorBoard": {
@@ -550,7 +535,7 @@
       }
     },
     {
-      "learner_name": "set_transformer_ranker",
+      "learner_name": "set_transformer_dc",
       "learner_params": {
         "stacking_height": 1,
         "attention_layer_config": {
@@ -559,13 +544,8 @@
               "MAB": {
                 "multi_head": {
                   "ScaledDotProductAttention": {
-                    "activation": null,
-                    "biased": false,
-                    "scale": true,
                     "weighted": false,
-                    "weights_initializer": "lecun_normal",
-                    "factor": null,
-                    "sordoni_biased": false
+                    "biased": false
                   }
                 },
                 "layer_normalization": false,
@@ -621,15 +601,15 @@
         "dense_config": {
           "units": 5,
           "activation": "selu",
+          "kernel_initializer": "lecun_normal",
+          "use_bias": true,
+          "bias_initializer": "zeros",
           "kernel_regularizer": "l2",
           "kernel_regularizer_params": {
             "l": 1e-07
-          },
-          "kernel_initializer": "lecun_normal",
-          "use_bias": true,
-          "bias_initializer": "zeros"
+          }
         },
-        "loss_function": "hinged_rank_loss",
+        "loss_function": "categorical_hinge",
         "loss_function_requires_x_values": false,
         "batch_size": 256,
         "optimizer": "SGD",
@@ -641,7 +621,7 @@
         }
       },
       "learner_fit_params": {
-        "epochs": 128,
+        "epochs": 512,
         "validation_split": 0.1,
         "callbacks": {
           "AdvancedTensorBoard": {
@@ -680,7 +660,7 @@
       }
     },
     {
-      "learner_name": "set_transformer_ranker",
+      "learner_name": "set_transformer_dc",
       "learner_params": {
         "stacking_height": 1,
         "attention_layer_config": {
@@ -689,13 +669,8 @@
               "MAB": {
                 "multi_head": {
                   "ScaledDotProductAttention": {
-                    "activation": null,
-                    "biased": false,
-                    "scale": true,
                     "weighted": false,
-                    "weights_initializer": "lecun_normal",
-                    "factor": null,
-                    "sordoni_biased": false
+                    "biased": false
                   }
                 },
                 "layer_normalization": false,
@@ -751,15 +726,15 @@
         "dense_config": {
           "units": 8,
           "activation": "selu",
+          "kernel_initializer": "lecun_normal",
+          "use_bias": true,
+          "bias_initializer": "zeros",
           "kernel_regularizer": "l2",
           "kernel_regularizer_params": {
             "l": 1e-06
-          },
-          "kernel_initializer": "lecun_normal",
-          "use_bias": true,
-          "bias_initializer": "zeros"
+          }
         },
-        "loss_function": "hinged_rank_loss",
+        "loss_function": "categorical_hinge",
         "loss_function_requires_x_values": false,
         "batch_size": 256,
         "optimizer": "SGD",
@@ -771,7 +746,7 @@
         }
       },
       "learner_fit_params": {
-        "epochs": 128,
+        "epochs": 512,
         "validation_split": 0.1,
         "callbacks": {
           "AdvancedTensorBoard": {
@@ -810,7 +785,7 @@
       }
     },
     {
-      "learner_name": "set_transformer_ranker",
+      "learner_name": "set_transformer_dc",
       "learner_params": {
         "stacking_height": 1,
         "attention_layer_config": {
@@ -819,13 +794,8 @@
               "MAB": {
                 "multi_head": {
                   "ScaledDotProductAttention": {
-                    "activation": null,
-                    "biased": false,
-                    "scale": true,
                     "weighted": false,
-                    "weights_initializer": "lecun_normal",
-                    "factor": null,
-                    "sordoni_biased": false
+                    "biased": false
                   }
                 },
                 "layer_normalization": false,
@@ -881,15 +851,15 @@
         "dense_config": {
           "units": 10,
           "activation": "selu",
+          "kernel_initializer": "lecun_normal",
+          "use_bias": true,
+          "bias_initializer": "zeros",
           "kernel_regularizer": "l2",
           "kernel_regularizer_params": {
             "l": 1e-08
-          },
-          "kernel_initializer": "lecun_normal",
-          "use_bias": true,
-          "bias_initializer": "zeros"
+          }
         },
-        "loss_function": "hinged_rank_loss",
+        "loss_function": "categorical_hinge",
         "loss_function_requires_x_values": false,
         "batch_size": 256,
         "optimizer": "SGD",
@@ -901,7 +871,7 @@
         }
       },
       "learner_fit_params": {
-        "epochs": 128,
+        "epochs": 512,
         "validation_split": 0.1,
         "callbacks": {
           "AdvancedTensorBoard": {
@@ -940,7 +910,7 @@
       }
     },
     {
-      "learner_name": "set_transformer_ranker",
+      "learner_name": "set_transformer_dc",
       "learner_params": {
         "stacking_height": 1,
         "attention_layer_config": {
@@ -949,13 +919,8 @@
               "MAB": {
                 "multi_head": {
                   "ScaledDotProductAttention": {
-                    "activation": null,
-                    "biased": false,
-                    "scale": true,
                     "weighted": false,
-                    "weights_initializer": "lecun_normal",
-                    "factor": null,
-                    "sordoni_biased": false
+                    "biased": false
                   }
                 },
                 "layer_normalization": false,
@@ -1011,15 +976,15 @@
         "dense_config": {
           "units": 7,
           "activation": "selu",
+          "kernel_initializer": "lecun_normal",
+          "use_bias": true,
+          "bias_initializer": "zeros",
           "kernel_regularizer": "l2",
           "kernel_regularizer_params": {
             "l": 1e-08
-          },
-          "kernel_initializer": "lecun_normal",
-          "use_bias": true,
-          "bias_initializer": "zeros"
+          }
         },
-        "loss_function": "hinged_rank_loss",
+        "loss_function": "categorical_hinge",
         "loss_function_requires_x_values": false,
         "batch_size": 256,
         "optimizer": "SGD",
@@ -1031,7 +996,7 @@
         }
       },
       "learner_fit_params": {
-        "epochs": 128,
+        "epochs": 512,
         "validation_split": 0.1,
         "callbacks": {
           "AdvancedTensorBoard": {
@@ -1070,7 +1035,7 @@
       }
     },
     {
-      "learner_name": "set_transformer_ranker",
+      "learner_name": "set_transformer_dc",
       "learner_params": {
         "stacking_height": 1,
         "attention_layer_config": {
@@ -1079,13 +1044,8 @@
               "MAB": {
                 "multi_head": {
                   "ScaledDotProductAttention": {
-                    "activation": null,
-                    "biased": false,
-                    "scale": true,
                     "weighted": false,
-                    "weights_initializer": "lecun_normal",
-                    "factor": null,
-                    "sordoni_biased": false
+                    "biased": false
                   }
                 },
                 "layer_normalization": false,
@@ -1141,15 +1101,15 @@
         "dense_config": {
           "units": 10,
           "activation": "selu",
+          "kernel_initializer": "lecun_normal",
+          "use_bias": true,
+          "bias_initializer": "zeros",
           "kernel_regularizer": "l2",
           "kernel_regularizer_params": {
             "l": 1e-09
-          },
-          "kernel_initializer": "lecun_normal",
-          "use_bias": true,
-          "bias_initializer": "zeros"
+          }
         },
-        "loss_function": "hinged_rank_loss",
+        "loss_function": "categorical_hinge",
         "loss_function_requires_x_values": false,
         "batch_size": 256,
         "optimizer": "SGD",
@@ -1161,7 +1121,7 @@
         }
       },
       "learner_fit_params": {
-        "epochs": 128,
+        "epochs": 512,
         "validation_split": 0.1,
         "callbacks": {
           "AdvancedTensorBoard": {
@@ -1200,7 +1160,7 @@
       }
     },
     {
-      "learner_name": "set_transformer_ranker",
+      "learner_name": "set_transformer_dc",
       "learner_params": {
         "stacking_height": 1,
         "attention_layer_config": {
@@ -1209,13 +1169,8 @@
               "MAB": {
                 "multi_head": {
                   "ScaledDotProductAttention": {
-                    "activation": null,
-                    "biased": false,
-                    "scale": true,
                     "weighted": false,
-                    "weights_initializer": "lecun_normal",
-                    "factor": null,
-                    "sordoni_biased": false
+                    "biased": false
                   }
                 },
                 "layer_normalization": false,
@@ -1271,15 +1226,15 @@
         "dense_config": {
           "units": 6,
           "activation": "selu",
+          "kernel_initializer": "lecun_normal",
+          "use_bias": true,
+          "bias_initializer": "zeros",
           "kernel_regularizer": "l2",
           "kernel_regularizer_params": {
             "l": 1e-10
-          },
-          "kernel_initializer": "lecun_normal",
-          "use_bias": true,
-          "bias_initializer": "zeros"
+          }
         },
-        "loss_function": "hinged_rank_loss",
+        "loss_function": "categorical_hinge",
         "loss_function_requires_x_values": false,
         "batch_size": 256,
         "optimizer": "SGD",
@@ -1291,7 +1246,7 @@
         }
       },
       "learner_fit_params": {
-        "epochs": 128,
+        "epochs": 512,
         "validation_split": 0.1,
         "callbacks": {
           "AdvancedTensorBoard": {
@@ -1340,9 +1295,9 @@
   ],
   "timings": [
     {
-      "duration": "8h",
+      "duration": "2h",
       "time_out_eval": "10m"
     }
   ],
-  "results_table_name": "results_simple_ranking"
+  "results_table_name": "results_simple_dc"
 }

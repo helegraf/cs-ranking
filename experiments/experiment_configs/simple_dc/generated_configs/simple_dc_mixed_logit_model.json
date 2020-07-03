@@ -1,6 +1,6 @@
 {
   "resources": {
-    "ncpus": "2",
+    "ncpus": "8",
     "vmem": "42g",
     "mem": "16g"
   },
@@ -58,8 +58,30 @@
   ],
   "learners": [
     {
-      "learner_name": "multinomial_logit_model",
+      "learner_name": "mixed_logit_model",
       "learner_params": {
+        "n_mixtures": 2,
+        "loss_function": "categorical_hinge",
+        "regularization": "l2"
+      },
+      "learner_fit_params": {
+        "sampler": "variational",
+        "tune": 1000,
+        "draws": 2000,
+        "cores": 4,
+        "vi_params": {
+          "n": 20000,
+          "method": "advi",
+          "callbacks": [
+            "CheckParametersConvergence"
+          ]
+        }
+      }
+    },
+    {
+      "learner_name": "mixed_logit_model",
+      "learner_params": {
+        "n_mixtures": 6,
         "loss_function": "categorical_hinge",
         "regularization": "l2"
       },
@@ -71,15 +93,16 @@
       }
     },
     {
-      "learner_name": "multinomial_logit_model",
+      "learner_name": "mixed_logit_model",
       "learner_params": {
+        "n_mixtures": 9,
         "loss_function": "categorical_hinge",
         "regularization": "l2"
       },
       "learner_fit_params": {
         "sampler": "variational",
-        "tune": 4000,
-        "draws": 4000,
+        "tune": 500,
+        "draws": 500,
         "cores": 4,
         "vi_params": {
           "n": 20000,
@@ -91,74 +114,23 @@
       }
     },
     {
-      "learner_name": "multinomial_logit_model",
+      "learner_name": "mixed_logit_model",
       "learner_params": {
-        "loss_function": "categorical_hinge",
-        "regularization": "l2"
-      },
-      "learner_fit_params": {
-        "sampler": "variational",
-        "tune": 1000,
-        "draws": 8000,
-        "cores": 4,
-        "vi_params": {
-          "n": 20000,
-          "method": "advi",
-          "callbacks": [
-            "CheckParametersConvergence"
-          ]
-        }
-      }
-    },
-    {
-      "learner_name": "multinomial_logit_model",
-      "learner_params": {
-        "loss_function": "categorical_hinge",
-        "regularization": "l2"
-      },
-      "learner_fit_params": {
-        "sampler": "variational",
-        "tune": 2000,
-        "draws": 1000,
-        "cores": 4,
-        "vi_params": {
-          "n": 20000,
-          "method": "advi",
-          "callbacks": [
-            "CheckParametersConvergence"
-          ]
-        }
-      }
-    },
-    {
-      "learner_name": "multinomial_logit_model",
-      "learner_params": {
+        "n_mixtures": 5,
         "loss_function": "categorical_hinge",
         "regularization": "l2"
       },
       "learner_fit_params": {
         "sampler": "NUTS",
         "tune": 500,
-        "draws": 4000,
-        "cores": 4
-      }
-    },
-    {
-      "learner_name": "multinomial_logit_model",
-      "learner_params": {
-        "loss_function": "categorical_hinge",
-        "regularization": "l2"
-      },
-      "learner_fit_params": {
-        "sampler": "NUTS",
-        "tune": 2000,
         "draws": 8000,
         "cores": 4
       }
     },
     {
-      "learner_name": "multinomial_logit_model",
+      "learner_name": "mixed_logit_model",
       "learner_params": {
+        "n_mixtures": 7,
         "loss_function": "categorical_hinge",
         "regularization": "l2"
       },
@@ -177,21 +149,58 @@
       }
     },
     {
-      "learner_name": "multinomial_logit_model",
+      "learner_name": "mixed_logit_model",
       "learner_params": {
+        "n_mixtures": 8,
         "loss_function": "categorical_hinge",
         "regularization": "l2"
       },
       "learner_fit_params": {
         "sampler": "NUTS",
         "tune": 1000,
-        "draws": 2000,
+        "draws": 4000,
         "cores": 4
       }
     },
     {
-      "learner_name": "multinomial_logit_model",
+      "learner_name": "mixed_logit_model",
       "learner_params": {
+        "n_mixtures": 10,
+        "loss_function": "categorical_hinge",
+        "regularization": "l2"
+      },
+      "learner_fit_params": {
+        "sampler": "NUTS",
+        "tune": 2000,
+        "draws": 1000,
+        "cores": 4
+      }
+    },
+    {
+      "learner_name": "mixed_logit_model",
+      "learner_params": {
+        "n_mixtures": 10,
+        "loss_function": "categorical_hinge",
+        "regularization": "l2"
+      },
+      "learner_fit_params": {
+        "sampler": "variational",
+        "tune": 4000,
+        "draws": 8000,
+        "cores": 4,
+        "vi_params": {
+          "n": 20000,
+          "method": "advi",
+          "callbacks": [
+            "CheckParametersConvergence"
+          ]
+        }
+      }
+    },
+    {
+      "learner_name": "mixed_logit_model",
+      "learner_params": {
+        "n_mixtures": 3,
         "loss_function": "categorical_hinge",
         "regularization": "l2"
       },
@@ -203,15 +212,16 @@
       }
     },
     {
-      "learner_name": "multinomial_logit_model",
+      "learner_name": "mixed_logit_model",
       "learner_params": {
+        "n_mixtures": 4,
         "loss_function": "categorical_hinge",
         "regularization": "l2"
       },
       "learner_fit_params": {
         "sampler": "variational",
-        "tune": 500,
-        "draws": 500,
+        "tune": 2000,
+        "draws": 4000,
         "cores": 4,
         "vi_params": {
           "n": 20000,

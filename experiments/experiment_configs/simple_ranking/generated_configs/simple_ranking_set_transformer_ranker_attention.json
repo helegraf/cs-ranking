@@ -38,25 +38,22 @@
             "mab": {
               "MAB": {
                 "multi_head": {
-                  "ScaledDotProductAttention": {
+                  "AdditiveAttention": {
                     "activation": null,
                     "biased": false,
-                    "scale": true,
-                    "weighted": false,
-                    "weights_initializer": "lecun_normal",
-                    "factor": null,
-                    "sordoni_biased": false
+                    "flavour": "Luong",
+                    "weights_initializer": "lecun_normal"
                   }
                 },
                 "layer_normalization": false,
                 "depth_rff": 1,
                 "rff_config": {
-                  "units": 9,
+                  "units": 5,
                   "kernel_initializer": "lecun_normal",
                   "activation": "selu",
                   "kernel_regularizer": "l2",
                   "kernel_regularizer_params": {
-                    "l": 1e-10
+                    "l": 1e-4
                   },
                   "use_bias": true,
                   "bias_initializer": "zeros"
@@ -71,299 +68,34 @@
             "mab": {
               "MAB": {
                 "multi_head": {
-                  "ScaledDotProductAttention": {
+                  "SimilarityAttention": {
                     "activation": null,
-                    "biased": false,
-                    "scale": true,
-                    "weighted": false,
-                    "weights_initializer": "lecun_normal",
-                    "factor": null,
-                    "sordoni_biased": false
+                    "biased": false
                   }
                 }
               }
             },
             "depth_rff": 1,
             "rff_config": {
-              "units": 9,
+              "units": 5,
               "activation": "selu",
               "kernel_initializer": "lecun_normal",
               "use_bias": true,
               "bias_initializer": "zeros",
               "kernel_regularizer": "l2",
               "kernel_regularizer_params": {
-                "l": 1e-10
-              }
-            }
-          }
-        },
-        "num_layers_dense": 4,
-        "dense_config": {
-          "units": 9,
-          "activation": "selu",
-          "kernel_regularizer": "l2",
-          "kernel_regularizer_params": {
-            "l": 1e-10
-          },
-          "kernel_initializer": "lecun_normal",
-          "use_bias": true,
-          "bias_initializer": "zeros"
-        },
-        "loss_function": "hinged_rank_loss",
-        "loss_function_requires_x_values": false,
-        "batch_size": 256,
-        "optimizer": "SGD",
-        "optimizer_params": {
-          "lr": 0.0001,
-          "nesterov": true,
-          "momentum": 0.9,
-          "clipnorm": 1.0
-        }
-      },
-      "learner_fit_params": {
-        "epochs": 128,
-        "validation_split": 0.1,
-        "callbacks": {
-          "AdvancedTensorBoard": {
-            "num_visualizations_per_epoch": 1,
-            "save_space": true,
-            "log_lr": true,
-            "log_gradient_norms": "global",
-            "log_attention": true,
-            "no_detailed_histograms": true,
-            "lr_vs_accuracy_diagram": false,
-            "log_lr_each_batch": true,
-            "log_dir": "./tensorboard_logs/",
-            "histogram_freq": 1,
-            "write_graph": false,
-            "write_grads": false,
-            "write_images": false,
-            "embeddings_freq": 0,
-            "update_freq": "epoch"
-          },
-          "CyclicLR": {
-            "base_lr": 1e-05,
-            "max_lr": 0.1,
-            "step_size": 5760,
-            "mode": "triangular2"
-          },
-          "EarlyStoppingExtraRestoration": {
-            "monitor": "val_loss",
-            "min_delta": 0,
-            "patience": 64,
-            "verbose": 2,
-            "mode": "auto",
-            "baseline": null,
-            "restore_best_weights": true
-          }
-        }
-      }
-    },
-    {
-      "learner_name": "set_transformer_ranker",
-      "learner_params": {
-        "stacking_height": 1,
-        "attention_layer_config": {
-          "SAB": {
-            "mab": {
-              "MAB": {
-                "multi_head": {
-                  "ScaledDotProductAttention": {
-                    "activation": null,
-                    "biased": false,
-                    "scale": true,
-                    "weighted": false,
-                    "weights_initializer": "lecun_normal",
-                    "factor": null,
-                    "sordoni_biased": false
-                  }
-                },
-                "layer_normalization": false,
-                "depth_rff": 1,
-                "rff_config": {
-                  "units": 9,
-                  "kernel_initializer": "lecun_normal",
-                  "activation": "selu",
-                  "kernel_regularizer": "l2",
-                  "kernel_regularizer_params": {
-                    "l": 1e-07
-                  },
-                  "use_bias": true,
-                  "bias_initializer": "zeros"
-                }
-              }
-            }
-          }
-        },
-        "pooling_config": {
-          "PMA": {
-            "k": 1,
-            "mab": {
-              "MAB": {
-                "multi_head": {
-                  "ScaledDotProductAttention": {
-                    "activation": null,
-                    "biased": false,
-                    "scale": true,
-                    "weighted": false,
-                    "weights_initializer": "lecun_normal",
-                    "factor": null,
-                    "sordoni_biased": false
-                  }
-                }
-              }
-            },
-            "depth_rff": 1,
-            "rff_config": {
-              "units": 9,
-              "activation": "selu",
-              "kernel_initializer": "lecun_normal",
-              "use_bias": true,
-              "bias_initializer": "zeros",
-              "kernel_regularizer": "l2",
-              "kernel_regularizer_params": {
-                "l": 1e-07
-              }
-            }
-          }
-        },
-        "num_layers_dense": 2,
-        "dense_config": {
-          "units": 9,
-          "activation": "selu",
-          "kernel_regularizer": "l2",
-          "kernel_regularizer_params": {
-            "l": 1e-07
-          },
-          "kernel_initializer": "lecun_normal",
-          "use_bias": true,
-          "bias_initializer": "zeros"
-        },
-        "loss_function": "hinged_rank_loss",
-        "loss_function_requires_x_values": false,
-        "batch_size": 256,
-        "optimizer": "SGD",
-        "optimizer_params": {
-          "lr": 0.0001,
-          "nesterov": true,
-          "momentum": 0.9,
-          "clipnorm": 1.0
-        }
-      },
-      "learner_fit_params": {
-        "epochs": 128,
-        "validation_split": 0.1,
-        "callbacks": {
-          "AdvancedTensorBoard": {
-            "num_visualizations_per_epoch": 1,
-            "save_space": true,
-            "log_lr": true,
-            "log_gradient_norms": "global",
-            "log_attention": true,
-            "no_detailed_histograms": true,
-            "lr_vs_accuracy_diagram": false,
-            "log_lr_each_batch": true,
-            "log_dir": "./tensorboard_logs/",
-            "histogram_freq": 1,
-            "write_graph": false,
-            "write_grads": false,
-            "write_images": false,
-            "embeddings_freq": 0,
-            "update_freq": "epoch"
-          },
-          "CyclicLR": {
-            "base_lr": 1e-05,
-            "max_lr": 0.1,
-            "step_size": 5760,
-            "mode": "triangular2"
-          },
-          "EarlyStoppingExtraRestoration": {
-            "monitor": "val_loss",
-            "min_delta": 0,
-            "patience": 64,
-            "verbose": 2,
-            "mode": "auto",
-            "baseline": null,
-            "restore_best_weights": true
-          }
-        }
-      }
-    },
-    {
-      "learner_name": "set_transformer_ranker",
-      "learner_params": {
-        "stacking_height": 1,
-        "attention_layer_config": {
-          "SAB": {
-            "mab": {
-              "MAB": {
-                "multi_head": {
-                  "ScaledDotProductAttention": {
-                    "activation": null,
-                    "biased": false,
-                    "scale": true,
-                    "weighted": false,
-                    "weights_initializer": "lecun_normal",
-                    "factor": null,
-                    "sordoni_biased": false
-                  }
-                },
-                "layer_normalization": false,
-                "depth_rff": 1,
-                "rff_config": {
-                  "units": 6,
-                  "kernel_initializer": "lecun_normal",
-                  "activation": "selu",
-                  "kernel_regularizer": "l2",
-                  "kernel_regularizer_params": {
-                    "l": 1e-06
-                  },
-                  "use_bias": true,
-                  "bias_initializer": "zeros"
-                }
-              }
-            }
-          }
-        },
-        "pooling_config": {
-          "PMA": {
-            "k": 1,
-            "mab": {
-              "MAB": {
-                "multi_head": {
-                  "ScaledDotProductAttention": {
-                    "activation": null,
-                    "biased": false,
-                    "scale": true,
-                    "weighted": false,
-                    "weights_initializer": "lecun_normal",
-                    "factor": null,
-                    "sordoni_biased": false
-                  }
-                }
-              }
-            },
-            "depth_rff": 1,
-            "rff_config": {
-              "units": 6,
-              "activation": "selu",
-              "kernel_initializer": "lecun_normal",
-              "use_bias": true,
-              "bias_initializer": "zeros",
-              "kernel_regularizer": "l2",
-              "kernel_regularizer_params": {
-                "l": 1e-06
+                "l": 1e-4
               }
             }
           }
         },
         "num_layers_dense": 3,
         "dense_config": {
-          "units": 6,
+          "units": 5,
           "activation": "selu",
           "kernel_regularizer": "l2",
           "kernel_regularizer_params": {
-            "l": 1e-06
+            "l": 1e-4
           },
           "kernel_initializer": "lecun_normal",
           "use_bias": true,
@@ -402,8 +134,8 @@
             "update_freq": "epoch"
           },
           "CyclicLR": {
-            "base_lr": 1e-05,
-            "max_lr": 0.1,
+            "base_lr": 1e-5,
+            "max_lr": 1e-1,
             "step_size": 5760,
             "mode": "triangular2"
           },
@@ -428,25 +160,22 @@
             "mab": {
               "MAB": {
                 "multi_head": {
-                  "ScaledDotProductAttention": {
+                  "AdditiveAttention": {
                     "activation": null,
                     "biased": false,
-                    "scale": true,
-                    "weighted": false,
-                    "weights_initializer": "lecun_normal",
-                    "factor": null,
-                    "sordoni_biased": false
+                    "flavour": "Luong",
+                    "weights_initializer": "lecun_normal"
                   }
                 },
                 "layer_normalization": false,
                 "depth_rff": 1,
                 "rff_config": {
-                  "units": 7,
+                  "units": 5,
                   "kernel_initializer": "lecun_normal",
                   "activation": "selu",
                   "kernel_regularizer": "l2",
                   "kernel_regularizer_params": {
-                    "l": 1e-09
+                    "l": 1e-4
                   },
                   "use_bias": true,
                   "bias_initializer": "zeros"
@@ -475,25 +204,25 @@
             },
             "depth_rff": 1,
             "rff_config": {
-              "units": 7,
+              "units": 5,
               "activation": "selu",
               "kernel_initializer": "lecun_normal",
               "use_bias": true,
               "bias_initializer": "zeros",
               "kernel_regularizer": "l2",
               "kernel_regularizer_params": {
-                "l": 1e-09
+                "l": 1e-4
               }
             }
           }
         },
-        "num_layers_dense": 2,
+        "num_layers_dense": 3,
         "dense_config": {
-          "units": 7,
+          "units": 5,
           "activation": "selu",
           "kernel_regularizer": "l2",
           "kernel_regularizer_params": {
-            "l": 1e-09
+            "l": 1e-4
           },
           "kernel_initializer": "lecun_normal",
           "use_bias": true,
@@ -532,8 +261,256 @@
             "update_freq": "epoch"
           },
           "CyclicLR": {
-            "base_lr": 1e-05,
-            "max_lr": 0.1,
+            "base_lr": 1e-5,
+            "max_lr": 1e-1,
+            "step_size": 5760,
+            "mode": "triangular2"
+          },
+          "EarlyStoppingExtraRestoration": {
+            "monitor": "val_loss",
+            "min_delta": 0,
+            "patience": 64,
+            "verbose": 2,
+            "mode": "auto",
+            "baseline": null,
+            "restore_best_weights": true
+          }
+        }
+      }
+    },
+    {
+      "learner_name": "set_transformer_ranker",
+      "learner_params": {
+        "stacking_height": 1,
+        "attention_layer_config": {
+          "SAB": {
+            "mab": {
+              "MAB": {
+                "multi_head": {
+                  "AdditiveAttention": {
+                    "activation": null,
+                    "biased": false,
+                    "flavour": "Bahdanau",
+                    "weights_initializer": "lecun_normal"
+                  }
+                },
+                "layer_normalization": false,
+                "depth_rff": 1,
+                "rff_config": {
+                  "units": 5,
+                  "kernel_initializer": "lecun_normal",
+                  "activation": "selu",
+                  "kernel_regularizer": "l2",
+                  "kernel_regularizer_params": {
+                    "l": 1e-4
+                  },
+                  "use_bias": true,
+                  "bias_initializer": "zeros"
+                }
+              }
+            }
+          }
+        },
+        "pooling_config": {
+          "PMA": {
+            "k": 1,
+            "mab": {
+              "MAB": {
+                "multi_head": {
+                  "SimilarityAttention": {
+                    "activation": null,
+                    "biased": false
+                  }
+                }
+              }
+            },
+            "depth_rff": 1,
+            "rff_config": {
+              "units": 5,
+              "activation": "selu",
+              "kernel_initializer": "lecun_normal",
+              "use_bias": true,
+              "bias_initializer": "zeros",
+              "kernel_regularizer": "l2",
+              "kernel_regularizer_params": {
+                "l": 1e-4
+              }
+            }
+          }
+        },
+        "num_layers_dense": 3,
+        "dense_config": {
+          "units": 5,
+          "activation": "selu",
+          "kernel_regularizer": "l2",
+          "kernel_regularizer_params": {
+            "l": 1e-4
+          },
+          "kernel_initializer": "lecun_normal",
+          "use_bias": true,
+          "bias_initializer": "zeros"
+        },
+        "loss_function": "hinged_rank_loss",
+        "loss_function_requires_x_values": false,
+        "batch_size": 256,
+        "optimizer": "SGD",
+        "optimizer_params": {
+          "lr": 0.0001,
+          "nesterov": true,
+          "momentum": 0.9,
+          "clipnorm": 1.0
+        }
+      },
+      "learner_fit_params": {
+        "epochs": 128,
+        "validation_split": 0.1,
+        "callbacks": {
+          "AdvancedTensorBoard": {
+            "num_visualizations_per_epoch": 1,
+            "save_space": true,
+            "log_lr": true,
+            "log_gradient_norms": "global",
+            "log_attention": true,
+            "no_detailed_histograms": true,
+            "lr_vs_accuracy_diagram": false,
+            "log_lr_each_batch": true,
+            "log_dir": "./tensorboard_logs/",
+            "histogram_freq": 1,
+            "write_graph": false,
+            "write_grads": false,
+            "write_images": false,
+            "embeddings_freq": 0,
+            "update_freq": "epoch"
+          },
+          "CyclicLR": {
+            "base_lr": 1e-5,
+            "max_lr": 1e-1,
+            "step_size": 5760,
+            "mode": "triangular2"
+          },
+          "EarlyStoppingExtraRestoration": {
+            "monitor": "val_loss",
+            "min_delta": 0,
+            "patience": 64,
+            "verbose": 2,
+            "mode": "auto",
+            "baseline": null,
+            "restore_best_weights": true
+          }
+        }
+      }
+    },
+    {
+      "learner_name": "set_transformer_ranker",
+      "learner_params": {
+        "stacking_height": 1,
+        "attention_layer_config": {
+          "SAB": {
+            "mab": {
+              "MAB": {
+                "multi_head": {
+                  "AdditiveAttention": {
+                    "activation": null,
+                    "biased": false,
+                    "flavour": "Bahdanau",
+                    "weights_initializer": "lecun_normal"
+                  }
+                },
+                "layer_normalization": false,
+                "depth_rff": 1,
+                "rff_config": {
+                  "units": 5,
+                  "activation": "selu",
+                  "kernel_regularizer": "l2",
+                  "kernel_regularizer_params": {
+                    "l": 1e-4
+                  },
+                  "use_bias": true,
+                  "bias_initializer": "zeros"
+                }
+              }
+            }
+          }
+        },
+        "pooling_config": {
+          "PMA": {
+            "k": 1,
+            "mab": {
+              "MAB": {
+                "multi_head": {
+                  "ScaledDotProductAttention": {
+                    "activation": null,
+                    "biased": false,
+                    "scale": true,
+                    "weighted": false,
+                    "weights_initializer": "lecun_normal",
+                    "factor": null,
+                    "sordoni_biased": false
+                  }
+                }
+              }
+            },
+            "depth_rff": 1,
+            "rff_config": {
+              "units": 5,
+              "activation": "selu",
+              "kernel_initializer": "lecun_normal",
+              "use_bias": true,
+              "bias_initializer": "zeros",
+              "kernel_regularizer": "l2",
+              "kernel_regularizer_params": {
+                "l": 1e-4
+              }
+            }
+          }
+        },
+        "num_layers_dense": 3,
+        "dense_config": {
+          "units": 5,
+          "activation": "selu",
+          "kernel_regularizer": "l2",
+          "kernel_regularizer_params": {
+            "l": 1e-4
+          },
+          "kernel_initializer": "lecun_normal",
+          "use_bias": true,
+          "bias_initializer": "zeros"
+        },
+        "loss_function": "hinged_rank_loss",
+        "loss_function_requires_x_values": false,
+        "batch_size": 256,
+        "optimizer": "SGD",
+        "optimizer_params": {
+          "lr": 0.0001,
+          "nesterov": true,
+          "momentum": 0.9,
+          "clipnorm": 1.0
+        }
+      },
+      "learner_fit_params": {
+        "epochs": 128,
+        "validation_split": 0.1,
+        "callbacks": {
+          "AdvancedTensorBoard": {
+            "num_visualizations_per_epoch": 1,
+            "save_space": true,
+            "log_lr": true,
+            "log_gradient_norms": "global",
+            "log_attention": true,
+            "no_detailed_histograms": true,
+            "lr_vs_accuracy_diagram": false,
+            "log_lr_each_batch": true,
+            "log_dir": "./tensorboard_logs/",
+            "histogram_freq": 1,
+            "write_graph": false,
+            "write_grads": false,
+            "write_images": false,
+            "embeddings_freq": 0,
+            "update_freq": "epoch"
+          },
+          "CyclicLR": {
+            "base_lr": 1e-5,
+            "max_lr": 1e-1,
             "step_size": 5760,
             "mode": "triangular2"
           },
@@ -576,7 +553,7 @@
                   "activation": "selu",
                   "kernel_regularizer": "l2",
                   "kernel_regularizer_params": {
-                    "l": 1e-07
+                    "l": 1e-4
                   },
                   "use_bias": true,
                   "bias_initializer": "zeros"
@@ -612,18 +589,18 @@
               "bias_initializer": "zeros",
               "kernel_regularizer": "l2",
               "kernel_regularizer_params": {
-                "l": 1e-07
+                "l": 1e-4
               }
             }
           }
         },
-        "num_layers_dense": 4,
+        "num_layers_dense": 3,
         "dense_config": {
           "units": 5,
           "activation": "selu",
           "kernel_regularizer": "l2",
           "kernel_regularizer_params": {
-            "l": 1e-07
+            "l": 1e-4
           },
           "kernel_initializer": "lecun_normal",
           "use_bias": true,
@@ -662,8 +639,8 @@
             "update_freq": "epoch"
           },
           "CyclicLR": {
-            "base_lr": 1e-05,
-            "max_lr": 0.1,
+            "base_lr": 1e-5,
+            "max_lr": 1e-1,
             "step_size": 5760,
             "mode": "triangular2"
           },
@@ -688,25 +665,20 @@
             "mab": {
               "MAB": {
                 "multi_head": {
-                  "ScaledDotProductAttention": {
+                  "SimilarityAttention": {
                     "activation": null,
-                    "biased": false,
-                    "scale": true,
-                    "weighted": false,
-                    "weights_initializer": "lecun_normal",
-                    "factor": null,
-                    "sordoni_biased": false
+                    "biased": false
                   }
                 },
                 "layer_normalization": false,
                 "depth_rff": 1,
                 "rff_config": {
-                  "units": 8,
+                  "units": 5,
                   "kernel_initializer": "lecun_normal",
                   "activation": "selu",
                   "kernel_regularizer": "l2",
                   "kernel_regularizer_params": {
-                    "l": 1e-06
+                    "l": 1e-4
                   },
                   "use_bias": true,
                   "bias_initializer": "zeros"
@@ -721,169 +693,34 @@
             "mab": {
               "MAB": {
                 "multi_head": {
-                  "ScaledDotProductAttention": {
+                  "SimilarityAttention": {
                     "activation": null,
-                    "biased": false,
-                    "scale": true,
-                    "weighted": false,
-                    "weights_initializer": "lecun_normal",
-                    "factor": null,
-                    "sordoni_biased": false
+                    "biased": false
                   }
                 }
               }
             },
             "depth_rff": 1,
             "rff_config": {
-              "units": 8,
+              "units": 5,
               "activation": "selu",
               "kernel_initializer": "lecun_normal",
               "use_bias": true,
               "bias_initializer": "zeros",
               "kernel_regularizer": "l2",
               "kernel_regularizer_params": {
-                "l": 1e-06
-              }
-            }
-          }
-        },
-        "num_layers_dense": 5,
-        "dense_config": {
-          "units": 8,
-          "activation": "selu",
-          "kernel_regularizer": "l2",
-          "kernel_regularizer_params": {
-            "l": 1e-06
-          },
-          "kernel_initializer": "lecun_normal",
-          "use_bias": true,
-          "bias_initializer": "zeros"
-        },
-        "loss_function": "hinged_rank_loss",
-        "loss_function_requires_x_values": false,
-        "batch_size": 256,
-        "optimizer": "SGD",
-        "optimizer_params": {
-          "lr": 0.0001,
-          "nesterov": true,
-          "momentum": 0.9,
-          "clipnorm": 1.0
-        }
-      },
-      "learner_fit_params": {
-        "epochs": 128,
-        "validation_split": 0.1,
-        "callbacks": {
-          "AdvancedTensorBoard": {
-            "num_visualizations_per_epoch": 1,
-            "save_space": true,
-            "log_lr": true,
-            "log_gradient_norms": "global",
-            "log_attention": true,
-            "no_detailed_histograms": true,
-            "lr_vs_accuracy_diagram": false,
-            "log_lr_each_batch": true,
-            "log_dir": "./tensorboard_logs/",
-            "histogram_freq": 1,
-            "write_graph": false,
-            "write_grads": false,
-            "write_images": false,
-            "embeddings_freq": 0,
-            "update_freq": "epoch"
-          },
-          "CyclicLR": {
-            "base_lr": 1e-05,
-            "max_lr": 0.1,
-            "step_size": 5760,
-            "mode": "triangular2"
-          },
-          "EarlyStoppingExtraRestoration": {
-            "monitor": "val_loss",
-            "min_delta": 0,
-            "patience": 64,
-            "verbose": 2,
-            "mode": "auto",
-            "baseline": null,
-            "restore_best_weights": true
-          }
-        }
-      }
-    },
-    {
-      "learner_name": "set_transformer_ranker",
-      "learner_params": {
-        "stacking_height": 1,
-        "attention_layer_config": {
-          "SAB": {
-            "mab": {
-              "MAB": {
-                "multi_head": {
-                  "ScaledDotProductAttention": {
-                    "activation": null,
-                    "biased": false,
-                    "scale": true,
-                    "weighted": false,
-                    "weights_initializer": "lecun_normal",
-                    "factor": null,
-                    "sordoni_biased": false
-                  }
-                },
-                "layer_normalization": false,
-                "depth_rff": 1,
-                "rff_config": {
-                  "units": 10,
-                  "kernel_initializer": "lecun_normal",
-                  "activation": "selu",
-                  "kernel_regularizer": "l2",
-                  "kernel_regularizer_params": {
-                    "l": 1e-08
-                  },
-                  "use_bias": true,
-                  "bias_initializer": "zeros"
-                }
-              }
-            }
-          }
-        },
-        "pooling_config": {
-          "PMA": {
-            "k": 1,
-            "mab": {
-              "MAB": {
-                "multi_head": {
-                  "ScaledDotProductAttention": {
-                    "activation": null,
-                    "biased": false,
-                    "scale": true,
-                    "weighted": false,
-                    "weights_initializer": "lecun_normal",
-                    "factor": null,
-                    "sordoni_biased": false
-                  }
-                }
-              }
-            },
-            "depth_rff": 1,
-            "rff_config": {
-              "units": 10,
-              "activation": "selu",
-              "kernel_initializer": "lecun_normal",
-              "use_bias": true,
-              "bias_initializer": "zeros",
-              "kernel_regularizer": "l2",
-              "kernel_regularizer_params": {
-                "l": 1e-08
+                "l": 1e-4
               }
             }
           }
         },
         "num_layers_dense": 3,
         "dense_config": {
-          "units": 10,
+          "units": 5,
           "activation": "selu",
           "kernel_regularizer": "l2",
           "kernel_regularizer_params": {
-            "l": 1e-08
+            "l": 1e-4
           },
           "kernel_initializer": "lecun_normal",
           "use_bias": true,
@@ -922,398 +759,8 @@
             "update_freq": "epoch"
           },
           "CyclicLR": {
-            "base_lr": 1e-05,
-            "max_lr": 0.1,
-            "step_size": 5760,
-            "mode": "triangular2"
-          },
-          "EarlyStoppingExtraRestoration": {
-            "monitor": "val_loss",
-            "min_delta": 0,
-            "patience": 64,
-            "verbose": 2,
-            "mode": "auto",
-            "baseline": null,
-            "restore_best_weights": true
-          }
-        }
-      }
-    },
-    {
-      "learner_name": "set_transformer_ranker",
-      "learner_params": {
-        "stacking_height": 1,
-        "attention_layer_config": {
-          "SAB": {
-            "mab": {
-              "MAB": {
-                "multi_head": {
-                  "ScaledDotProductAttention": {
-                    "activation": null,
-                    "biased": false,
-                    "scale": true,
-                    "weighted": false,
-                    "weights_initializer": "lecun_normal",
-                    "factor": null,
-                    "sordoni_biased": false
-                  }
-                },
-                "layer_normalization": false,
-                "depth_rff": 1,
-                "rff_config": {
-                  "units": 7,
-                  "kernel_initializer": "lecun_normal",
-                  "activation": "selu",
-                  "kernel_regularizer": "l2",
-                  "kernel_regularizer_params": {
-                    "l": 1e-08
-                  },
-                  "use_bias": true,
-                  "bias_initializer": "zeros"
-                }
-              }
-            }
-          }
-        },
-        "pooling_config": {
-          "PMA": {
-            "k": 1,
-            "mab": {
-              "MAB": {
-                "multi_head": {
-                  "ScaledDotProductAttention": {
-                    "activation": null,
-                    "biased": false,
-                    "scale": true,
-                    "weighted": false,
-                    "weights_initializer": "lecun_normal",
-                    "factor": null,
-                    "sordoni_biased": false
-                  }
-                }
-              }
-            },
-            "depth_rff": 1,
-            "rff_config": {
-              "units": 7,
-              "activation": "selu",
-              "kernel_initializer": "lecun_normal",
-              "use_bias": true,
-              "bias_initializer": "zeros",
-              "kernel_regularizer": "l2",
-              "kernel_regularizer_params": {
-                "l": 1e-08
-              }
-            }
-          }
-        },
-        "num_layers_dense": 5,
-        "dense_config": {
-          "units": 7,
-          "activation": "selu",
-          "kernel_regularizer": "l2",
-          "kernel_regularizer_params": {
-            "l": 1e-08
-          },
-          "kernel_initializer": "lecun_normal",
-          "use_bias": true,
-          "bias_initializer": "zeros"
-        },
-        "loss_function": "hinged_rank_loss",
-        "loss_function_requires_x_values": false,
-        "batch_size": 256,
-        "optimizer": "SGD",
-        "optimizer_params": {
-          "lr": 0.0001,
-          "nesterov": true,
-          "momentum": 0.9,
-          "clipnorm": 1.0
-        }
-      },
-      "learner_fit_params": {
-        "epochs": 128,
-        "validation_split": 0.1,
-        "callbacks": {
-          "AdvancedTensorBoard": {
-            "num_visualizations_per_epoch": 1,
-            "save_space": true,
-            "log_lr": true,
-            "log_gradient_norms": "global",
-            "log_attention": true,
-            "no_detailed_histograms": true,
-            "lr_vs_accuracy_diagram": false,
-            "log_lr_each_batch": true,
-            "log_dir": "./tensorboard_logs/",
-            "histogram_freq": 1,
-            "write_graph": false,
-            "write_grads": false,
-            "write_images": false,
-            "embeddings_freq": 0,
-            "update_freq": "epoch"
-          },
-          "CyclicLR": {
-            "base_lr": 1e-05,
-            "max_lr": 0.1,
-            "step_size": 5760,
-            "mode": "triangular2"
-          },
-          "EarlyStoppingExtraRestoration": {
-            "monitor": "val_loss",
-            "min_delta": 0,
-            "patience": 64,
-            "verbose": 2,
-            "mode": "auto",
-            "baseline": null,
-            "restore_best_weights": true
-          }
-        }
-      }
-    },
-    {
-      "learner_name": "set_transformer_ranker",
-      "learner_params": {
-        "stacking_height": 1,
-        "attention_layer_config": {
-          "SAB": {
-            "mab": {
-              "MAB": {
-                "multi_head": {
-                  "ScaledDotProductAttention": {
-                    "activation": null,
-                    "biased": false,
-                    "scale": true,
-                    "weighted": false,
-                    "weights_initializer": "lecun_normal",
-                    "factor": null,
-                    "sordoni_biased": false
-                  }
-                },
-                "layer_normalization": false,
-                "depth_rff": 1,
-                "rff_config": {
-                  "units": 10,
-                  "kernel_initializer": "lecun_normal",
-                  "activation": "selu",
-                  "kernel_regularizer": "l2",
-                  "kernel_regularizer_params": {
-                    "l": 1e-09
-                  },
-                  "use_bias": true,
-                  "bias_initializer": "zeros"
-                }
-              }
-            }
-          }
-        },
-        "pooling_config": {
-          "PMA": {
-            "k": 1,
-            "mab": {
-              "MAB": {
-                "multi_head": {
-                  "ScaledDotProductAttention": {
-                    "activation": null,
-                    "biased": false,
-                    "scale": true,
-                    "weighted": false,
-                    "weights_initializer": "lecun_normal",
-                    "factor": null,
-                    "sordoni_biased": false
-                  }
-                }
-              }
-            },
-            "depth_rff": 1,
-            "rff_config": {
-              "units": 10,
-              "activation": "selu",
-              "kernel_initializer": "lecun_normal",
-              "use_bias": true,
-              "bias_initializer": "zeros",
-              "kernel_regularizer": "l2",
-              "kernel_regularizer_params": {
-                "l": 1e-09
-              }
-            }
-          }
-        },
-        "num_layers_dense": 5,
-        "dense_config": {
-          "units": 10,
-          "activation": "selu",
-          "kernel_regularizer": "l2",
-          "kernel_regularizer_params": {
-            "l": 1e-09
-          },
-          "kernel_initializer": "lecun_normal",
-          "use_bias": true,
-          "bias_initializer": "zeros"
-        },
-        "loss_function": "hinged_rank_loss",
-        "loss_function_requires_x_values": false,
-        "batch_size": 256,
-        "optimizer": "SGD",
-        "optimizer_params": {
-          "lr": 0.0001,
-          "nesterov": true,
-          "momentum": 0.9,
-          "clipnorm": 1.0
-        }
-      },
-      "learner_fit_params": {
-        "epochs": 128,
-        "validation_split": 0.1,
-        "callbacks": {
-          "AdvancedTensorBoard": {
-            "num_visualizations_per_epoch": 1,
-            "save_space": true,
-            "log_lr": true,
-            "log_gradient_norms": "global",
-            "log_attention": true,
-            "no_detailed_histograms": true,
-            "lr_vs_accuracy_diagram": false,
-            "log_lr_each_batch": true,
-            "log_dir": "./tensorboard_logs/",
-            "histogram_freq": 1,
-            "write_graph": false,
-            "write_grads": false,
-            "write_images": false,
-            "embeddings_freq": 0,
-            "update_freq": "epoch"
-          },
-          "CyclicLR": {
-            "base_lr": 1e-05,
-            "max_lr": 0.1,
-            "step_size": 5760,
-            "mode": "triangular2"
-          },
-          "EarlyStoppingExtraRestoration": {
-            "monitor": "val_loss",
-            "min_delta": 0,
-            "patience": 64,
-            "verbose": 2,
-            "mode": "auto",
-            "baseline": null,
-            "restore_best_weights": true
-          }
-        }
-      }
-    },
-    {
-      "learner_name": "set_transformer_ranker",
-      "learner_params": {
-        "stacking_height": 1,
-        "attention_layer_config": {
-          "SAB": {
-            "mab": {
-              "MAB": {
-                "multi_head": {
-                  "ScaledDotProductAttention": {
-                    "activation": null,
-                    "biased": false,
-                    "scale": true,
-                    "weighted": false,
-                    "weights_initializer": "lecun_normal",
-                    "factor": null,
-                    "sordoni_biased": false
-                  }
-                },
-                "layer_normalization": false,
-                "depth_rff": 1,
-                "rff_config": {
-                  "units": 6,
-                  "kernel_initializer": "lecun_normal",
-                  "activation": "selu",
-                  "kernel_regularizer": "l2",
-                  "kernel_regularizer_params": {
-                    "l": 1e-10
-                  },
-                  "use_bias": true,
-                  "bias_initializer": "zeros"
-                }
-              }
-            }
-          }
-        },
-        "pooling_config": {
-          "PMA": {
-            "k": 1,
-            "mab": {
-              "MAB": {
-                "multi_head": {
-                  "ScaledDotProductAttention": {
-                    "activation": null,
-                    "biased": false,
-                    "scale": true,
-                    "weighted": false,
-                    "weights_initializer": "lecun_normal",
-                    "factor": null,
-                    "sordoni_biased": false
-                  }
-                }
-              }
-            },
-            "depth_rff": 1,
-            "rff_config": {
-              "units": 6,
-              "activation": "selu",
-              "kernel_initializer": "lecun_normal",
-              "use_bias": true,
-              "bias_initializer": "zeros",
-              "kernel_regularizer": "l2",
-              "kernel_regularizer_params": {
-                "l": 1e-10
-              }
-            }
-          }
-        },
-        "num_layers_dense": 3,
-        "dense_config": {
-          "units": 6,
-          "activation": "selu",
-          "kernel_regularizer": "l2",
-          "kernel_regularizer_params": {
-            "l": 1e-10
-          },
-          "kernel_initializer": "lecun_normal",
-          "use_bias": true,
-          "bias_initializer": "zeros"
-        },
-        "loss_function": "hinged_rank_loss",
-        "loss_function_requires_x_values": false,
-        "batch_size": 256,
-        "optimizer": "SGD",
-        "optimizer_params": {
-          "lr": 0.0001,
-          "nesterov": true,
-          "momentum": 0.9,
-          "clipnorm": 1.0
-        }
-      },
-      "learner_fit_params": {
-        "epochs": 128,
-        "validation_split": 0.1,
-        "callbacks": {
-          "AdvancedTensorBoard": {
-            "num_visualizations_per_epoch": 1,
-            "save_space": true,
-            "log_lr": true,
-            "log_gradient_norms": "global",
-            "log_attention": true,
-            "no_detailed_histograms": true,
-            "lr_vs_accuracy_diagram": false,
-            "log_lr_each_batch": true,
-            "log_dir": "./tensorboard_logs/",
-            "histogram_freq": 1,
-            "write_graph": false,
-            "write_grads": false,
-            "write_images": false,
-            "embeddings_freq": 0,
-            "update_freq": "epoch"
-          },
-          "CyclicLR": {
-            "base_lr": 1e-05,
-            "max_lr": 0.1,
+            "base_lr": 1e-5,
+            "max_lr": 1e-1,
             "step_size": 5760,
             "mode": "triangular2"
           },

@@ -51,8 +51,8 @@ def gen_jobs(configuration_file_path):
     return combine_with_elements(previous_dict={}, index=0, combos=combos)
 
 
-table = "tsp"
-name = "{}_ranknet".format(table)
+table = "simple_dc"
+name = "{}_feta_dc_incorrect".format(table)
 folder = "{}/generated_configs/".format(table)
 #table = "test"
 #name = "test"

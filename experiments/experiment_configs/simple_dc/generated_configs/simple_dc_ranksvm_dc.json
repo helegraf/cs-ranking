@@ -1,0 +1,179 @@
+{
+  "resources": {
+    "ncpus": "2",
+    "vmem": "42g",
+    "mem": "16g"
+  },
+  "dataset_configs": [
+    {
+      "dataset": "synthetic_dc",
+      "dataset_params": {
+        "dataset_type": "movie_genre",
+        "n_objects": 10,
+        "n_features": 4,
+        "ensure_distance": true,
+        "min_distance": 0.2,
+        "similarity": 0.01,
+        "scatter": true,
+        "n_train_instances": 102400,
+        "n_test_instances": 10240
+      }
+    }
+  ],
+  "folds": [
+    {
+      "fold_id": 1,
+      "n_inner_folds": 0
+    }
+  ],
+  "learning_problem": "discrete_choice",
+  "seeds": [
+    {
+      "seed": 1234
+    },
+    {
+      "seed": 2345
+    },
+    {
+      "seed": 3456
+    },
+    {
+      "seed": 4567
+    },
+    {
+      "seed": 5678
+    },
+    {
+      "seed": 6789
+    },
+    {
+      "seed": 9876
+    },
+    {
+      "seed": 8765
+    },
+    {
+      "seed": 7654
+    },
+    {
+      "seed": 6543
+    }
+  ],
+  "learners": [
+    {
+      "learner_name": "ranksvm_dc",
+      "learner_params": {
+        "C": 1.0,
+        "tol": 1e-08,
+        "normalize": true,
+        "fit_intercept": true
+      },
+      "learner_fit_params": {}
+    },
+    {
+      "learner_name": "ranksvm_dc",
+      "learner_params": {
+        "C": 0.01,
+        "tol": 1e-08,
+        "normalize": true,
+        "fit_intercept": true
+      },
+      "learner_fit_params": {}
+    },
+    {
+      "learner_name": "ranksvm_dc",
+      "learner_params": {
+        "C": 1.0,
+        "tol": 0.0001,
+        "normalize": true,
+        "fit_intercept": true
+      },
+      "learner_fit_params": {}
+    },
+    {
+      "learner_name": "ranksvm_dc",
+      "learner_params": {
+        "C": 0.01,
+        "tol": 1e-06,
+        "normalize": true,
+        "fit_intercept": true
+      },
+      "learner_fit_params": {}
+    },
+    {
+      "learner_name": "ranksvm_dc",
+      "learner_params": {
+        "C": 10.0,
+        "tol": 0.01,
+        "normalize": true,
+        "fit_intercept": true
+      },
+      "learner_fit_params": {}
+    },
+    {
+      "learner_name": "ranksvm_dc",
+      "learner_params": {
+        "C": 100.0,
+        "tol": 1e-06,
+        "normalize": true,
+        "fit_intercept": true
+      },
+      "learner_fit_params": {}
+    },
+    {
+      "learner_name": "ranksvm_dc",
+      "learner_params": {
+        "C": 0.1,
+        "tol": 1e-10,
+        "normalize": true,
+        "fit_intercept": true
+      },
+      "learner_fit_params": {}
+    },
+    {
+      "learner_name": "ranksvm_dc",
+      "learner_params": {
+        "C": 100.0,
+        "tol": 0.0001,
+        "normalize": true,
+        "fit_intercept": true
+      },
+      "learner_fit_params": {}
+    },
+    {
+      "learner_name": "ranksvm_dc",
+      "learner_params": {
+        "C": 10.0,
+        "tol": 1e-10,
+        "normalize": true,
+        "fit_intercept": true
+      },
+      "learner_fit_params": {}
+    },
+    {
+      "learner_name": "ranksvm_dc",
+      "learner_params": {
+        "C": 0.1,
+        "tol": 0.01,
+        "normalize": true,
+        "fit_intercept": true
+      },
+      "learner_fit_params": {}
+    }
+  ],
+  "optimizers": [
+    {
+      "use_hp": "False",
+      "hp_iterations": 0,
+      "hp_ranges": {},
+      "hp_fit_params": {}
+    }
+  ],
+  "timings": [
+    {
+      "duration": "2h",
+      "time_out_eval": "10m"
+    }
+  ],
+  "results_table_name": "results_simple_dc"
+}
