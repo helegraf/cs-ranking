@@ -1,7 +1,7 @@
 """Thin experiment runner which takes all simulation parameters from a database.
 
 Usage:
-  experiment_cv.py --config_file_name=<config_file_name> --job_name=<job_name>
+  experiment_cv.py --job_name=<job_name>
   experiment_cv.py (-h | --help)
 
 Arguments:
@@ -9,7 +9,6 @@ Arguments:
 
 Options:
   -h --help                             Show this screen.
-  --config_file_name=<config_file_name>   File name of the database config
   --job_name=<job_name>             table from which to get configs
 """
 import inspect
@@ -23,7 +22,7 @@ from docopt import docopt
 from csrank.experiments.dbconnection_modified import ModifiedDBConnector
 
 arguments = docopt(__doc__)
-config_file_name = arguments["--config_file_name"]
+config_file_name = 'db.json'
 job_name = arguments["--job_name"]
 
 # configure postgres database connector
@@ -44,6 +43,7 @@ script = "#!/bin/bash\n" \
          "#CCS -t {}\n" \
          "\n" \
          "cd /upb/scratch/departments/pc2/groups/hpc-prf-isys/hgraf/attention\n" \
+         "export THEANO_FLAGS=\"base_compiledir=/upb/scratch/departments/pc2/groups/hpc-prf-isys/hgraf/theano_dump/${{CCS_REQID}}\"\n" \
          "\n" \
          "# do the job\n" \
          "job_starter.sh -e {} -i {} -c ${{CCS_REQID}}\n"
@@ -80,5 +80,5 @@ for job in jobs:
     target = "/upb/scratch/departments/pc2/groups/hpc-prf-isys/hgraf/attention/{}/experiments/logs/out\n"\
         .format(job_name)
 
-    # echo allocation
-    subprocess.run(["echo", "$PWD"])
+    # change rights
+    subprocess.run(["chmod", "755", path])
