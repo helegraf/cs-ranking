@@ -25,7 +25,7 @@
   "learning_problem": "object_ranking_tsp",
   "seeds": [
     {
-      "seed": 2345
+      "seed": 1234
     }
   ],
   "learners": [
@@ -51,7 +51,20 @@
                       "l": 0.01
                     }
                   }
-                }
+                },
+                "depth_rff": 1,
+                "rff_config": {
+                  "units": 6,
+                  "activation": "selu",
+                  "kernel_initializer": "lecun_normal",
+                  "use_bias": true,
+                  "bias_initializer": "zeros",
+                  "kernel_regularizer": "l2",
+                  "kernel_regularizer_params": {
+                    "l": 0.01
+                  }
+                },
+                "layer_normalization": false
               }
             },
             "depth_rff": 1,
@@ -162,7 +175,20 @@
                       "l": 0.01
                     }
                   }
-                }
+                },
+                "depth_rff": 1,
+                "rff_config": {
+                  "units": 6,
+                  "activation": "selu",
+                  "kernel_initializer": "lecun_normal",
+                  "use_bias": true,
+                  "bias_initializer": "zeros",
+                  "kernel_regularizer": "l2",
+                  "kernel_regularizer_params": {
+                    "l": 0.01
+                  }
+                },
+                "layer_normalization": false
               }
             },
             "depth_rff": 1,
@@ -270,19 +296,20 @@
                   "l": 0.01
                 }
               }
-            }
-          }
-        },
-        "depth_rff": 1,
-        "rff_config": {
-          "units": 6,
-          "activation": "selu",
-          "kernel_initializer": "lecun_normal",
-          "use_bias": true,
-          "bias_initializer": "zeros",
-          "kernel_regularizer": "l2",
-          "kernel_regularizer_params": {
-            "l": 0.01
+            },
+            "depth_rff": 1,
+            "rff_config": {
+              "units": 6,
+              "activation": "selu",
+              "kernel_initializer": "lecun_normal",
+              "use_bias": true,
+              "bias_initializer": "zeros",
+              "kernel_regularizer": "l2",
+              "kernel_regularizer_params": {
+                "l": 0.01
+              }
+            },
+            "layer_normalization": false
           }
         },
         "attention_preselection_config": null,

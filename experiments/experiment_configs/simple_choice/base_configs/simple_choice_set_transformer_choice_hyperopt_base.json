@@ -88,7 +88,19 @@
                       "l": 1e-08
                     }
                   }
-                }
+                },
+                "layer_normalization": false,
+                "depth_rff": 1,
+                "rff_config": {
+                  "units": 5,
+                  "kernel_initializer": "lecun_normal",
+                  "activation": "selu",
+                  "kernel_regularizer":  "l2",
+                  "kernel_regularizer_params":  {
+                    "l": 1e-08
+                  },
+                  "use_bias":  true,
+                  "bias_initializer":  "zeros"}
               }
             },
             "depth_rff": 1,

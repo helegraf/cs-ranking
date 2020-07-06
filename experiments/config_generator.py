@@ -167,8 +167,8 @@ def read_json_and_replace(dataset, learner, num_runs):
                        .format(dataset, dataset, learner), final_config)
 
 
-dataset = 'simple_choice'
-learner = 'set_transformer_choice_hyperopt'
+dataset = 'tsp'
+learner = 'set_transformer_ranker_hypertest'
 num_confs = 10
 
 read_json_and_replace(dataset=dataset,

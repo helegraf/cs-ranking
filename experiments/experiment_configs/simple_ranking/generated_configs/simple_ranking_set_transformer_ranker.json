@@ -88,6 +88,19 @@
                       "l": 1e-08
                     }
                   }
+                },
+                "layer_normalization": false,
+                "depth_rff": 1,
+                "rff_config": {
+                  "units": 9,
+                  "kernel_initializer": "lecun_normal",
+                  "activation": "selu",
+                  "kernel_regularizer": "l2",
+                  "kernel_regularizer_params": {
+                    "l": 1e-08
+                  },
+                  "use_bias": true,
+                  "bias_initializer": "zeros"
                 }
               }
             },
@@ -231,6 +244,19 @@
                       "l": 0.001
                     }
                   }
+                },
+                "layer_normalization": false,
+                "depth_rff": 1,
+                "rff_config": {
+                  "units": 9,
+                  "kernel_initializer": "lecun_normal",
+                  "activation": "selu",
+                  "kernel_regularizer": "l2",
+                  "kernel_regularizer_params": {
+                    "l": 0.001
+                  },
+                  "use_bias": true,
+                  "bias_initializer": "zeros"
                 }
               }
             },
@@ -374,6 +400,19 @@
                       "l": 0.01
                     }
                   }
+                },
+                "layer_normalization": false,
+                "depth_rff": 1,
+                "rff_config": {
+                  "units": 6,
+                  "kernel_initializer": "lecun_normal",
+                  "activation": "selu",
+                  "kernel_regularizer": "l2",
+                  "kernel_regularizer_params": {
+                    "l": 0.01
+                  },
+                  "use_bias": true,
+                  "bias_initializer": "zeros"
                 }
               }
             },
@@ -517,6 +556,19 @@
                       "l": 1e-06
                     }
                   }
+                },
+                "layer_normalization": false,
+                "depth_rff": 1,
+                "rff_config": {
+                  "units": 7,
+                  "kernel_initializer": "lecun_normal",
+                  "activation": "selu",
+                  "kernel_regularizer": "l2",
+                  "kernel_regularizer_params": {
+                    "l": 1e-06
+                  },
+                  "use_bias": true,
+                  "bias_initializer": "zeros"
                 }
               }
             },
@@ -660,6 +712,19 @@
                       "l": 0.0001
                     }
                   }
+                },
+                "layer_normalization": false,
+                "depth_rff": 1,
+                "rff_config": {
+                  "units": 5,
+                  "kernel_initializer": "lecun_normal",
+                  "activation": "selu",
+                  "kernel_regularizer": "l2",
+                  "kernel_regularizer_params": {
+                    "l": 0.0001
+                  },
+                  "use_bias": true,
+                  "bias_initializer": "zeros"
                 }
               }
             },
@@ -803,6 +868,19 @@
                       "l": 0.01
                     }
                   }
+                },
+                "layer_normalization": false,
+                "depth_rff": 1,
+                "rff_config": {
+                  "units": 8,
+                  "kernel_initializer": "lecun_normal",
+                  "activation": "selu",
+                  "kernel_regularizer": "l2",
+                  "kernel_regularizer_params": {
+                    "l": 0.01
+                  },
+                  "use_bias": true,
+                  "bias_initializer": "zeros"
                 }
               }
             },
@@ -946,6 +1024,19 @@
                       "l": 0.0001
                     }
                   }
+                },
+                "layer_normalization": false,
+                "depth_rff": 1,
+                "rff_config": {
+                  "units": 10,
+                  "kernel_initializer": "lecun_normal",
+                  "activation": "selu",
+                  "kernel_regularizer": "l2",
+                  "kernel_regularizer_params": {
+                    "l": 0.0001
+                  },
+                  "use_bias": true,
+                  "bias_initializer": "zeros"
                 }
               }
             },
@@ -1089,6 +1180,19 @@
                       "l": 1e-05
                     }
                   }
+                },
+                "layer_normalization": false,
+                "depth_rff": 1,
+                "rff_config": {
+                  "units": 7,
+                  "kernel_initializer": "lecun_normal",
+                  "activation": "selu",
+                  "kernel_regularizer": "l2",
+                  "kernel_regularizer_params": {
+                    "l": 1e-05
+                  },
+                  "use_bias": true,
+                  "bias_initializer": "zeros"
                 }
               }
             },
@@ -1232,6 +1336,19 @@
                       "l": 1e-06
                     }
                   }
+                },
+                "layer_normalization": false,
+                "depth_rff": 1,
+                "rff_config": {
+                  "units": 10,
+                  "kernel_initializer": "lecun_normal",
+                  "activation": "selu",
+                  "kernel_regularizer": "l2",
+                  "kernel_regularizer_params": {
+                    "l": 1e-06
+                  },
+                  "use_bias": true,
+                  "bias_initializer": "zeros"
                 }
               }
             },
@@ -1375,6 +1492,19 @@
                       "l": 1e-07
                     }
                   }
+                },
+                "layer_normalization": false,
+                "depth_rff": 1,
+                "rff_config": {
+                  "units": 6,
+                  "kernel_initializer": "lecun_normal",
+                  "activation": "selu",
+                  "kernel_regularizer": "l2",
+                  "kernel_regularizer_params": {
+                    "l": 1e-07
+                  },
+                  "use_bias": true,
+                  "bias_initializer": "zeros"
                 }
               }
             },

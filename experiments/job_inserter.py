@@ -51,8 +51,8 @@ def gen_jobs(configuration_file_path):
     return combine_with_elements(previous_dict={}, index=0, combos=combos)
 
 
-table = "simple_choice"
-name = "{}_set_transformer_choice_hyperopt".format(table)
+table = "tsp"
+name = "{}_feta_ranker_attention".format(table)
 folder = "{}/generated_configs/".format(table)
 #table = "test"
 #name = "test"
