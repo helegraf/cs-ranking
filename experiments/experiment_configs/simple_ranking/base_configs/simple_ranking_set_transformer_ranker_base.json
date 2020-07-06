@@ -45,7 +45,11 @@
                     "weighted": false,
                     "weights_initializer": "lecun_normal",
                     "factor": null,
-                    "sordoni_biased": false
+                    "sordoni_biased": false,
+                    "kernel_regularizer":  "l2",
+                    "kernel_regularizer_params":  {
+                      "l": 1e-08
+                    }
                   }
                 },
                 "layer_normalization": false,
@@ -76,7 +80,11 @@
                     "weighted": false,
                     "weights_initializer": "lecun_normal",
                     "factor": null,
-                    "sordoni_biased": false
+                    "sordoni_biased": false,
+                    "kernel_regularizer":  "l2",
+                    "kernel_regularizer_params":  {
+                      "l": 1e-08
+                    }
                   }
                 }
               }
@@ -92,6 +100,11 @@
               "kernel_regularizer_params":  {
                 "l": 1e-08
               }
+            },
+            "weights_initializer": "lecun_normal",
+            "kernel_regularizer":  "l2",
+            "kernel_regularizer_params":  {
+              "l": 1e-08
             }
           }
         },
@@ -145,7 +158,7 @@
           },
           "EarlyStoppingExtraRestoration": {
             "monitor": "val_loss",
-            "min_delta": 0,
+            "min_delta": 1e-3,
             "patience": 64,
             "verbose": 2,
             "mode": "auto",
@@ -166,7 +179,7 @@
   ],
   "timings": [
     {
-      "duration": "8h",
+      "duration": "4h",
       "time_out_eval": "10m"
     }
   ],

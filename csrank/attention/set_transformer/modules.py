@@ -6,6 +6,7 @@ from keras.activations import selu
 from keras.engine import Layer
 from keras import backend as K, Model, Input
 from keras.layers import Dense, TimeDistributed
+from keras.regularizers import l2
 from keras_layer_normalization import LayerNormalization
 
 from csrank.tensorflow_util import repeat_vector_along_new_axis
@@ -153,7 +154,7 @@ class BaseAttention(AttentionContainingLayer):
 class ScaledDotProductAttention(BaseAttention):
 
     def __init__(self, scale=True, weighted=False, weights_initializer="glorot_uniform", factor=None,
-                 sordoni_biased=False, **kwargs):
+                 sordoni_biased=False, kernel_regularizer=l2(1e-4), **kwargs):
         super(ScaledDotProductAttention, self).__init__(**kwargs)
 
         self.logger = logging.getLogger(ScaledDotProductAttention.__name__)
@@ -164,6 +165,7 @@ class ScaledDotProductAttention(BaseAttention):
         self.factor = factor if factor is not None else 1
         self.weights_initializer = weights_initializer
         self.sordoni_biased = sordoni_biased
+        self.kernel_regularizer = kernel_regularizer
 
         # weights
         self.w_a = None
@@ -179,7 +181,8 @@ class ScaledDotProductAttention(BaseAttention):
         if self.weighted:
             self.w_a = self.add_weight(name='w_a',
                                        shape=(d_q, d_q),
-                                       initializer=self.weights_initializer)
+                                       initializer=self.weights_initializer,
+                                       regularizer=self.kernel_regularizer)
             self.logger.debug("Init weight with", self.w_a)
 
         if self.biased:
@@ -222,13 +225,14 @@ class ScaledDotProductAttention(BaseAttention):
 
 class AdditiveAttention(BaseAttention):
 
-    def __init__(self, flavour='Luong', weights_initializer='glorot_uniform', **kwargs):
+    def __init__(self, flavour='Luong', weights_initializer='glorot_uniform', kernel_regularizer=l2(1e-4), **kwargs):
         super(AdditiveAttention, self).__init__(**kwargs)
         allowed_flavours = ['Luong', 'Bahdanau']
         if flavour not in allowed_flavours:
             raise ValueError("Given flavour {} is invalid; allowed: {}".format(flavour, allowed_flavours))
 
         self.weights_initializer = weights_initializer
+        self.kernel_regularizer = kernel_regularizer
 
         # non-linear activation is needed
         if self.activation is None:
@@ -255,15 +259,18 @@ class AdditiveAttention(BaseAttention):
         if self.flavour == 'Luong':
             self.w_a = self.add_weight(name="w_a",
                                        shape=(n, n),
-                                       initializer=self.weights_initializer)
+                                       initializer=self.weights_initializer,
+                                       regularizer=self.kernel_regularizer)
         else:
             # flavour = Bahdanau
             self.w_1 = self.add_weight(name="w_1",
                                        shape=(n, n),
-                                       initializer=self.weights_initializer)
+                                       initializer=self.weights_initializer,
+                                       regularizer=self.kernel_regularizer)
             self.w_2 = self.add_weight(name="w_2",
                                        shape=(m, m),
-                                       initializer=self.weights_initializer)
+                                       initializer=self.weights_initializer,
+                                       regularizer=self.kernel_regularizer)
 
         if self.biased:
             self.b = self.add_weight(name='b',
@@ -272,7 +279,8 @@ class AdditiveAttention(BaseAttention):
 
         self.v_a = self.add_weight(name="v_a",
                                    shape=(n, n),
-                                   initializer=self.weights_initializer)
+                                   initializer=self.weights_initializer,
+                                   regularizer=self.kernel_regularizer)
 
         super(AdditiveAttention, self).build(input_shape)
 
@@ -309,11 +317,13 @@ class SimilarityAttention(BaseAttention):
 
 
 class MultiHeadAttention(AttentionContainingLayer):
-    def __init__(self, attention_config, num_heads=None, weights_initializer="glorot_uniform", **kwargs):
+    def __init__(self, attention_config, num_heads=None, weights_initializer="glorot_uniform",
+                 kernel_regularizer=l2(1e-4), **kwargs):
         # hyperparameters
         self.num_heads = num_heads
         self.attention_config = attention_config
         self.weights_initializer = weights_initializer
+        self.kernel_regularizer = kernel_regularizer
 
         # runtime shape information
         self.d_q_prime = None
@@ -348,19 +358,23 @@ class MultiHeadAttention(AttentionContainingLayer):
 
         self.w_0 = self.add_weight(name='w_0',
                                    shape=(d_v, d_v),
-                                   initializer=self.weights_initializer)
+                                   initializer=self.weights_initializer,
+                                   regularizer=self.kernel_regularizer)
 
         self.w_q = self.add_weight(name='w_q',
                                    shape=(d_q, d_q),
-                                   initializer=self.weights_initializer)
+                                   initializer=self.weights_initializer,
+                                   regularizer=self.kernel_regularizer)
 
         self.w_k = self.add_weight(name='w_k',
                                    shape=(d_k, d_k),
-                                   initializer=self.weights_initializer)
+                                   initializer=self.weights_initializer,
+                                   regularizer=self.kernel_regularizer)
 
         self.w_v = self.add_weight(name='w_v',
                                    shape=(d_v, d_v),
-                                   initializer=self.weights_initializer)
+                                   initializer=self.weights_initializer,
+                                   regularizer=self.kernel_regularizer)
 
         super(MultiHeadAttention, self).build(input_shape)
 
@@ -505,19 +519,23 @@ class SAB(AttentionContainingLayer):
 
 
 class ISAB(AttentionContainingLayer):
-    def __init__(self, num_inducing_points_m, mab_inner, mab_outer, **kwargs):
+    def __init__(self, num_inducing_points_m, mab_inner, mab_outer, weights_initializer="glorot_uniform",
+                 kernel_regularizer=l2(1e-4), **kwargs):
         super(ISAB, self).__init__(**kwargs)
 
         self.num_inducing_points_m = num_inducing_points_m
         self.mab_outer = instantiate_attention_layer(mab_outer)
         self.mab_inner = instantiate_attention_layer(mab_inner)
+        self.weights_initializer = weights_initializer
+        self.kernel_regularizer = kernel_regularizer
 
         self.i = None
 
     def build(self, input_shape):
         self.i = self.add_weight(name="I",
                                  shape=(self.num_inducing_points_m, input_shape[2]),
-                                 initializer='glorot_uniform')
+                                 initializer=self.weights_initializer,
+                                 regularizer=self.kernel_regularizer)
         super(ISAB, self).build(input_shape)
 
     def call(self, inputs_, **kwargs):
@@ -545,7 +563,8 @@ class ISAB(AttentionContainingLayer):
 
 
 class PMA(AttentionContainingLayer):
-    def __init__(self, k, mab, depth_rff=1, rff_config={"activation": "relu"}, **kwargs):
+    def __init__(self, k, mab, depth_rff=1, rff_config={"activation": "relu"}, weights_initializer='glorot_uniform',
+                 kernel_regularizer=l2(1e-4), **kwargs):
         """
 
         Parameters
@@ -562,6 +581,8 @@ class PMA(AttentionContainingLayer):
 
         self.k = k
         self.mab = instantiate_attention_layer(mab)
+        self.weights_initializer = weights_initializer
+        self.kernel_regularizer = kernel_regularizer
 
         self.depth_rff = depth_rff
         self.rff_config = rff_config
@@ -572,7 +593,8 @@ class PMA(AttentionContainingLayer):
     def build(self, input_shape):
         self.S = self.add_weight(name='S',
                                  shape=(self.k, input_shape[2]),
-                                 initializer='glorot_uniform')
+                                 initializer=self.weights_initializer,
+                                 regularizer=self.kernel_regularizer)
 
         if "units" not in self.rff_config.keys():
             self.rff_config = {"units": input_shape[2], **self.rff_config}

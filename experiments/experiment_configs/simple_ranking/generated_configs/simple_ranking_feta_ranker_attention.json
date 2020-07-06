@@ -118,7 +118,7 @@
           },
           "EarlyStoppingExtraRestoration": {
             "monitor": "val_loss",
-            "min_delta": 0,
+            "min_delta": 1e-3,
             "patience": 64,
             "verbose": 2,
             "mode": "auto",
@@ -212,7 +212,7 @@
           },
           "EarlyStoppingExtraRestoration": {
             "monitor": "val_loss",
-            "min_delta": 0,
+            "min_delta": 1e-3,
             "patience": 64,
             "verbose": 2,
             "mode": "auto",
@@ -306,7 +306,7 @@
           },
           "EarlyStoppingExtraRestoration": {
             "monitor": "val_loss",
-            "min_delta": 0,
+            "min_delta": 1e-3,
             "patience": 64,
             "verbose": 2,
             "mode": "auto",
@@ -402,7 +402,7 @@
           },
           "EarlyStoppingExtraRestoration": {
             "monitor": "val_loss",
-            "min_delta": 0,
+            "min_delta": 1e-3,
             "patience": 64,
             "verbose": 2,
             "mode": "auto",
@@ -501,7 +501,7 @@
           },
           "EarlyStoppingExtraRestoration": {
             "monitor": "val_loss",
-            "min_delta": 0,
+            "min_delta": 1e-3,
             "patience": 64,
             "verbose": 2,
             "mode": "auto",
@@ -600,7 +600,7 @@
           },
           "EarlyStoppingExtraRestoration": {
             "monitor": "val_loss",
-            "min_delta": 0,
+            "min_delta": 1e-3,
             "patience": 64,
             "verbose": 2,
             "mode": "auto",
@@ -699,7 +699,7 @@
           },
           "EarlyStoppingExtraRestoration": {
             "monitor": "val_loss",
-            "min_delta": 0,
+            "min_delta": 1e-3,
             "patience": 64,
             "verbose": 2,
             "mode": "auto",
@@ -793,7 +793,7 @@
           },
           "EarlyStoppingExtraRestoration": {
             "monitor": "val_loss",
-            "min_delta": 0,
+            "min_delta": 1e-3,
             "patience": 64,
             "verbose": 2,
             "mode": "auto",
@@ -889,7 +889,7 @@
           },
           "EarlyStoppingExtraRestoration": {
             "monitor": "val_loss",
-            "min_delta": 0,
+            "min_delta": 1e-3,
             "patience": 64,
             "verbose": 2,
             "mode": "auto",
@@ -983,7 +983,7 @@
           },
           "EarlyStoppingExtraRestoration": {
             "monitor": "val_loss",
-            "min_delta": 0,
+            "min_delta": 1e-3,
             "patience": 64,
             "verbose": 2,
             "mode": "auto",

@@ -44,12 +44,11 @@
     "feta_dc": {
     "n_hidden": [2, 3, 4, 5],
     "n_units": [5, 6, 7, 8, 9, 10],
-    "l": [1e-8, 1e-7, 1e-6, 1e-5, 1e-4, 1e-3, 1e-2],
-    "loss_function": ["knapsack_loss_wrapper_wrapper", "binary_crossentropy"]
+    "l": [1e-8, 1e-7, 1e-6, 1e-5, 1e-4, 1e-3, 1e-2]
     },
   "set_transformer_dc": {
     "num_layers_dense": [2, 3, 4, 5],
     "units": [5, 6, 7, 8, 9, 10],
-    "l": [1e-10, 1e-9, 1e-8, 1e-7, 1e-6]
+    "l": [1e-8, 1e-7, 1e-6, 1e-5, 1e-4, 1e-3, 1e-2]
   }
 }
