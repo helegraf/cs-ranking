@@ -1,0 +1,80 @@
+{
+  "resources": {
+    "ncpus": "2",
+    "vmem": "42g",
+    "mem": "16g"
+  },
+  "dataset_configs": [
+    {
+      "dataset": "synthetic_or",
+      "dataset_params": {
+        "dataset_type": "tsp",
+        "n_objects": 10,
+        "n_train_instances": 102400,
+        "n_test_instances": 10240,
+        "sorted": true
+      }
+    }
+  ],
+  "folds": [
+    {
+      "fold_id": 1,
+      "n_inner_folds": 0
+    }
+  ],
+  "learning_problem": "object_ranking_tsp",
+  "seeds": [
+    {
+      "seed": 1234
+    },
+    {
+      "seed": 2345
+    },
+    {
+      "seed": 3456
+    },
+    {
+      "seed": 4567
+    },
+    {
+      "seed": 5678
+    },
+    {
+      "seed": 6789
+    },
+    {
+      "seed": 9876
+    },
+    {
+      "seed": 8765
+    },
+    {
+      "seed": 7654
+    },
+    {
+      "seed": 6543
+    }
+  ],
+  "learners": [
+    {
+      "learner_name": "random_ranker",
+      "learner_params": {},
+      "learner_fit_params": {}
+    }
+  ],
+  "optimizers": [
+    {
+      "use_hp": "False",
+      "hp_iterations": 0,
+      "hp_ranges": {},
+      "hp_fit_params": {}
+    }
+  ],
+  "timings": [
+    {
+      "duration": "30m",
+      "time_out_eval": "10m"
+    }
+  ],
+  "results_table_name": "results_tsp_sorted"
+}
