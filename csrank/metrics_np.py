@@ -15,12 +15,14 @@ __all__ = ['spearman_correlation_for_scores_np', 'kendalls_tau_for_scores_np', '
 
 
 def turn_around(ranking, n):
-    return np.asarray([(x + n) % len(ranking) for x in ranking])
+    result = np.asarray([(x + n) % len(ranking) for x in ranking])
+    return result
 
 
 def kendalls_tau_tsp_min(y_true, s_pred):
-    kendalls_taus = [kendalls_tau_for_scores_np(turn_around(y_true, n), s_pred) for n in range(len(y_true))]
-    return max(kendalls_taus)
+    kendalls_taus = [[kendalls_tau_for_scores_np(np.asarray([turn_around(y_true[i], n)]), np.asarray([s_pred[i]])) for n in range(len(y_true[i]))] for i in range(len(y_true))]
+    maximum = np.max(np.asarray(kendalls_taus))
+    return maximum
 
 
 def spearman_correlation_for_scores_np(y_true, s_pred):

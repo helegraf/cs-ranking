@@ -67,10 +67,6 @@ def do_experiment():
                                                                 n_test_instances=n_test_instances, n_objects=n_objects,
                                                                 seed=seed, path=SAVED_DATA_FOLDER, sorted=sorted)
 
-    print(x_train)
-    print("--")
-    print(y_train)
-
     assert_almost_equal(actual=x_train_2, desired=x_train, decimal=7)
     assert_almost_equal(actual=x_test_2, desired=x_test, decimal=7)
     assert_almost_equal(actual=y_train_2, desired=y_train, decimal=7)
