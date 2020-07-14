@@ -26,7 +26,7 @@
   "learning_problem": "choice_function",
   "seeds": [
     {
-      "seed": 1234
+      "seed": 3456
     }
   ],
   "learners": [
@@ -611,7 +611,7 @@
           }
         },
         "loss_function": "binary_crossentropy",
-        "loss_function_requires_x_values": true,
+        "loss_function_requires_x_values": false,
         "batch_size": 256,
         "optimizer": "SGD",
         "optimizer_params": {
@@ -769,7 +769,7 @@
           }
         },
         "loss_function": "binary_crossentropy",
-        "loss_function_requires_x_values": true,
+        "loss_function_requires_x_values": false,
         "batch_size": 256,
         "optimizer": "SGD",
         "optimizer_params": {
@@ -927,7 +927,7 @@
           }
         },
         "loss_function": "binary_crossentropy",
-        "loss_function_requires_x_values": true,
+        "loss_function_requires_x_values": false,
         "batch_size": 256,
         "optimizer": "SGD",
         "optimizer_params": {
@@ -1243,7 +1243,7 @@
           }
         },
         "loss_function": "binary_crossentropy",
-        "loss_function_requires_x_values": true,
+        "loss_function_requires_x_values": false,
         "batch_size": 256,
         "optimizer": "SGD",
         "optimizer_params": {
@@ -1559,7 +1559,7 @@
           }
         },
         "loss_function": "binary_crossentropy",
-        "loss_function_requires_x_values": true,
+        "loss_function_requires_x_values": false,
         "batch_size": 256,
         "optimizer": "SGD",
         "optimizer_params": {

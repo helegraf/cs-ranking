@@ -52,19 +52,24 @@ def do_experiment():
     n_test_instances = int(arguments["--n_test_instances"])
     n_objects = int(arguments["--n_objects"])
     seed = int(arguments["--seed"])
+    sorted = True
 
     gen = ObjectRankingDatasetGenerator(dataset_type='tsp', n_train_instances=n_train_instances,
                                         n_test_instances=n_test_instances, n_objects=n_objects,
-                                        random_state=np.random.RandomState(seed=42))
+                                        random_state=np.random.RandomState(seed=42), sorted=sorted)
     x_train, y_train, x_test, y_test = gen.get_single_train_test_split()
 
     save_tsp_dataset(x_train=x_train, y_train=y_train, x_test=x_test, y_test=y_test,
                      n_train_instances=n_train_instances, n_test_instances=n_test_instances, n_objects=n_objects,
-                     seed=seed, path=SAVED_DATA_FOLDER)
+                     seed=seed, path=SAVED_DATA_FOLDER, sorted=sorted)
 
     x_train_2, y_train_2, x_test_2, y_test_2 = load_tsp_dataset(n_train_instances=n_train_instances,
                                                                 n_test_instances=n_test_instances, n_objects=n_objects,
-                                                                seed=seed, path=SAVED_DATA_FOLDER)
+                                                                seed=seed, path=SAVED_DATA_FOLDER, sorted=sorted)
+
+    print(x_train)
+    print("--")
+    print(y_train)
 
     assert_almost_equal(actual=x_train_2, desired=x_train, decimal=7)
     assert_almost_equal(actual=x_test_2, desired=x_test, decimal=7)

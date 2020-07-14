@@ -25,7 +25,10 @@
   "learning_problem": "object_ranking_tsp",
   "seeds": [
     {
-      "seed": 1234
+      "seed": 2345
+    },
+    {
+      "seed": 3456
     }
   ],
   "learners": [
@@ -295,7 +298,7 @@
           "bias_initializer": "zeros"
         },
         "loss_function": "tsp_dist_matrix_loss_wrapper",
-        "loss_function_requires_x_values": false,
+        "loss_function_requires_x_values": true,
         "batch_size": 256,
         "optimizer": "SGD",
         "optimizer_params": {
@@ -454,7 +457,7 @@
           "bias_initializer": "zeros"
         },
         "loss_function": "tsp_dist_matrix_loss_wrapper",
-        "loss_function_requires_x_values": false,
+        "loss_function_requires_x_values": true,
         "batch_size": 256,
         "optimizer": "SGD",
         "optimizer_params": {
@@ -1408,7 +1411,7 @@
           "bias_initializer": "zeros"
         },
         "loss_function": "tsp_dist_matrix_loss_wrapper",
-        "loss_function_requires_x_values": false,
+        "loss_function_requires_x_values": true,
         "batch_size": 256,
         "optimizer": "SGD",
         "optimizer_params": {

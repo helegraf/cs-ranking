@@ -25,9 +25,6 @@
   ],
   "learning_problem": "choice_function",
   "seeds": [
-    {
-      "seed": 1234
-    },
       {
       "seed": 2345
     },

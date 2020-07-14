@@ -30,7 +30,10 @@
   "learning_problem": "discrete_choice",
   "seeds": [
     {
-      "seed": 1234
+      "seed": 2345
+    },
+    {
+      "seed": 3456
     }
   ],
   "learners": [

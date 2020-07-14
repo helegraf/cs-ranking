@@ -17,9 +17,9 @@ from ..util import create_pairwise_prob_matrix, quicksort
 from ...util import create_dir_recursively
 
 
-def load_tsp_dataset(n_train_instances, n_test_instances, n_objects, seed, path):
-    filename = "tsp_dataset_n_train_instances-{}_n_test_instances-{}_n_objects-{}_seed-{}"
-    filename = filename.format(n_train_instances, n_test_instances, n_objects, seed)
+def load_tsp_dataset(n_train_instances, n_test_instances, n_objects, seed, path, sorted=False):
+    filename = "tsp_dataset_n_train_instances-{}_n_test_instances-{}_n_objects-{}_seed-{}_sorted-{}"
+    filename = filename.format(n_train_instances, n_test_instances, n_objects, seed, sorted)
     pred_file = os.path.join(path, filename + ".h5")
     f = h5py.File(pred_file, 'r')
 
@@ -34,10 +34,11 @@ def load_tsp_dataset(n_train_instances, n_test_instances, n_objects, seed, path)
 
 
 def save_tsp_dataset(x_train, y_train, x_test, y_test, n_train_instances, n_test_instances, n_objects, seed,
-                     path):
-    filename = "tsp_dataset_n_train_instances-{}_n_test_instances-{}_n_objects-{}_seed-{}"
-    filename = filename.format(n_train_instances, n_test_instances, n_objects, seed)
+                     path, sorted=False):
+    filename = "tsp_dataset_n_train_instances-{}_n_test_instances-{}_n_objects-{}_seed-{}_sorted-{}"
+    filename = filename.format(n_train_instances, n_test_instances, n_objects, seed, sorted)
     pred_file = os.path.join(path, filename + ".h5")
+    print("save data at", pred_file)
     create_dir_recursively(pred_file, True)
     f = h5py.File(pred_file, 'w')
 
@@ -91,9 +92,13 @@ class ObjectRankingDatasetGenerator(SyntheticDatasetGenerator):
 
         return x, y
 
-    def make_tsp_dataset(self, n_instances, n_objects, seed=42, **kwargs):
+    def make_tsp_dataset(self, n_instances, n_objects, seed=42, sorted=False, **kwargs):
         # 1. Generate x data
         x = self.random_state.random_integers(low=0, high=10000, size=(n_instances, n_objects, 2))
+
+        # 2. Sort the data lexicographically
+        for instance in range(n_instances):
+            x[instance] = x[instance][np.lexsort(np.rot90(x[instance]))]
 
         # 2. Label the data
         y = np.empty((n_instances, n_objects), dtype=int)

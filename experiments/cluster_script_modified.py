@@ -169,7 +169,8 @@ def do_experiment():
                     n_test_instances=dataset_params['n_test_instances'],
                     n_objects=dataset_params['n_objects'],
                     seed=seed,
-                    path=data_foldr)
+                    path=data_foldr,
+                    sorted=dataset_params['sorted'])
                 standardizer = None
             else:
                 dataset_params['random_state'] = random_state

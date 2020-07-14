@@ -52,7 +52,7 @@ def gen_jobs(configuration_file_path):
 
 
 table = "tsp"
-name = "{}_feta_ranker_attention".format(table)
+name = "{}_fate_ranker_sensitivity".format(table)
 folder = "{}/generated_configs/".format(table)
 #table = "test"
 #name = "test"

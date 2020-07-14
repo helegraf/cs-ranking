@@ -74,7 +74,8 @@ tsp_ranking_metrics = {'KendallsTau': kendalls_tau_for_scores_np,
                        'ZeroOneAccuracy': zero_one_accuracy_for_scores_np,
                        'TSPAbsoluteDifference_requiresX': tsp_loss_absolute_wrapper,
                        'TSPRelativeDifference_requiresX': tsp_loss_relative_wrapper,
-                       'TSPDistance_requiresX': tsp_distance_wrapper}
+                       'TSPDistance_requiresX': tsp_distance_wrapper,
+                       'KendallsTauTSPMin': kendalls_tau_tsp_min}
 discrete_choice_metrics = {'CategoricalAccuracy': categorical_accuracy_np,
                            'CategoricalTopK2': topk_categorical_accuracy_np(k=2),
                            'CategoricalTopK3': topk_categorical_accuracy_np(k=3),

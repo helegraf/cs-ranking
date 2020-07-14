@@ -11,7 +11,16 @@ __all__ = ['spearman_correlation_for_scores_np', 'kendalls_tau_for_scores_np', '
            'zero_one_rank_loss_for_scores_np', 'auc_score', "instance_informedness", 'f1_measure', 'recall', 'hamming',
            'average_precision', "precision", "subset_01_loss", "spearman_correlation_for_scores_scipy",
            "topk_categorical_accuracy_np",
-           "categorical_accuracy_np", "make_ndcg_at_k_loss_np"]
+           "categorical_accuracy_np", "make_ndcg_at_k_loss_np", "kendalls_tau_tsp_min"]
+
+
+def turn_around(ranking, n):
+    return np.asarray([(x + n) % len(ranking) for x in ranking])
+
+
+def kendalls_tau_tsp_min(y_true, s_pred):
+    kendalls_taus = [kendalls_tau_for_scores_np(turn_around(y_true, n), s_pred) for n in range(len(y_true))]
+    return max(kendalls_taus)
 
 
 def spearman_correlation_for_scores_np(y_true, s_pred):

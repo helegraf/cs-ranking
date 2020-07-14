@@ -25,7 +25,10 @@
   "learning_problem": "object_ranking_tsp",
   "seeds": [
     {
-      "seed": 1234
+      "seed": 2345
+    },
+    {
+      "seed": 3456
     }
   ],
   "learners": [
