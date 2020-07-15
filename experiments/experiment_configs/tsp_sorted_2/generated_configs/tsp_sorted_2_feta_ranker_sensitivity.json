@@ -2,8 +2,8 @@
   "resources": {
     "gtx1080": "1",
     "ncpus": "2",
-    "vmem": "42g",
-    "mem": "16g"
+    "vmem": "54g",
+    "mem": "32g"
   },
   "dataset_configs": [
     {
@@ -34,23 +34,24 @@
   ],
   "learners": [
     {
-      "learner_name": "fate_ranker",
+      "learner_name": "feta_ranker",
       "learner_params": {
-        "attention_pooling": null,
+        "attention_pooling_config": null,
         "attention_preselection_config": null,
         "num_attention_preselection_layers": 0,
-        "loss_function": "hinged_rank_loss",
+        "n_hidden": 4,
+        "n_units": 32,
+        "add_zeroth_order_model": true,
+        "max_number_of_objects": 10,
+        "loss_function": "tsp_probability_matrix_loss",
         "loss_function_requires_x_values": false,
-        "n_hidden_set_layers": 2,
-        "n_hidden_set_units": 32,
-        "n_hidden_joint_layers": 5,
-        "n_hidden_joint_units": 32,
-        "activation": "selu",
         "batch_size": 256,
+        "batch_normalization": false,
+        "activation": "selu",
         "kernel_initializer": "lecun_normal",
         "kernel_regularizer": "l2",
         "kernel_regularizer_params": {
-          "l": 1e-6
+          "l": 0.01
         },
         "optimizer": "SGD",
         "optimizer_params": {
@@ -85,8 +86,8 @@
             "update_freq": "epoch"
           },
           "CyclicLR": {
-            "base_lr": 1e-5,
-            "max_lr": 1e-1,
+            "base_lr": 1e-6,
+            "max_lr": 1e-2,
             "step_size": 5760,
             "mode": "triangular2"
           },
@@ -113,9 +114,9 @@
   ],
   "timings": [
     {
-      "duration": "12h",
+      "duration": "1d",
       "time_out_eval": "10m"
     }
   ],
-  "results_table_name": "results_tsp_sorted"
+  "results_table_name": "results_tsp_sorted_2"
 }

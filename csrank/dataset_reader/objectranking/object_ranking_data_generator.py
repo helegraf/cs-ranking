@@ -9,6 +9,8 @@ from sklearn.datasets import make_blobs
 from sklearn.gaussian_process.kernels import Matern
 from sklearn.utils import check_random_state
 import elkai
+import matplotlib.pyplot as plt
+import copy
 
 from csrank.constants import OBJECT_RANKING
 from csrank.numpy_util import scores_to_rankings
@@ -96,13 +98,13 @@ class ObjectRankingDatasetGenerator(SyntheticDatasetGenerator):
         # 1. Generate x data
         x = self.random_state.random_integers(low=0, high=10000, size=(n_instances, n_objects, 2))
 
-        # 2. Sort the data lexicographically
-        for instance in range(n_instances):
-            x[instance] = x[instance][np.lexsort(np.rot90(x[instance]))]
-
         # 2. Label the data
         y = np.empty((n_instances, n_objects), dtype=int)
         for instance in range(n_instances):
+            # 2. Sort the data lexicographically
+            if sorted:
+                x[instance] = x[instance][np.lexsort(np.rot90(x[instance]))]
+
             # fill matrix with distances
             matrix = cdist(x[instance], x[instance])
 
@@ -111,6 +113,28 @@ class ObjectRankingDatasetGenerator(SyntheticDatasetGenerator):
 
             # predict labels
             y[instance] = np.asarray(np.argsort(elkai.solve_int_matrix(matrix)), dtype=int)
+
+            if sorted:
+                # ensure that labels are going clockwise
+                # 1. find centroid
+                centroid = np.mean(x[instance], axis=0)
+
+                # compute degrees
+                degrees = 0
+                path = x[instance][np.argsort(y[instance])]
+                for i in range(len(path)):
+                    obj1 = path[i-1]
+                    obj2 = path[i]
+                    v1 = obj1 - centroid
+                    v2 = obj2 - centroid
+                    degree = np.arctan2(v1[0] * v2[1] - v1[1] * v2[0], v1[0] * v2[0] + v1[1] * v2[1])
+                    degrees += degree
+
+                # correct if going counterclockwise
+                if degrees < 0:
+                    previous = copy.deepcopy(y[instance])
+                    flipped = [0, *np.flip(np.argsort(y[instance][1:]))]
+                    y[instance] = np.asarray(np.argsort(flipped))
 
         return x, y
 

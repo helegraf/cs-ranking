@@ -12,7 +12,7 @@
         "n_objects": 10,
         "n_train_instances": 102400,
         "n_test_instances": 10240,
-        "sorted": true
+"sorted": true
       }
     }
   ],
@@ -36,32 +36,69 @@
   ],
   "learners": [
     {
-      "learner_name": "err",
+      "learner_name": "ranksvm",
       "learner_params": {
-        "alpha": 0.0,
-        "l1_ratio": 0.5,
-        "tol": 1e-4,
+        "C": 1.0,
+        "tol": 1e-08,
         "normalize": true,
         "fit_intercept": true
       },
       "learner_fit_params": {}
     },
     {
-      "learner_name": "err",
+      "learner_name": "ranksvm",
       "learner_params": {
-        "alpha": 0.2,
-        "l1_ratio": 0.0,
-        "tol": 1e-4,
+        "C": 0.01,
+        "tol": 1e-08,
         "normalize": true,
         "fit_intercept": true
       },
       "learner_fit_params": {}
     },
     {
-      "learner_name": "err",
+      "learner_name": "ranksvm",
       "learner_params": {
-        "alpha": 0.4,
-        "l1_ratio": 0.0,
+        "C": 1.0,
+        "tol": 0.0001,
+        "normalize": true,
+        "fit_intercept": true
+      },
+      "learner_fit_params": {}
+    },
+    {
+      "learner_name": "ranksvm",
+      "learner_params": {
+        "C": 0.01,
+        "tol": 1e-06,
+        "normalize": true,
+        "fit_intercept": true
+      },
+      "learner_fit_params": {}
+    },
+    {
+      "learner_name": "ranksvm",
+      "learner_params": {
+        "C": 10.0,
+        "tol": 0.01,
+        "normalize": true,
+        "fit_intercept": true
+      },
+      "learner_fit_params": {}
+    },
+    {
+      "learner_name": "ranksvm",
+      "learner_params": {
+        "C": 100.0,
+        "tol": 1e-06,
+        "normalize": true,
+        "fit_intercept": true
+      },
+      "learner_fit_params": {}
+    },
+    {
+      "learner_name": "ranksvm",
+      "learner_params": {
+        "C": 0.1,
         "tol": 1e-10,
         "normalize": true,
         "fit_intercept": true
@@ -69,54 +106,19 @@
       "learner_fit_params": {}
     },
     {
-      "learner_name": "err",
+      "learner_name": "ranksvm",
       "learner_params": {
-        "alpha": 0.8,
-        "l1_ratio": 0.0,
-        "tol": 1e-2,
+        "C": 100.0,
+        "tol": 0.0001,
         "normalize": true,
         "fit_intercept": true
       },
       "learner_fit_params": {}
     },
     {
-      "learner_name": "err",
+      "learner_name": "ranksvm",
       "learner_params": {
-        "alpha": 1.0,
-        "l1_ratio": 0.0,
-        "tol": 1e-8,
-        "normalize": true,
-        "fit_intercept": true
-      },
-      "learner_fit_params": {}
-    },
-    {
-      "learner_name": "err",
-      "learner_params": {
-        "alpha": 0.6,
-        "l1_ratio": 0.0,
-        "tol": 1e-6,
-        "normalize": true,
-        "fit_intercept": true
-      },
-      "learner_fit_params": {}
-    },
-    {
-      "learner_name": "err",
-      "learner_params": {
-        "alpha": 1.0,
-        "l1_ratio": 0.6,
-        "tol": 1e-6,
-        "normalize": true,
-        "fit_intercept": true
-      },
-      "learner_fit_params": {}
-    },
-    {
-      "learner_name": "err",
-      "learner_params": {
-        "alpha": 0.8,
-        "l1_ratio": 0.8,
+        "C": 10.0,
         "tol": 1e-10,
         "normalize": true,
         "fit_intercept": true
@@ -124,33 +126,10 @@
       "learner_fit_params": {}
     },
     {
-      "learner_name": "err",
+      "learner_name": "ranksvm",
       "learner_params": {
-        "alpha": 0.6,
-        "l1_ratio": 0.2,
-        "tol": 1e-2,
-        "normalize": true,
-        "fit_intercept": true
-      },
-      "learner_fit_params": {}
-    },
-    {
-      "learner_name": "err",
-      "learner_params": {
-        "alpha": 0.4,
-        "l1_ratio": 1.0,
-        "tol": 1e-4,
-        "normalize": true,
-        "fit_intercept": true
-      },
-      "learner_fit_params": {}
-    },
-    {
-      "learner_name": "err",
-      "learner_params": {
-        "alpha": 0.2,
-        "l1_ratio": 0.4,
-        "tol": 1e-8,
+        "C": 0.1,
+        "tol": 0.01,
         "normalize": true,
         "fit_intercept": true
       },
@@ -167,9 +146,9 @@
   ],
   "timings": [
     {
-      "duration": "15m",
+      "duration": "1h",
       "time_out_eval": "10m"
     }
   ],
-  "results_table_name": "results_tsp_sorted"
+  "results_table_name": "results_tsp_sorted_2"
 }

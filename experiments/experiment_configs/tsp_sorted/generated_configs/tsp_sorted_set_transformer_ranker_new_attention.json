@@ -509,7 +509,7 @@
   ],
   "optimizers": [
     {
-      "use_hp": "False",
+      "use_hp": false,
       "hp_iterations": 0,
       "hp_ranges": {},
       "hp_fit_params": {}

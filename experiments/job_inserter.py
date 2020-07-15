@@ -51,7 +51,7 @@ def gen_jobs(configuration_file_path):
     return combine_with_elements(previous_dict={}, index=0, combos=combos)
 
 
-table = "tsp_sorted"
+table = "tsp_sorted_2"
 name = "{}_test".format(table)
 folder = "{}/generated_configs/".format(table)
 #table = "test"

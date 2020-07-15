@@ -32,27 +32,6 @@
     },
     {
       "seed": 3456
-    },
-    {
-      "seed": 4567
-    },
-    {
-      "seed": 5678
-    },
-    {
-      "seed": 6789
-    },
-    {
-      "seed": 9876
-    },
-    {
-      "seed": 8765
-    },
-    {
-      "seed": 7654
-    },
-    {
-      "seed": 6543
     }
   ],
   "learners": [
@@ -159,7 +138,7 @@
   ],
   "optimizers": [
     {
-      "use_hp": "False",
+      "use_hp": false,
       "hp_iterations": 0,
       "hp_ranges": {},
       "hp_fit_params": {}

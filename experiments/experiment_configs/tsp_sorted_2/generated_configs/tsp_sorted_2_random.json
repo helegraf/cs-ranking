@@ -55,5 +55,5 @@
       "time_out_eval": "10m"
     }
   ],
-  "results_table_name": "results_tsp_sorted"
+  "results_table_name": "results_tsp_sorted_2"
 }

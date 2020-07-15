@@ -1,8 +1,10 @@
+import copy
 import io
 
 import matplotlib.pyplot as plt
 import tensorflow as tf
 import numpy as np
+from matplotlib.patches import ArrowStyle
 
 from csrank.visualization.util import tableau_10_colorblind_color_scheme
 
@@ -99,15 +101,50 @@ def add_tsp_figure_to_plot(figure, gridspec_location, x, true, prediction):
     plt.legend()
 
 
+def add_arrow(line, position=None, direction='right', size=15, color=None):
+    """
+    add an arrow to a line.
+
+    line:       Line2D object
+    position:   x-position of the arrow. If None, mean of xdata is taken
+    direction:  'left' or 'right'
+    size:       size of the arrow in fontsize points
+    color:      if None, line color is taken.
+    """
+    if color is None:
+        color = line.get_color()
+
+    xdata = line.get_xdata()
+    ydata = line.get_ydata()
+
+    if position is None:
+        position = xdata.mean()
+    # find closest index
+    start_ind = np.argmin(np.absolute(xdata - position))
+    if direction == 'right':
+        end_ind = start_ind + 1
+    else:
+        end_ind = start_ind - 1
+
+    line.axes.annotate('',
+        xytext=(xdata[start_ind], ydata[start_ind]),
+        xy=(xdata[end_ind], ydata[end_ind]),
+        #arrowprops=dict(arrowstyle="->", color=color),
+        arrowprops={'color': color, 'linewidth': 0, 'arrowstyle':ArrowStyle(stylename="Simple", head_length=0.4, head_width=0.4, tail_width=0)},
+        size=size
+    )
+
+
 def plot_path(x_instances, rankings, color, line_style, label):
     path = np.argsort(rankings)
 
     for i in range(len(path)):
         x_and_y = np.append(x_instances[path[i - 1]], x_instances[path[i]]).reshape((2, 2))
         if i == 0:
-            plt.plot(x_and_y[:, 0], x_and_y[:, 1], color=color, linestyle=line_style, label=label)
+            line = plt.plot(x_and_y[:, 0], x_and_y[:, 1], color=color, linestyle=line_style, label=label)
         else:
-            plt.plot(x_and_y[:, 0], x_and_y[:, 1], color=color, linestyle=line_style)
+            line = plt.plot(x_and_y[:, 0], x_and_y[:, 1], color=color, linestyle=line_style)
+        add_arrow(line[0])
 
 
 def create_lr_plotting_graph(update_freq):
@@ -141,3 +178,23 @@ def create_scalar_plotting_graph(metric_name):
     tmp_data = value_placeholder + 0
     summary_scalar = tf.summary.scalar("metric/" + metric_name, tensor=tmp_data)
     return value_placeholder, summary_scalar
+
+
+def tsp_directional_figure(x, before, after):
+    # Create a figure to contain the plot.
+    figure = plt.figure(figsize=(7, 7))
+    ax = plt.subplot(111)
+    x2 = copy.deepcopy(x)
+    x2[:, 0] = x[:, 0] + 5000
+
+    # plot both predictions and correct path
+    plot_path(x, before, tableau_10_colorblind_color_scheme['dark_blue'], "--", "before")
+    plot_path(x2, after, tableau_10_colorblind_color_scheme['orange'], "-", "after")
+
+    set_up_figure(ax)
+
+    # add legend
+    plt.legend(frameon=False)
+    plt.title("Correcting the direction of the label.")
+
+    return figure

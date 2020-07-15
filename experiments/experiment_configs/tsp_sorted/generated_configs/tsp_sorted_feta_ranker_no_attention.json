@@ -60,7 +60,7 @@
         "optimizer": "SGD",
         "optimizer_params": {
           "lr": 0.0001,
-          "nesterov": "true",
+          "nesterov": true,
           "momentum": 0.9,
           "clipnorm": 1.0
         }
@@ -131,7 +131,7 @@
         "optimizer": "SGD",
         "optimizer_params": {
           "lr": 0.0001,
-          "nesterov": "true",
+          "nesterov": true,
           "momentum": 0.9,
           "clipnorm": 1.0
         }
@@ -202,7 +202,7 @@
         "optimizer": "SGD",
         "optimizer_params": {
           "lr": 0.0001,
-          "nesterov": "true",
+          "nesterov": true,
           "momentum": 0.9,
           "clipnorm": 1.0
         }
@@ -273,7 +273,7 @@
         "optimizer": "SGD",
         "optimizer_params": {
           "lr": 0.0001,
-          "nesterov": "true",
+          "nesterov": true,
           "momentum": 0.9,
           "clipnorm": 1.0
         }
@@ -344,7 +344,7 @@
         "optimizer": "SGD",
         "optimizer_params": {
           "lr": 0.0001,
-          "nesterov": "true",
+          "nesterov": true,
           "momentum": 0.9,
           "clipnorm": 1.0
         }
@@ -415,7 +415,7 @@
         "optimizer": "SGD",
         "optimizer_params": {
           "lr": 0.0001,
-          "nesterov": "true",
+          "nesterov": true,
           "momentum": 0.9,
           "clipnorm": 1.0
         }
@@ -486,7 +486,7 @@
         "optimizer": "SGD",
         "optimizer_params": {
           "lr": 0.0001,
-          "nesterov": "true",
+          "nesterov": true,
           "momentum": 0.9,
           "clipnorm": 1.0
         }
@@ -557,7 +557,7 @@
         "optimizer": "SGD",
         "optimizer_params": {
           "lr": 0.0001,
-          "nesterov": "true",
+          "nesterov": true,
           "momentum": 0.9,
           "clipnorm": 1.0
         }
@@ -628,7 +628,7 @@
         "optimizer": "SGD",
         "optimizer_params": {
           "lr": 0.0001,
-          "nesterov": "true",
+          "nesterov": true,
           "momentum": 0.9,
           "clipnorm": 1.0
         }
@@ -699,7 +699,7 @@
         "optimizer": "SGD",
         "optimizer_params": {
           "lr": 0.0001,
-          "nesterov": "true",
+          "nesterov": true,
           "momentum": 0.9,
           "clipnorm": 1.0
         }
@@ -749,7 +749,7 @@
   ],
   "optimizers": [
     {
-      "use_hp": "False",
+      "use_hp": false,
       "hp_iterations": 0,
       "hp_ranges": {},
       "hp_fit_params": {}
