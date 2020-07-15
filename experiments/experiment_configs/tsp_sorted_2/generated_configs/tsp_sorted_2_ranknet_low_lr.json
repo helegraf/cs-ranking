@@ -13,7 +13,7 @@
         "n_objects": 10,
         "n_train_instances": 102400,
         "n_test_instances": 10240,
-"sorted": true
+        "sorted": true
       }
     }
   ],
@@ -27,6 +27,12 @@
   "seeds": [
     {
       "seed": 1234
+    },
+    {
+      "seed": 2345
+    },
+    {
+      "seed": 3456
     }
   ],
   "learners": [

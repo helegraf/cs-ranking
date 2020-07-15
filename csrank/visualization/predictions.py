@@ -144,7 +144,7 @@ def plot_path(x_instances, rankings, color, line_style, label):
             line = plt.plot(x_and_y[:, 0], x_and_y[:, 1], color=color, linestyle=line_style, label=label)
         else:
             line = plt.plot(x_and_y[:, 0], x_and_y[:, 1], color=color, linestyle=line_style)
-        add_arrow(line[0])
+        #add_arrow(line[0])
 
 
 def create_lr_plotting_graph(update_freq):

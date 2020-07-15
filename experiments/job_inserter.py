@@ -52,7 +52,7 @@ def gen_jobs(configuration_file_path):
 
 
 table = "tsp_sorted_2"
-name = "{}_test".format(table)
+name = "{}_ranksvm".format(table)
 folder = "{}/generated_configs/".format(table)
 #table = "test"
 #name = "test"
