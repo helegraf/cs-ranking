@@ -71,7 +71,7 @@ def tsp_figure(input, true, prediction=None, metric=None, epoch=None):
     if metric is not None:
         if not additional_info == "":
             additional_info += ", "
-        additional_info += "Quality {}".format(round(metric, 3))
+        additional_info += "Quality {}".format(round(1/metric, 3))
 
     if not additional_info == "":
         plt.title("Shortest Path vs. Predicted Path\n{}".format(additional_info))
@@ -121,6 +121,7 @@ def add_arrow(line, position=None, direction='right', size=15, color=None):
         position = xdata.mean()
     # find closest index
     start_ind = np.argmin(np.absolute(xdata - position))
+    start_ind = 0
     if direction == 'right':
         end_ind = start_ind + 1
     else:
@@ -138,13 +139,17 @@ def add_arrow(line, position=None, direction='right', size=15, color=None):
 def plot_path(x_instances, rankings, color, line_style, label):
     path = np.argsort(rankings)
 
+    x_and_y = np.append(x_instances[path[0]]-0.2, x_instances[path[0]]-0.05).reshape((2, 2))
+    beginner_index = plt.plot(x_and_y[:, 0], x_and_y[:, 1], color=color)
+    add_arrow(beginner_index[0])
+
     for i in range(len(path)):
         x_and_y = np.append(x_instances[path[i - 1]], x_instances[path[i]]).reshape((2, 2))
         if i == 0:
             line = plt.plot(x_and_y[:, 0], x_and_y[:, 1], color=color, linestyle=line_style, label=label)
         else:
             line = plt.plot(x_and_y[:, 0], x_and_y[:, 1], color=color, linestyle=line_style)
-        #add_arrow(line[0])
+        add_arrow(line[0])
 
 
 def create_lr_plotting_graph(update_freq):

@@ -502,9 +502,13 @@ class AdvancedTensorBoard(TensorBoard):
 
             # metric set up
             if self.metric_for_visualization is not None:
-                metrics = [self.metric_for_visualization(self.x)(self.y, predictions_as_rankings)
+                print(self.x)
+                print(self.y)
+                print(predictions_as_rankings)
+                metrics = [self.metric_for_visualization([self.x[i]])([self.y[i]], [predictions_as_rankings[i]])
                            if self.metric_for_visualization_requires_x else
-                           self.metric_for_visualization(self.y, predictions_as_rankings)]
+                           self.metric_for_visualization([self.y[i]], [predictions_as_rankings[i]]) for i in range(len(self.x))]
+                print(metrics)
             elif self.x is not None:
                 metrics = [None for _ in self.x]
 
@@ -529,6 +533,7 @@ class AdvancedTensorBoard(TensorBoard):
                         if self.prediction_visualization is not None:
                             prediction_img_bytes = self.prediction_plotting_graphs[num_visualization][0]
                             prediction_merged = self.prediction_plotting_graphs[num_visualization][1]
+                            print(metrics)
                             vis_data = self.prediction_visualization(self.x[num_visualization],
                                                                      self.y[num_visualization],
                                                                      predictions_as_rankings[num_visualization],
