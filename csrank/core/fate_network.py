@@ -385,7 +385,8 @@ class FATENetwork(FATENetworkCore):
         # attention preselection
         if self.attention_preselection_config is not None:
             input_with_attention = input_layer
-            self.attention_preselection_layers = [instantiate_attention_layer(self.attention_preselection_config)]
+            self.attention_preselection_layers = [instantiate_attention_layer(self.attention_preselection_config)
+                                                  for _ in range(self.num_attention_preselection_layers)]
             for layer in self.attention_preselection_layers:
                 input_with_attention = layer(input_with_attention)
         else:

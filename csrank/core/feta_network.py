@@ -85,7 +85,8 @@ class FETANetwork(Learner):
         self.input_layer = Input(shape=(self.n_objects, self.n_object_features))
         if self.attention_preselection_config is not None:
             self.attention_preselection_layers = \
-                [instantiate_attention_layer(self.attention_preselection_config)]
+                [instantiate_attention_layer(self.attention_preselection_config)
+                 for _ in range(self.num_attention_preselection_layers)]
             self.attention_preselected_input = self.input_layer
             for layer in self.attention_preselection_layers:
                 self.attention_preselected_input = layer(self.attention_preselected_input)
