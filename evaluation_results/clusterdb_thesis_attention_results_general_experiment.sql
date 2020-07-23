@@ -1,0 +1,47 @@
+create table results_general_experiment
+(
+    job_id                               int4         not null,
+    train_test                           varchar(200) not null,
+    kendallstau_min                      float8,
+    kendallstau_max                      float8,
+    kendallstau_mean                     float8,
+    kendallstau_std                      float8,
+    spearmancorrelation_min              float8,
+    spearmancorrelation_max              float8,
+    spearmancorrelation_mean             float8,
+    spearmancorrelation_std              float8,
+    zeroonerankloss_min                  float8,
+    zeroonerankloss_max                  float8,
+    zeroonerankloss_mean                 float8,
+    zeroonerankloss_std                  float8,
+    zerooneranklossties_min              float8,
+    zerooneranklossties_max              float8,
+    zerooneranklossties_mean             float8,
+    zerooneranklossties_std              float8,
+    zerooneaccuracy_min                  float8,
+    zerooneaccuracy_max                  float8,
+    zerooneaccuracy_mean                 float8,
+    zerooneaccuracy_std                  float8,
+    tspabsolutedifference_requiresx_min  float8,
+    tspabsolutedifference_requiresx_max  float8,
+    tspabsolutedifference_requiresx_mean float8,
+    tspabsolutedifference_requiresx_std  float8,
+    tsprelativedifference_requiresx_min  float8,
+    tsprelativedifference_requiresx_max  float8,
+    tsprelativedifference_requiresx_mean float8,
+    tsprelativedifference_requiresx_std  float8,
+    tspdistance_requiresx_min            float8,
+    tspdistance_requiresx_max            float8,
+    tspdistance_requiresx_mean           float8,
+    tspdistance_requiresx_std            float8,
+    inserted_at                          timestamp(6),
+    constraint results_general_experiment_pkey
+        primary key (job_id, train_test)
+);
+
+INSERT INTO thesis_attention.results_general_experiment (job_id, train_test, kendallstau_min, kendallstau_max, kendallstau_mean, kendallstau_std, spearmancorrelation_min, spearmancorrelation_max, spearmancorrelation_mean, spearmancorrelation_std, zeroonerankloss_min, zeroonerankloss_max, zeroonerankloss_mean, zeroonerankloss_std, zerooneranklossties_min, zerooneranklossties_max, zerooneranklossties_mean, zerooneranklossties_std, zerooneaccuracy_min, zerooneaccuracy_max, zerooneaccuracy_mean, zerooneaccuracy_std, tspabsolutedifference_requiresx_min, tspabsolutedifference_requiresx_max, tspabsolutedifference_requiresx_mean, tspabsolutedifference_requiresx_std, tsprelativedifference_requiresx_min, tsprelativedifference_requiresx_max, tsprelativedifference_requiresx_mean, tsprelativedifference_requiresx_std, tspdistance_requiresx_min, tspdistance_requiresx_max, tspdistance_requiresx_mean, tspdistance_requiresx_std, inserted_at) VALUES (27, 'test', -0.8222, 0.7333, 0.025, 0.3924, -0.9273, 0.8909, 0.0172, 0.5072, 0.1333, 0.9111, 0.4875, 0.1962, 0.1333, 0.9111, 0.4875, 0.1962, 0, 0, 0, 0, 0.1429, 14.2511, 4.3152, 2.3709, 0.4463, 0.9866, 0.716, 0.1057, 7.5449, 12.4797, 10.042, 1.0881, '2020-05-12 11:25:59.759665');
+INSERT INTO thesis_attention.results_general_experiment (job_id, train_test, kendallstau_min, kendallstau_max, kendallstau_mean, kendallstau_std, spearmancorrelation_min, spearmancorrelation_max, spearmancorrelation_mean, spearmancorrelation_std, zeroonerankloss_min, zeroonerankloss_max, zeroonerankloss_mean, zeroonerankloss_std, zerooneranklossties_min, zerooneranklossties_max, zerooneranklossties_mean, zerooneranklossties_std, zerooneaccuracy_min, zerooneaccuracy_max, zerooneaccuracy_mean, zerooneaccuracy_std, tspabsolutedifference_requiresx_min, tspabsolutedifference_requiresx_max, tspabsolutedifference_requiresx_mean, tspabsolutedifference_requiresx_std, tsprelativedifference_requiresx_min, tsprelativedifference_requiresx_max, tsprelativedifference_requiresx_mean, tsprelativedifference_requiresx_std, tspdistance_requiresx_min, tspdistance_requiresx_max, tspdistance_requiresx_mean, tspdistance_requiresx_std, inserted_at) VALUES (27, 'train', -0.8222, 0.7778, 0.0514, 0.3856, -0.9515, 0.8909, 0.1066, 0.5265, 0.1111, 0.9111, 0.4743, 0.1928, 0.1111, 0.9111, 0.4743, 0.1928, 0, 0, 0, 0, 0.1831, 10.1376, 4.365, 2.1226, 0.4746, 0.9794, 0.7038, 0.103, 6.4013, 12.1765, 9.7485, 1.3296, '2020-05-12 11:25:59.970239');
+INSERT INTO thesis_attention.results_general_experiment (job_id, train_test, kendallstau_min, kendallstau_max, kendallstau_mean, kendallstau_std, spearmancorrelation_min, spearmancorrelation_max, spearmancorrelation_mean, spearmancorrelation_std, zeroonerankloss_min, zeroonerankloss_max, zeroonerankloss_mean, zeroonerankloss_std, zerooneranklossties_min, zerooneranklossties_max, zerooneranklossties_mean, zerooneranklossties_std, zerooneaccuracy_min, zerooneaccuracy_max, zerooneaccuracy_mean, zerooneaccuracy_std, tspabsolutedifference_requiresx_min, tspabsolutedifference_requiresx_max, tspabsolutedifference_requiresx_mean, tspabsolutedifference_requiresx_std, tsprelativedifference_requiresx_min, tsprelativedifference_requiresx_max, tsprelativedifference_requiresx_mean, tsprelativedifference_requiresx_std, tspdistance_requiresx_min, tspdistance_requiresx_max, tspdistance_requiresx_mean, tspdistance_requiresx_std, inserted_at) VALUES (29, 'test', -0.8222, 0.7333, 0.025, 0.3924, -0.9273, 0.8909, 0.0172, 0.5072, 0.1333, 0.9111, 0.4875, 0.1962, 0.1333, 0.9111, 0.4875, 0.1962, 0, 0, 0, 0, 0.1429, 14.2511, 4.3152, 2.3709, 0.4463, 0.9866, 0.716, 0.1057, 7.5449, 12.4797, 10.042, 1.0881, '2020-05-12 11:34:47.332371');
+INSERT INTO thesis_attention.results_general_experiment (job_id, train_test, kendallstau_min, kendallstau_max, kendallstau_mean, kendallstau_std, spearmancorrelation_min, spearmancorrelation_max, spearmancorrelation_mean, spearmancorrelation_std, zeroonerankloss_min, zeroonerankloss_max, zeroonerankloss_mean, zeroonerankloss_std, zerooneranklossties_min, zerooneranklossties_max, zerooneranklossties_mean, zerooneranklossties_std, zerooneaccuracy_min, zerooneaccuracy_max, zerooneaccuracy_mean, zerooneaccuracy_std, tspabsolutedifference_requiresx_min, tspabsolutedifference_requiresx_max, tspabsolutedifference_requiresx_mean, tspabsolutedifference_requiresx_std, tsprelativedifference_requiresx_min, tsprelativedifference_requiresx_max, tsprelativedifference_requiresx_mean, tsprelativedifference_requiresx_std, tspdistance_requiresx_min, tspdistance_requiresx_max, tspdistance_requiresx_mean, tspdistance_requiresx_std, inserted_at) VALUES (29, 'train', -0.8222, 0.7778, 0.0514, 0.3856, -0.9515, 0.8909, 0.1066, 0.5265, 0.1111, 0.9111, 0.4743, 0.1928, 0.1111, 0.9111, 0.4743, 0.1928, 0, 0, 0, 0, 0.1831, 10.1376, 4.365, 2.1226, 0.4746, 0.9794, 0.7038, 0.103, 6.4013, 12.1765, 9.7485, 1.3296, '2020-05-12 11:34:47.546523');
+INSERT INTO thesis_attention.results_general_experiment (job_id, train_test, kendallstau_min, kendallstau_max, kendallstau_mean, kendallstau_std, spearmancorrelation_min, spearmancorrelation_max, spearmancorrelation_mean, spearmancorrelation_std, zeroonerankloss_min, zeroonerankloss_max, zeroonerankloss_mean, zeroonerankloss_std, zerooneranklossties_min, zerooneranklossties_max, zerooneranklossties_mean, zerooneranklossties_std, zerooneaccuracy_min, zerooneaccuracy_max, zerooneaccuracy_mean, zerooneaccuracy_std, tspabsolutedifference_requiresx_min, tspabsolutedifference_requiresx_max, tspabsolutedifference_requiresx_mean, tspabsolutedifference_requiresx_std, tsprelativedifference_requiresx_min, tsprelativedifference_requiresx_max, tsprelativedifference_requiresx_mean, tsprelativedifference_requiresx_std, tspdistance_requiresx_min, tspdistance_requiresx_max, tspdistance_requiresx_mean, tspdistance_requiresx_std, inserted_at) VALUES (30, 'test', -0.5556, 0.6222, -0.0073, 0.3033, -0.8461, 0.871, -0.009, 0.4778, 0.1889, 0.7778, 0.5036, 0.1516, 0.1889, 0.7778, 0.5036, 0.1516, 0, 0, 0, 0, 0.7524, 12.0177, 5.9191, 2.2358, 0.4332, 0.9173, 0.6409, 0.0925, 7.5449, 12.4797, 10.042, 1.0881, '2020-05-12 11:40:02.044871');
+INSERT INTO thesis_attention.results_general_experiment (job_id, train_test, kendallstau_min, kendallstau_max, kendallstau_mean, kendallstau_std, spearmancorrelation_min, spearmancorrelation_max, spearmancorrelation_mean, spearmancorrelation_std, zeroonerankloss_min, zeroonerankloss_max, zeroonerankloss_mean, zeroonerankloss_std, zerooneranklossties_min, zerooneranklossties_max, zerooneranklossties_mean, zerooneranklossties_std, zerooneaccuracy_min, zerooneaccuracy_max, zerooneaccuracy_mean, zerooneaccuracy_std, tspabsolutedifference_requiresx_min, tspabsolutedifference_requiresx_max, tspabsolutedifference_requiresx_mean, tspabsolutedifference_requiresx_std, tsprelativedifference_requiresx_min, tsprelativedifference_requiresx_max, tsprelativedifference_requiresx_mean, tsprelativedifference_requiresx_std, tspdistance_requiresx_min, tspdistance_requiresx_max, tspdistance_requiresx_mean, tspdistance_requiresx_std, inserted_at) VALUES (30, 'train', -0.6889, 0.6444, -0.0483, 0.3023, -0.9051, 0.9045, -0.0738, 0.4628, 0.1778, 0.8444, 0.5241, 0.1511, 0.1778, 0.8444, 0.5241, 0.1511, 0, 0, 0, 0, 0.7965, 11.1143, 5.633, 2.2211, 0.4532, 0.9254, 0.6445, 0.0971, 6.4013, 12.1765, 9.7485, 1.3296, '2020-05-12 11:40:02.209223');

@@ -13,7 +13,7 @@
         "n_objects": 10,
         "n_train_instances": 102400,
         "n_test_instances": 10240,
-"sorted": true
+        "sorted": true
       }
     }
   ],
@@ -29,6 +29,9 @@
       "seed": 1234
     },
     {
+      "seed": 2345
+    },
+    {
       "seed": 3456
     }
   ],
@@ -39,9 +42,9 @@
         "attention_pooling": null,
         "attention_preselection_config": null,
         "num_attention_preselection_layers": 0,
-        "loss_function": "hinged_rank_loss",
+        "loss_function": "tsp_probability_matrix_loss",
         "loss_function_requires_x_values": false,
-        "n_hidden_set_layers": 2,
+        "n_hidden_set_layers": 5,
         "n_hidden_set_units": 32,
         "n_hidden_joint_layers": 5,
         "n_hidden_joint_units": 32,
@@ -50,7 +53,7 @@
         "kernel_initializer": "lecun_normal",
         "kernel_regularizer": "l2",
         "kernel_regularizer_params": {
-          "l": 1e-6
+          "l": 0.001
         },
         "optimizer": "SGD",
         "optimizer_params": {
@@ -113,7 +116,7 @@
   ],
   "timings": [
     {
-      "duration": "12h",
+      "duration": "1d",
       "time_out_eval": "10m"
     }
   ],

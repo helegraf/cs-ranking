@@ -13,7 +13,7 @@
         "n_objects": 10,
         "n_train_instances": 102400,
         "n_test_instances": 10240,
-"sorted": true
+        "sorted": true
       }
     }
   ],
@@ -29,6 +29,9 @@
       "seed": 1234
     },
     {
+      "seed": 2345
+    },
+    {
       "seed": 3456
     }
   ],
@@ -39,7 +42,7 @@
         "attention_pooling_config": null,
         "attention_preselection_config": null,
         "num_attention_preselection_layers": 0,
-        "n_hidden": 4,
+        "n_hidden": 5,
         "n_units": 32,
         "add_zeroth_order_model": true,
         "max_number_of_objects": 10,
@@ -51,7 +54,7 @@
         "kernel_initializer": "lecun_normal",
         "kernel_regularizer": "l2",
         "kernel_regularizer_params": {
-          "l": 0.01
+          "l": 1e-5
         },
         "optimizer": "SGD",
         "optimizer_params": {
